@@ -217,7 +217,7 @@ def get_time(value, datetime_format=None):
     return parsed_time
 
 
-def get_time_filter(filter, cls, key, constructed_filter):
+def get_time_filter(filters, cls, key, constructed_filter):
     """
         Build a datetime filter (otherwise known as a WHERE clause)
 
@@ -225,7 +225,7 @@ def get_time_filter(filter, cls, key, constructed_filter):
         -----------
         filters: dict - this time filter, allows 'from' key and 'to' key where
             each are optional.  However, if neither 'from' or 'to' keys 
-            are provided, this method will simly not add a filter.
+            are provided, this method will simply not add a filter.
             example dict: 
             {
                 'from': '2015-01-01_00:00:00',
@@ -243,7 +243,7 @@ def get_time_filter(filter, cls, key, constructed_filter):
             the DateTime column 'key'.
 
         """
-    if not isinstance(filter, dict):
+    if not isinstance(filters, dict):
         msg = f'Invalid type for filter, must be \'dict\', actually ' \
             f'type: {type(filters)}'
         raise TypeError(msg)

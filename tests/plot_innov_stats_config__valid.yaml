@@ -34,4 +34,4 @@ stat_groups:
   stats:
   - bias
   - rmsd
-work_dir: /home/slawrence/Development/score-db/tests/figures
+work_dir: /Users/jknezha/Development/score-db/tests/figures
