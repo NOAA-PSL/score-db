@@ -26,7 +26,7 @@ from score_db_base import handle_request
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
 
 CYCLES = [0, 21600, 43200, 64800]
-BASE = '/home/slawrence/Development/experiment_data/'
+BASE = './tests/experiment-data/'
 EXP_NAME = 'uncoupled_c96_3dvar/'
 GSI_3DVAR = 'gsi/'
 SOCA_3DVAR = '%Y%m%d%H%M%S/post/soca/3dvar/'
@@ -38,13 +38,14 @@ def test_run_innov_stats_harvester_for_date_range():
         'db_request_name': 'harvest_innov_stats',
         'date_range': {
             'datetime_str': '%Y-%m-%d %H:%M:%S',
-            'start': '2016-01-01 00:00:00',
-            'end': '2016-01-31 18:00:00'
+            'start': '2015-12-01 0:00:00',
+            'end': '2015-12-01 0:00:00'
         },
 
         'files': [
             {
-                'filepath': BASE + EXP_NAME + GSI_3DVAR,
+                # 'filepath': BASE + EXP_NAME + GSI
+                'filepath': BASE,
                 'filename': 'innov_stats.metric.%Y%m%d%H.nc',
                 'cycles': CYCLES,
                 'harvester': 'innov_stats_netcdf',

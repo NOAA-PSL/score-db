@@ -91,13 +91,13 @@ class Region:
                 f'min_lat: {self.min_lat}, max_lat: {self.max_lat}'
             raise ValueError(msg)
         if self.max_lat < self.min_lat:
-            msg = f'min_lat must be greater than min_lat - min_lat: {self.min_lat}, '\
+            msg = f'max_lat must be greater than min_lat - min_lat: {self.min_lat}, '\
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
 
         if abs(self.min_lat) > 90 or abs(self.max_lat) > 90:
             msg = f'min_lat or max_lat is out of allowed range, must be greater' \
-                f' than -90 and let than 90 - min_lat: {self.min_lat}, ' \
+                f' than -90 and less than 90 - min_lat: {self.min_lat}, ' \
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
 

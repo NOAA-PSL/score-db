@@ -411,7 +411,7 @@ def build_column_ordering(cls, ordering):
         return None
     
     if not isinstance(ordering, list):
-        msg = f'\'order_by\' must be a list - type(ordering): ' \
+        msg = f'\'order_by\' must be a list - was: ' \
             f'{type(ordering)}'
         raise TypeError(msg)
 

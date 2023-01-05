@@ -67,7 +67,7 @@ class YamlLoader:
             msg = f'Cannot load yaml file: {self.yaml_file}, {err}'
             raise TypeError(msg) from err
         except Exception as err:
-            msg = f'Unkown error when parsing {self.yaml_file}, err: {err}'
+            msg = f'Unknown error when parsing {self.yaml_file}, err: {err}'
             raise ValueError(msg) from err
 
         return documents

@@ -59,7 +59,7 @@ request_registry = {
         DbActionResponse
     ),
     'plot_innov_stats': RequestHandler(
-        'plot innovation statistics',
+        'Plot innovation statistics',
         PlotInnovStatsRequest,
         DbActionResponse
     ),
