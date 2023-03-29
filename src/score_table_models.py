@@ -28,6 +28,9 @@ EXPERIMENTS_TABLE = 'experiments'
 EXPERIMENT_METRICS_TABLE = 'expt_metrics'
 REGIONS_TABLE = 'regions'
 METRIC_TYPES_TABLE = 'metric_types'
+STORAGE_LOCATION_TABLE = 'storage_location'
+FILE_TYPES_TABLE = 'file_types'
+EXPT_STORED_FILE_COUNTS_TABLE = 'expt_stored_file_counts'
 
 
 # temporary use dotenv to load the db environment
@@ -96,6 +99,7 @@ class Experiment(Base):
     updated_at = Column(DateTime)
 
     metrics = relationship('ExperimentMetric', back_populates='experiment')
+    file_counts = relationship('ExptStoredFileCount', back_populates='experiment')
 
 
 class ExperimentMetric(Base):
@@ -155,6 +159,56 @@ class MetricType(Base):
     
     metrics = relationship('ExperimentMetric', back_populates='metric_type')
 
+class StorageLocation(Base):
+    __tablename__ = STORAGE_LOCATION_TABLE
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    platform = Column(String(16), nullable=False)   
+    bucket_name = Column(String(128), nullable=False)
+    key = Column(String(128), nullable=False)
+    platform_region = Column(String(64))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    file_counts = relationship('ExptStoredFileCount', back_populates='storage_location')
+
+class ExptStoredFileCounts(Base):
+    __tablename__ = EXPT_STORED_FILE_COUNTS_TABLE
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    storage_location_id = Column(Integer, ForeignKey('storage_location.id'))
+    file_type_id = Column(Integer, ForeignKey('file_types.id'))
+    count = Column(Float, nullable=False)
+    time_valid = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime)
+
+    experiment = relationship('Experiment', back_populates='file_counts')
+    file_type = relationship('FileType', back_populates='file_counts')
+    storage_location = relationship('Storage_Location', back_populates='file_counts')
+
+
+class FileTypes(Base):
+    __tablename__ = FILE_TYPES_TABLE
+    __table_args__ = (
+        UniqueConstraint(
+            'name',
+            'file_extension',
+            name='unique_file_type'
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(128), nullable=False)
+    file_extension = Column(String(64), nullable=False)
+    file_format = Column(String(64), nullable=False)
+    stat_type = Column(String(64))
+    description = Column(JSONB(astext_type=sa.Text()), nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime)
+    
+    file_counts = relationship('ExptStoredFileCount', back_populates='file_type')
+    
 
 Base.metadata.create_all(engine)
 
