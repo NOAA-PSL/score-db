@@ -172,12 +172,13 @@ class StorageLocation(Base):
 
     file_counts = relationship('ExptStoredFileCount', back_populates='storage_location')
 
-class ExptStoredFileCounts(Base):
+class ExptStoredFileCount(Base):
     __tablename__ = EXPT_STORED_FILE_COUNTS_TABLE
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     storage_location_id = Column(Integer, ForeignKey('storage_location.id'))
     file_type_id = Column(Integer, ForeignKey('file_types.id'))
+    experiment_id = Column(Integer, ForeignKey('experiments.id'))
     count = Column(Float, nullable=False)
     time_valid = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow())
@@ -185,10 +186,10 @@ class ExptStoredFileCounts(Base):
 
     experiment = relationship('Experiment', back_populates='file_counts')
     file_type = relationship('FileType', back_populates='file_counts')
-    storage_location = relationship('Storage_Location', back_populates='file_counts')
+    storage_location = relationship('StorageLocation', back_populates='file_counts')
 
 
-class FileTypes(Base):
+class FileType(Base):
     __tablename__ = FILE_TYPES_TABLE
     __table_args__ = (
         UniqueConstraint(
