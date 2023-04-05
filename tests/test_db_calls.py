@@ -17,7 +17,7 @@ from sqlalchemy import Table, Column, MetaData, ForeignKey
 from sqlalchemy import Integer, String, Boolean, DateTime, Float
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
-
+from sqlalchemy import select 
 
 import score_table_models
 from score_table_models import Experiment as experiments_table
@@ -49,8 +49,9 @@ EXPERIMENT_CONFIG_FILE = os.path.join(
 
 @pytest.fixture(scope='module')
 def mock_engine():
-    engine = create_engine("sqlite://")
+    engine = create_engine("sqlite:///score-db-test.sqlite")
     create_database(engine.url)
+    score_table_models.Base.metadata.create_all(engine)
     return engine
 
 # mock score_table_models.get_engine_from_settings with create_engine("sqlite://")
@@ -82,9 +83,12 @@ def test_database_something(self, mock_engine):
     er = ExperimentRequest(request_dict)
     er.submit()
 
-    metadata = sa.MetaData()
-    experiments = sa.Table('experiments', metadata, autoload=True, autoload_with=mock_engine())
-    number = 2
+    stmt = select(experiments_table).where(experiments_table.name == "test_expt_123")
+    with mock_engine.connect() as conn:
+        result = conn.execute(stmt)
+        assert len(result) is 1
+    
+
 
 
     
