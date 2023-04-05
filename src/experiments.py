@@ -22,6 +22,8 @@ import pprint
 from db_action_response import DbActionResponse
 import score_table_models as stm
 from score_table_models import Experiment as exp
+import time_utils
+import db_utils
 
 from pandas import DataFrame
 import sqlalchemy as db
@@ -30,36 +32,6 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy import and_, or_, not_
 from sqlalchemy import asc, desc
 from sqlalchemy.sql import func
-
-
-HERA = 'hera'
-ORION = 'orion'
-PW_AZV1 = 'pw_azv1'
-PW_AZV2 = 'pw_azv2'
-PW_AWV1 = 'pw_awv1'
-PW_AWV2 = 'pw_awv2'
-
-VALID_PLATFORMS = [HERA, ORION, PW_AZV1, PW_AZV2, PW_AWV1, PW_AWV2]
-
-INSERT = 'INSERT'
-UPDATE = 'UPDATE'
-
-EXACT_DATETIME = 'exact'
-FROM_DATETIME = 'from'
-TO_DATETIME = 'to'
-EXAMPLE_TIME = datetime(2022, 1, 14, 6, 23, 41)
-
-ASCENDING = 'asc'
-DESCENDING = 'desc'
-
-VALID_ORDER_BY = [ASCENDING, DESCENDING]
-
-HTTP_GET = 'GET'
-HTTP_PUT = 'PUT'
-
-VALID_METHODS = [HTTP_GET, HTTP_PUT]
-
-DEFAULT_DATETIME_FORMAT_STR = '%Y-%m-%d %H:%M:%S'
 
 ExperimentData = namedtuple(
     'ExperimentData',
@@ -76,15 +48,6 @@ ExperimentData = namedtuple(
         'description'
     ],
 )
-
-def validate_method(method):
-    if method not in VALID_METHODS:
-        msg = f'Request type must be one of: {VALID_METHODS}, actually: {method}'
-        print(msg)
-        raise ValueError(msg)
-    
-    return method
-
 
 @dataclass
 class Experiment:
@@ -107,8 +70,8 @@ class Experiment:
             msg = f'start time must be before end time - start: {self.cycle_start}, ' \
                 f'end: {self.cycle_stop}'
             raise ValueError(msg)
-        if self.platform not in VALID_PLATFORMS:
-            msg = f'\'platform\' must be one of {VALID_PLATFORMS}, was ' \
+        if self.platform not in db_utils.VALID_PLATFORMS:
+            msg = f'\'platform\' must be one of {db_utils.VALID_PLATFORMS}, was ' \
                 f'\'{self.platform}\''
             raise ValueError(msg)
         
@@ -186,36 +149,6 @@ def get_experiment_from_body(body):
     
     return experiment
 
-def get_formatted_time(value, format_str):
-    try:
-        time_str = datetime.strftime(value, format_str)
-    except Exception as err:
-        msg = f'Problem formatting time: {value} with format_str' \
-            f' \'{format_str}\'. error: {err}.'
-        raise ValueError(msg) from err
-
-def get_time(value, datetime_format=None):
-    if value is None:
-        return None
-
-    if datetime_format is None:
-        datetime_format = DEFAULT_DATETIME_FORMAT_STR
-    
-    example_time = get_formatted_time(EXAMPLE_TIME, datetime_format)
-        
-    try:
-        parsed_time = datetime.strptime(
-            value, DEFAULT_DATETIME_FORMAT_STR
-        )
-    except Exception as err:
-        msg = 'Invalid datetime format, must be ' \
-            f'of \'{datetime_format}\'. ' \
-            f'For example: \'{example_time}\'.' \
-            f' Error: {err}.'
-        raise ValueError(msg) from err
-    
-    return parsed_time
-
 
 def get_time_filter(filters, cls, key, constructed_filter):
     """
@@ -253,7 +186,7 @@ def get_time_filter(filters, cls, key, constructed_filter):
         print(f'No \'{key}\' filter detected')
         return constructed_filter
 
-    exact_datetime = get_time(bounds.get(EXACT_DATETIME))
+    exact_datetime = time_utils.get_time(bounds.get(db_utils.EXACT_DATETIME))
     print(f'exact_datetime: {exact_datetime}')
     if exact_datetime is not None:
         constructed_filter[key] = (
@@ -261,8 +194,8 @@ def get_time_filter(filters, cls, key, constructed_filter):
         )
         return constructed_filter
 
-    from_datetime = get_time(bounds.get(FROM_DATETIME))
-    to_datetime = get_time(bounds.get(TO_DATETIME))
+    from_datetime = time_utils.get_time(bounds.get(db_utils.FROM_DATETIME))
+    to_datetime = time_utils.get_time(bounds.get(db_utils.TO_DATETIME))
     
     
     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
@@ -387,85 +320,6 @@ def construct_filters(filters):
     
     return constructed_filter
 
-
-def validate_column_name(cls, value):
-    if not isinstance(value, str):
-        raise TypeError(f'Column name must be a str, was {type(value)}')
-
-    try:
-        column_obj = getattr(cls, value)
-        print(f'column: {column_obj}, type(key): {type(column_obj)}')
-    except Exception as err:
-        msg = f'Column does not exist - err: {err}'
-        raise ValueError(msg)
-    
-    return column_obj
-
-
-def validate_order_dir(value):
-    if not isinstance(value, str):
-        raise TypeError(f'\'order_by\' must be a str, was {type(value)}')
-    
-    if value not in VALID_ORDER_BY:
-        raise TypeError(f'\'order_by\' must be one of {VALID_ORDER_BY}, ' \
-            f' was {value}')
-    
-    return value
-
-
-def build_column_ordering(cls, ordering):
-    """
-    Build a sequential list of column ordering (otherwise known as the 
-    ORDER BY clause)
-    pertaining
-    to the experiments table.
-
-    Parameters:
-    -----------
-    cls: class object - this object can be any sqlalchemy table object
-            such as Region, or Experiment
- 
-    ordering: list - this is a list of dicts which describe all the desired
-        column data sequential ordering (or the ORDER BY sql clause).
-
-        example list of orderby dicts: 
-        [
-            {'name': 'group_id', 'order_by': 'desc'},
-            {'name': 'created_at', 'order_by': 'desc'}
-        ]
-
-    """
-    if ordering is None:
-        return None
-    
-    if not isinstance(ordering, list):
-        msg = f'\'order_by\' must be a list - was: ' \
-            f'{type(ordering)}'
-        raise TypeError(msg)
-
-    constructed_ordering = []
-    for value in ordering:
-        print(f'value: {value}')
-
-        if type(value) != dict:
-            msg = f'List items must be a type-dict - was {type(value)}'
-            raise TypeError(msg)
-
-        col_obj = validate_column_name(cls, value.get('name'))
-        order_by = validate_order_dir(value.get('order_by'))
-        # if col_name is None or order_by is None:
-        #     msg = 'ordering item missing either \'name\' or \'order_by\' - ' \
-        #         f'ordering item: {value}.'
-        #     raise KeyValue(msg)
-        if order_by == ASCENDING:
-            constructed_ordering.append(asc(col_obj))
-        else:
-            constructed_ordering.append(desc(col_obj))
-    
-    print(f'constructed_ordering: {constructed_ordering}')
-    return constructed_ordering
-
-
 @dataclass
 class ExperimentRequest:
     request_dict: dict
@@ -481,7 +335,7 @@ class ExperimentRequest:
 
     def __post_init__(self):
         method = self.request_dict.get('method')
-        self.method = validate_method(method)
+        self.method = db_utils.validate_method(method)
         self.params = self.request_dict.get('params')
         self.filters = None
         self.ordering = None
@@ -496,7 +350,7 @@ class ExperimentRequest:
                 
         print(f'filters: {self.filters}')
         self.body = self.request_dict.get('body')
-        if self.method == HTTP_PUT:
+        if self.method == db_utils.HTTP_PUT:
             self.experiment = get_experiment_from_body(self.body)
             # pprint(f'experiment: {repr(self.experiment)}')
             self.experiment_data = self.experiment.get_experiment_data()
@@ -507,9 +361,9 @@ class ExperimentRequest:
 
     def submit(self):
 
-        if self.method == HTTP_GET:
+        if self.method == db_utils.HTTP_GET:
             return self.get_experiments()
-        elif self.method == HTTP_PUT:
+        elif self.method == db_utils.HTTP_PUT:
             # becomes an update if record exists
             return self.put_experiment()
 
@@ -572,9 +426,9 @@ class ExperimentRequest:
             result = session.execute(do_update_stmt)
             session.flush()
             result_row = result.fetchone()
-            action = INSERT
+            action = db_utils.INSERT
             if result_row.updated_at is not None:
-                action = UPDATE
+                action = db_utils.UPDATE
             # print(f'result.fetchone(): {result_row}')
             # print(f'updated_at: {result_row.updated_at}')
             # print(f'result.fetchone().keys(): {result_row._mapping}')
@@ -582,7 +436,7 @@ class ExperimentRequest:
             session.commit()
             session.close()
         except Exception as err:
-            action = INSERT
+            action = db_utils.INSERT
             message = f'Attempt to {action} experiment record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
@@ -634,7 +488,7 @@ class ExperimentRequest:
                 q = q.filter(value)
         
         # add column ordering
-        column_ordering = build_column_ordering(exp, self.ordering)
+        column_ordering = db_utils.build_column_ordering(exp, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)

@@ -41,32 +41,11 @@ from experiments import Experiment, ExperimentData
 from experiments import ExperimentRequest
 import regions as rg
 import metric_types as mt
-
-
+import time_utils
+import db_utils
 
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
-
-INSERT = 'INSERT'
-UPDATE = 'UPDATE'
-
-FROM_DATETIME = 'from'
-TO_DATETIME = 'to'
-EXACT_DATETIME = 'exact'
-EXAMPLE_TIME = datetime(2022, 1, 14, 6, 23, 41)
-
-ASCENDING = 'asc'
-DESCENDING = 'desc'
-
-VALID_ORDER_BY = [ASCENDING, DESCENDING]
-
-HTTP_GET = 'GET'
-HTTP_PUT = 'PUT'
-
-VALID_METHODS = [HTTP_GET, HTTP_PUT]
-
-DEFAULT_DATETIME_FORMAT_STR = '%Y-%m-%d %H:%M:%S'
-
 
 ExptMetricInputData = namedtuple(
     'ExptMetricInputData',
@@ -111,15 +90,6 @@ class ExptMetricsError(Exception):
         return self.message
 
 
-def validate_method(method):
-    if method not in VALID_METHODS:
-        msg = f'Request type must be one of: {VALID_METHODS}, actually: {method}'
-        print(msg)
-        raise ValueError(msg)
-    
-    return method
-
-
 @dataclass
 class ExptMetric:
     ''' region object storing region name and min/max latitude bounds '''
@@ -141,8 +111,8 @@ class ExptMetric:
             msg = f'start time must be before end time - start: {self.cycle_start}, ' \
                 f'end: {self.cycle_stop}'
             raise ValueError(msg)
-        if self.platform not in VALID_PLATFORMS:
-            msg = f'\'platform\' must be one of {VALID_PLATFORMS}, was ' \
+        if self.platform not in db_utils.VALID_PLATFORMS:
+            msg = f'\'platform\' must be one of {db_utils.VALID_PLATFORMS}, was ' \
                 f'\'{self.platform}\''
             raise ValueError(msg)
         
@@ -169,38 +139,6 @@ class ExptMetric:
         return self.experiment_data
 
 
-def get_formatted_time(value, format_str):
-    try:
-        time_str = datetime.strftime(value, format_str)
-    except Exception as err:
-        msg = f'Problem formatting time: {value} with format_str' \
-            f' \'{format_str}\'. error: {err}.'
-        raise ValueError(msg) from err
-
-
-def get_time(value, datetime_format=None):
-    if value is None:
-        return None
-
-    if datetime_format is None:
-        datetime_format = DEFAULT_DATETIME_FORMAT_STR
-    
-    example_time = get_formatted_time(EXAMPLE_TIME, datetime_format)
-        
-    try:
-        parsed_time = datetime.strptime(
-            value, datetime_format
-        )
-    except Exception as err:
-        msg = 'Invalid datetime format, must be ' \
-            f'of \'{datetime_format}\'. ' \
-            f'For example: \'{example_time}\'.' \
-            f' Error: {err}.'
-        raise ValueError(msg) from err
-    
-    return parsed_time
-
-
 def get_time_filter(filter_dict, cls, key, constructed_filter):
     if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filters, must be \'dict\', actually ' \
@@ -212,7 +150,7 @@ def get_time_filter(filter_dict, cls, key, constructed_filter):
         print(f'No \'{key}\' filter detected')
         return constructed_filter
 
-    exact_datetime = get_time(value.get(EXACT_DATETIME))
+    exact_datetime = time_utils.get_time(value.get(db_utils.EXACT_DATETIME))
 
     if exact_datetime is not None:
         constructed_filter[key] = (
@@ -220,8 +158,8 @@ def get_time_filter(filter_dict, cls, key, constructed_filter):
         )
         return constructed_filter
 
-    from_datetime = get_time(value.get(FROM_DATETIME))
-    to_datetime = get_time(value.get(TO_DATETIME))
+    from_datetime = time_utils.get_time(value.get(db_utils.FROM_DATETIME))
+    to_datetime = time_utils.get_time(value.get(db_utils.TO_DATETIME))
 
     if from_datetime is not None and to_datetime is not None:
         if to_datetime < from_datetime:
@@ -380,59 +318,6 @@ def get_regions_filter(filter_dict, constructed_filter):
 
     return constructed_filter
 
-
-def validate_column_name(cls, value):
-    if not isinstance(value, str):
-        raise TypeError(f'Column name must be a str, was {type(value)}')
-
-    try:
-        column_obj = getattr(cls, value)
-        print(f'column: {column_obj}, type(key): {type(column_obj)}')
-    except Exception as err:
-        msg = f'Column does not exist - err: {err}'
-        raise ValueError(msg)
-    
-    return column_obj
-
-
-def validate_order_dir(value):
-    if not isinstance(value, str):
-        raise TypeError(f'\'order_by\' must be a str, was {type(value)}')
-    
-    if value not in VALID_ORDER_BY:
-        raise TypeError(f'\'order_by\' must be one of {VALID_ORDER_BY}, ' \
-            f' was {value}')
-    
-    return value
-
-
-def build_column_ordering(cls, ordering):
-    if ordering is None:
-        return None
-    
-    if not isinstance(ordering, list):
-        msg = f'\'order_by\' must be a list - was: ' \
-            f'{type(ordering)}'
-        raise TypeError(msg)
-
-    constructed_ordering = []
-    for value in ordering:
-
-        if type(value) != dict:
-            msg = f'List items must be a type-dict - was {type(value)}'
-            raise TypeError(msg)
-
-        col_obj = validate_column_name(cls, value.get('name'))
-        order_by = validate_order_dir(value.get('order_by'))
-
-        if order_by == ASCENDING:
-            constructed_ordering.append(asc(col_obj))
-        else:
-            constructed_ordering.append(desc(col_obj))
-    
-    return constructed_ordering
-
-
 def get_expt_record(body):
 
     # get experiment name
@@ -441,14 +326,14 @@ def get_expt_record(body):
     expt_name = body.get('expt_name')
     datestr_format = body.get('datestr_format')
     wlclk_strt_str = body.get('expt_wallclock_start')
-    expt_wallclock_start = get_time(
+    expt_wallclock_start = time_utils.get_time(
         wlclk_strt_str,
         datestr_format
     )
     
     expt_request = {
         'name': 'experiment',
-        'method': 'GET',
+        'method': db_utils.HTTP_GET,
         'params': {
             'filters': {
                 'name': {
@@ -507,7 +392,7 @@ class ExptMetricRequest:
 
     def __post_init__(self):
         method = self.request_dict.get('method')
-        self.method = validate_method(self.request_dict.get('method'))
+        self.method = db_utils.validate_method(self.request_dict.get('method'))
         self.params = self.request_dict.get('params')
         self.body = self.request_dict.get('body')
         self.filters = None
@@ -520,8 +405,7 @@ class ExptMetricRequest:
 
 
     def submit(self):
-
-        if self.method == HTTP_GET:
+        if self.method == db_utils.HTTP_GET:
             try:
                 return self.get_experiment_metrics()
             except Exception as err:
@@ -530,7 +414,7 @@ class ExptMetricRequest:
                     f' trcbk: {trcbk}'
                 print(f'Submit GET error: {error_msg}')
                 return self.failed_request(error_msg)
-        elif self.method == HTTP_PUT:
+        elif self.method == db_utils.HTTP_PUT:
             # becomes an update if record exists
             print(f'in PUT method')
             try:
@@ -592,7 +476,7 @@ class ExptMetricRequest:
             except Exception as err:
                 msg = f'Problems adding filter to query - query: {query}, ' \
                     f'filter: {value}, err: {err}'
-                raise ExptMetricsError(error_msg) from err
+                raise ExptMetricsError(msg) from err
 
         return query
 
@@ -728,7 +612,7 @@ class ExptMetricRequest:
         q = self.construct_filters(q)
 
         # # add column ordering
-        column_ordering = build_column_ordering(ex_mt, self.ordering)
+        column_ordering = db_utils.build_column_ordering(ex_mt, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)
