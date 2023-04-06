@@ -15,7 +15,7 @@ import yaml
 from plot_innov_stats import PlotInnovStatsRequest
 from score_table_models import ExperimentMetric as exp_metrics_table
 import expt_metrics
-from expt_metrics import ExptMetricInputData, ExptMetric, ExptMetricRequest
+from expt_metrics import ExptMetricInputData, ExptMetricRequest
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
 PLOT_INNOV_STATS_CONFIG__VALID = 'plot_innov_stats_config__valid.yaml'

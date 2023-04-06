@@ -16,7 +16,7 @@ from score_table_models import ExperimentMetric as exp_metrics_table
 import experiments as expts
 import expt_metrics
 from experiments import ExperimentData, Experiment, ExperimentRequest
-from expt_metrics import ExptMetricInputData, ExptMetric, ExptMetricRequest
+from expt_metrics import ExptMetricInputData, ExptMetricRequest
 
 from score_db_base import handle_request
 

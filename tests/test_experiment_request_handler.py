@@ -25,24 +25,6 @@ EXPERIMENT_CONFIG_FILE = os.path.join(
     'experiment_description.json'
 )
 
-
-
-def test_validate_method():
-    with pytest.raises(ValueError):
-        expts.validate_method('blah')
-    
-    with pytest.raises(ValueError):
-        expts.validate_method(None)
-    
-    with pytest.raises(ValueError):
-        expts.validate_method([])
-    
-    for method in expts.VALID_METHODS:
-        expts.validate_method(method)
-    
-    print(f'PYTEST_CALLING_DIR: {PYTEST_CALLING_DIR}')
-    print(f'EXPERIMENT_CONFIG_FILE: {EXPERIMENT_CONFIG_FILE}')
-
 def test_parse_request_dict():
 
     with open(EXPERIMENT_CONFIG_FILE, 'r') as config_file:

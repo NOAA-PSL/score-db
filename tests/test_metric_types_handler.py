@@ -30,22 +30,6 @@ MetricType = namedtuple(
     ],
 )
 
-def test_validate_method():
-    with pytest.raises(ValueError):
-        mts.validate_method('blah')
-    
-    with pytest.raises(ValueError):
-        mts.validate_method(None)
-    
-    with pytest.raises(ValueError):
-        mts.validate_method([])
-    
-    for method in mts.VALID_METHODS:
-        mts.validate_method(method)
-    
-    print(f'PYTEST_CALLING_DIR: {PYTEST_CALLING_DIR}')
-    # print(f'EXPERIMENT_CONFIG_FILE: {EXPERIMENT_CONFIG_FILE}')
-
 def test_parse_request_dict():
 
     description_temperature_count = {

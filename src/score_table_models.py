@@ -166,7 +166,7 @@ class StorageLocation(Base):
             'platform',
             'key',
             name='unique_storage_location'
-        )
+        ),
     )
     
     id = Column(Integer, primary_key=True, autoincrement=True)

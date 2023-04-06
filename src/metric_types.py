@@ -255,7 +255,6 @@ class MetricTypeRequest:
             session.commit()
             session.close()
         except Exception as err:
-            action = db_utils.INSERT
             message = f'Attempt to {action} metric type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')

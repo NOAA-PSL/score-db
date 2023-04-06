@@ -133,7 +133,7 @@ def construct_filters(filters):
 def get_all_file_types():
     request_dict = {
         'name': 'file_type',
-        'method': 'GET'
+        'method': db_utils.HTTP_GET
     }
 
     ftr = FileTypeRequest(request_dict)
@@ -243,7 +243,6 @@ class FileTypeRequest:
             session.commit()
             session.close()
         except Exception as err:
-            action = db_utils.INSERT
             message = f'Attempt to {action} file type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')

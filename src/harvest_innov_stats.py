@@ -18,7 +18,7 @@ import traceback
 import time_utils
 from time_utils import DateRange
 from score_hv.harvester_base import harvest
-from expt_metrics import ExptMetricInputData, ExptMetric, ExptMetricRequest
+from expt_metrics import ExptMetricInputData, ExptMetricRequest
 
 # import aws_s3_interface as s3
 # from aws_s3_interface import AwsS3CommandRawResponse

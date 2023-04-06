@@ -90,53 +90,52 @@ class ExptMetricsError(Exception):
         return self.message
 
 
-@dataclass
-class ExptMetric:
-    ''' region object storing region name and min/max latitude bounds '''
-    name: str
-    cycle_start: datetime
-    cycle_stop: datetime
-    owner_id: str
-    group_id: str
-    experiment_type: str
-    platform: str
-    wallclock_start: datetime
-    wallclock_end: datetime
-    description: dict
-    experiment_data: ExperimentData = field(init=False)
+# @dataclass
+# class ExptMetric:
+#     name: str
+#     cycle_start: datetime
+#     cycle_stop: datetime
+#     owner_id: str
+#     group_id: str
+#     experiment_type: str
+#     platform: str
+#     wallclock_start: datetime
+#     wallclock_end: datetime
+#     description: dict
+#     experiment_data: ExperimentData = field(init=False)
 
-    def __post_init__(self):
-        print(f'in post init name: {self.name}')
-        if self.cycle_start > self.cycle_stop:
-            msg = f'start time must be before end time - start: {self.cycle_start}, ' \
-                f'end: {self.cycle_stop}'
-            raise ValueError(msg)
-        if self.platform not in db_utils.VALID_PLATFORMS:
-            msg = f'\'platform\' must be one of {db_utils.VALID_PLATFORMS}, was ' \
-                f'\'{self.platform}\''
-            raise ValueError(msg)
+#     def __post_init__(self):
+#         print(f'in post init name: {self.name}')
+#         if self.cycle_start > self.cycle_stop:
+#             msg = f'start time must be before end time - start: {self.cycle_start}, ' \
+#                 f'end: {self.cycle_stop}'
+#             raise ValueError(msg)
+#         if self.platform not in db_utils.VALID_PLATFORMS:
+#             msg = f'\'platform\' must be one of {db_utils.VALID_PLATFORMS}, was ' \
+#                 f'\'{self.platform}\''
+#             raise ValueError(msg)
         
-        print(f'description: {self.description}')
-        self.experiment_data = ExperimentData(
-            self.name,
-            self.cycle_start,
-            self.cycle_stop,
-            self.owner_id,
-            self.group_id,
-            self.experiment_type,
-            self.platform,
-            self.wallclock_start,
-            self.wallclock_end,
-            self.description
-        )
+#         print(f'description: {self.description}')
+#         self.experiment_data = ExperimentData(
+#             self.name,
+#             self.cycle_start,
+#             self.cycle_stop,
+#             self.owner_id,
+#             self.group_id,
+#             self.experiment_type,
+#             self.platform,
+#             self.wallclock_start,
+#             self.wallclock_end,
+#             self.description
+#         )
 
 
-    def __repr__(self):
-        return f'experiment_data: {self.experiment_data}'
+#     def __repr__(self):
+#         return f'experiment_data: {self.experiment_data}'
 
 
-    def get_experiment_data(self):
-        return self.experiment_data
+#     def get_experiment_data(self):
+#         return self.experiment_data
 
 
 def get_time_filter(filter_dict, cls, key, constructed_filter):
@@ -340,7 +339,7 @@ def get_expt_record(body):
                     'exact': expt_name
                 },
                 'wallclock_start': {
-                    'exact': wlclk_strt_str
+                    'exact': expt_wallclock_start
                 },
             },
             'ordering': [
