@@ -184,7 +184,7 @@ class StorageLocationRequest:
     
     def submit(self):
         if self.method == db_utils.HTTP_GET:
-            return self.get_metric_types()
+            return self.get_storage_locations()
         elif self.method == db_utils.HTTP_PUT:
             # becomes an update if record exists
             try:
@@ -234,7 +234,6 @@ class StorageLocationRequest:
             session.commit()
             session.close()
         except Exception as err:
-            action = db_utils.INSERT
             message = f'Attempt to {action} storage location record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
