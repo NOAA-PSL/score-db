@@ -161,10 +161,18 @@ class MetricType(Base):
 
 class StorageLocation(Base):
     __tablename__ = STORAGE_LOCATION_TABLE
+    __table_args__ = (
+        UniqueConstraint(
+            'platform',
+            'key',
+            name='unique_storage_location'
+        )
+    )
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    platform = Column(String(16), nullable=False)   
-    bucket_name = Column(String(128), nullable=False)
+    name = Column(String(128), nullable=False)
+    platform = Column(String(128), nullable=False)   
+    bucket_name = Column(String(128))
     key = Column(String(128), nullable=False)
     platform_region = Column(String(64))
     created_at = Column(DateTime)
