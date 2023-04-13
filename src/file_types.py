@@ -204,7 +204,7 @@ class FileTypeRequest:
                 return self.failed_request(error_msg)
 
     
-    def put_metric_type(self):
+    def put_file_type(self):
         session = stm.get_session()
 
         insert_stmt = insert(ft).values(
@@ -223,9 +223,9 @@ class FileTypeRequest:
         do_update_stmt = insert_stmt.on_conflict_do_update(
             constraint='unique_file_type',
             set_=dict(
-                file_format=self.metric_type_data.file_format,
-                stat_type=self.metric_type_data.stat_type,
-                description=self.metric_type_data.description,
+                file_format=self.file_type_data.file_format,
+                stat_type=self.file_type_data.stat_type,
+                description=self.file_type_data.description,
                 updated_at=time_now
             )
         )

@@ -163,6 +163,7 @@ class StorageLocation(Base):
     __tablename__ = STORAGE_LOCATION_TABLE
     __table_args__ = (
         UniqueConstraint(
+            'name',
             'platform',
             'key',
             name='unique_storage_location'

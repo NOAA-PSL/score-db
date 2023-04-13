@@ -32,11 +32,13 @@ from sqlalchemy.orm import joinedload
 from db_action_response import DbActionResponse
 import score_table_models as stm
 from score_table_models import Experiment as exp
-from score_table_models import ExperimentMetric as ex_mt
-from score_table_models import MetricType as mts
-from score_table_models import Region as rgs
+from score_table_models import FileType as ft
+from score_table_models import StorageLocation as sl
+from score_table_models import ExptStoredFileCount as esfc 
 from experiments import Experiment, ExperimentData
 from experiments import ExperimentRequest
+from file_types import FileTypeRequest
+from storage_locations import StorageLocationRequest
 import regions as rg
 import metric_types as mt
 import time_utils
@@ -280,19 +282,102 @@ def get_experiment_id(experiment_name, wallclock_start):
 
 
 def get_file_type_id(file_type_name, file_extension):
-    #TODO: write function
     type_request = {
-    
+        'name': 'file_types',
+        'method': db_utils.HTTP_GET,
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': file_type_name
+                },
+                'file_extension': {
+                    'exact': file_extension
+                }
+            },
+            'record_limit': 1
+        }
     }
-    file_type_id = -1 
+    print(f'type_request: {type_request}')
+    ftr = FileTypeRequest(type_request)
+    results = ftr.submit()
+    print(f'results: {results}')
+    
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting file type data.'
+            raise ExptFileCountsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for file type record did not return a record'
+            raise ExptFileCountsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting file type data. err - {err}'
+        raise ExptFileCountsError(msg)
+    
+    try:
+        record = records[0]
+        file_type_id = record[ft.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding file type id from record: {record} '\
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ExptFileCountsError(error_msg)
+
     return file_type_id
 
 def get_storage_location_id(storage_loc_name, storage_loc_platform, storage_loc_key):
-    #TODO: write function
-    type_request={
-
+    storage_loc_request = {
+        'name': 'storage_locations',
+        'method': db_utils.HTTP_GET,
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': storage_loc_name
+                },
+                'platform': {
+                    'exact': storage_loc_platform
+                },
+                'key': {
+                    'exact': storage_loc_key
+                }
+            },
+            'record_limit': 1
+        }
     }
-    storage_loc_id = -1
+    print(f'storage_loc_request: {storage_loc_request}')
+    slr = StorageLocationRequest(storage_loc_request)
+    results = slr.submit()
+    print(f'results: {results}')
+
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting storage location data.'
+            raise ExptFileCountsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for storage location record did not return a record'
+            raise ExptFileCountsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting storage location data. err - {err}'
+        raise ExptFileCountsError(msg)
+    
+    try:
+        record = records[0]
+        storage_loc_id = record[sl.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding storage location id from record: {record} '\
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ExptFileCountsError(error_msg)
+
     return storage_loc_id
 
 
@@ -347,5 +432,145 @@ class ExptFileCountRequest:
     
     def submit(self):
         if self.method == db_utils.HTTP_GET:
+            return self.get_expt_file_counts()
+        elif self.method == db_utils.HTTP_PUT:
+            try:
+                return self.put_expt_file_counts()
+            except Exception as err:
+                error_msg = 'Failed to insert expt file count record -' \
+                    f' err: {err}'
+                print(f'Submit PUT error: {error_msg}')
+                return self.failed_request(error_msg)
+
+    def put_expt_file_counts(self):
+        session = stm.get_session()
+
+        insert_stmt = insert(esfc).values(
+            count=self.expt_file_count_data.count,
+            time_valid=self.expt_file_count_data.time_valid,
+            experiment_id=self.expt_file_count_data.experiment_id,
+            file_type_id=self.expt_file_count_data.file_type_id,
+            storage_location_id=self.expt_file_count_data.storage_location_id,
+            created_at=datetime.utcnow(),
+            updated_at=None
+        ).returning(esfc)
+        print(f'insert_stmt: {insert_stmt}')
+
+        time_now = datetime.utcnow()
+
+        do_update_stmt = insert_stmt.on_conflict_do_update(
+            set_=dict(
+                count=self.expt_file_count_data.count,
+                time_valid=self.expt_file_count_data.time_valid,
+                experiment_id=self.expt_file_count_data.experiment_id,
+                file_type_id=self.expt_file_count_data.file_type_id,
+                storage_location_id=self.expt_file_count_data.storage_location_id,
+                updated_at=time_now
+            )
+        )
+
+        print(f'do_update_stmt: {do_update_stmt}')
+
+        try:
+            result = session.execute(do_update_stmt)
+            session.flush()
+            result_row = result.fetchone()
+            action = db_utils.INSERT
+            if result_row.updated_at is not None:
+                action = db_utils.UPDATE
+
+            session.commit()
+            session.close()
+        except Exception as err:
+            message = f'Attempt to {action} experiment stored file counts record FAILED'
+            error_msg = f'Failed to insert/update record - err: {err}'
+            print(f'error_msg: {error_msg}')
+        else:
+            message = f'Attempt to {action} experiment stored file counts record SUCCEEDED'
+            error_msg = None
+        
+        results = {}
+        if result_row is not None:
+            results['action'] = action
+            results['data'] = [result_row._mapping]
+            results['id'] = result_row.id
+
+        response = DbActionResponse(
+            self.request_dict,
+            (error_msg is None),
+            message,
+            results,
+            error_msg
+        )
+
+        print(f'response: {response}')
+        return response
+    
+    def get_expt_file_counts(self):
+        session = stm.get_session()
+
+        q = session.query(
+            esfc.id,
+            esfc.count,
+            esfc.time_valid,
+            esfc.experiment_id,
+            esfc.file_type_id,
+            esfc.storage_location_id
+            esfc.created_at, 
+            esfc.updated_at
+        ).select_from(
+            esfc
+        )
+
+        print('Before adding filters to the expt file counts request####')
+        if self.filters is not None and len(self.filters) > 0:
+            for key, value in self.filters.items():
+                q = q.filter(value)
+        
+        print('After adding filters to the expt file counts request####')
+
+        # add column ordering
+        column_ordering = db_utils.build_column_ordering(ft, self.ordering)
+        if column_ordering is not None and len(column_ordering) > 0:
+            for ordering_item in column_ordering:
+                q = q.order_by(ordering_item)
+
+        # limit number of returned records
+        if self.record_limit is not None and self.record_limit > 0:
+            q = q.limit(self.record_limit)
+
+        file_types = q.all()
+
+        results = DataFrame()
+        error_msg = None
+        record_count = 0
+        try:
+            if len(file_types) > 0:
+                results = DataFrame(file_types, columns = file_types[0]._fields)
             
-        #TODO: write this out 
+        except Exception as err:
+            message = 'Request for expt file counts records FAILED'
+            error_msg = f'Failed to get expt file counts records - err: {err}'
+        else:
+            message = 'Request for expt file counts records SUCCEEDED'
+            for idx, row in results.iterrows():
+                print(f'idx: {idx}, row: {row}')
+            record_count = len(results.index)
+        
+        details = {}
+        details['record_count'] = record_count
+
+        if record_count > 0:
+            details['records'] = results
+
+        response = DbActionResponse(
+            self.request_dict,
+            (error_msg is None),
+            message,
+            details,
+            error_msg
+        )
+
+        print(f'response: {response}')
+
+        return response

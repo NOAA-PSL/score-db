@@ -15,7 +15,9 @@ from expt_metrics import ExptMetricRequest
 from metric_types import MetricTypeRequest
 from harvest_innov_stats import HarvestInnovStatsRequest
 from plot_innov_stats import PlotInnovStatsRequest
-
+from file_types import FileTypeRequest
+from storage_locations import StorageLocationRequest
+from expt_file_counts import ExptFileCountRequest
 
 NAMED_TUPLES_LIST = 'tuples_list'
 PANDAS_DATAFRAME = 'pandas_dataframe'
@@ -63,4 +65,19 @@ request_registry = {
         PlotInnovStatsRequest,
         DbActionResponse
     ),
+    'file_types': RequestHandler(
+        'Add or get or update file types',
+        FileTypeRequest,
+        DbActionResponse
+    ),
+    'storage_locations': RequestHandler(
+        'Add or get or update storage locations',
+        StorageLocationRequest,
+        DbActionResponse
+    ),
+    'expt_file_counts': RequestHandler(
+        'Add or get or update experiment file counts',
+        ExptFileCountRequest,
+        DbActionResponse
+    )
 }
