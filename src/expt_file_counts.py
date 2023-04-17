@@ -588,7 +588,7 @@ class ExptFileCountRequest:
             esfc.time_valid,
             esfc.experiment_id,
             esfc.file_type_id,
-            esfc.storage_location_id
+            esfc.storage_location_id,
             esfc.created_at, 
             esfc.updated_at
         ).select_from(

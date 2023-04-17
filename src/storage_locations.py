@@ -45,7 +45,7 @@ class StorageLocation:
     platform: str
     platform_region: str
     key: str 
-    storage_location_data = StorageLocationData = field(init=False)
+    storage_location_data: StorageLocationData = field(init=False)
 
     def __post_init__(self):
         print(f'in post init name: {self.name}')
