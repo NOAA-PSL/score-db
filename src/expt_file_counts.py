@@ -229,6 +229,40 @@ def get_experiments_filter(filter_dict, constructed_filter):
     
     return constructed_filter
 
+def get_file_types_filter(filter_dict, constructed_filter):
+    constructed_filter = get_string_filter(
+        filter_dict, ft, 'name', constructed_filter, 'file_type_name')
+
+    constructed_filter = get_string_filter(
+        filter_dict, ft, 'file_extension', constructed_filter)
+
+    constructed_filter = get_string_filter(
+        filter_dict, ft, 'file_format', constructed_filter)
+
+    constructed_filter = get_string_filter(
+        filter_dict, ft, 'stat_type', constructed_filter)
+    
+    return constructed_filter
+
+def get_storage_locations_filter(filter_dict, constructed_filter):
+    constructed_filter = get_string_filter(
+        filter_dict, sl, 'name', constructed_filter, 'storage_location_name')
+
+    constructed_filter = get_string_filter(
+        filter_dict, sl, 'bucket_name', constructed_filter)
+
+    constructed_filter = get_string_filter(
+        filter_dict, sl, 'platform', constructed_filter)
+
+    constructed_filter = get_string_filter(
+        filter_dict, sl, 'platform_region', constructed_filter)
+    
+    constructed_filter = get_string_filter(
+        filter_dict, sl, 'key', constructed_filter)
+    
+    return constructed_filter
+
+
 def get_experiment_id(experiment_name, wallclock_start):
     expt_request = {
         'name': 'experiment',
@@ -430,6 +464,45 @@ class ExptFileCountRequest:
             errors=error_msg
         )
     
+    def construct_filters(self, query):
+        if not isinstance(self.filters, dict):
+            msg = f'Filters must be of the form dict, filters: {type(self.filters)}'
+            raise ExptFileCountsError(msg)
+        
+        constructed_filter = {}
+
+        constructed_filter = get_experiments_filter(
+            self.filters.get('experiment'), constructed_filter)
+        
+        constructed_filter = get_file_types_filter(
+            self.filters.get('file_types'), constructed_filter)
+        
+        constructed_filter = get_storage_locations_filter(
+            self.filters.get('storage_locations'), constructed_filter)
+
+        constructed_filter = get_time_filter(
+            self.filters, esfc, 'time_valid', constructed_filter)
+        
+        constructed_filter = get_string_filter(
+            self.filters,
+            esfc,
+            'count',
+            constructed_filter,
+            'count'
+        )
+
+        if len(constructed_filter) > 0:
+            try: 
+                for key,value in constructed_filter.items():
+                    print(f'adding filter: {value}')
+                    query = query.filter(value)
+            except Exception as err:
+                msg = f'Problems adding filter to query - query: {query}, ' \
+                    f'filter: {value}, err: {err}'
+                raise ExptFileCountsError(msg) from err 
+            
+        return query
+
     def submit(self):
         if self.method == db_utils.HTTP_GET:
             return self.get_expt_file_counts()
