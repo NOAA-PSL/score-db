@@ -28,7 +28,7 @@ EXPERIMENTS_TABLE = 'experiments'
 EXPERIMENT_METRICS_TABLE = 'expt_metrics'
 REGIONS_TABLE = 'regions'
 METRIC_TYPES_TABLE = 'metric_types'
-STORAGE_LOCATION_TABLE = 'storage_location'
+STORAGE_LOCATION_TABLE = 'storage_locations'
 FILE_TYPES_TABLE = 'file_types'
 EXPT_STORED_FILE_COUNTS_TABLE = 'expt_stored_file_counts'
 
@@ -185,7 +185,7 @@ class ExptStoredFileCount(Base):
     __tablename__ = EXPT_STORED_FILE_COUNTS_TABLE
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    storage_location_id = Column(Integer, ForeignKey('storage_location.id'))
+    storage_location_id = Column(Integer, ForeignKey('storage_locations.id'))
     file_type_id = Column(Integer, ForeignKey('file_types.id'))
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     count = Column(Float, nullable=False)
@@ -232,11 +232,14 @@ def get_session():
 
 # def init_tables():
     
-#     Platforms.create(engine)
-#     Experiment.__table__.create(bind=engine, checkfirst=True)
-#     Region.__table__.create(bind=engine, checkfirst=True)
-#     MetricType.__table__.create(bind=engine, checkfirst=True)
-#     ExperimentMetric.__table__.create(bind=engine, checkfirst=True)
+    # Platforms.create(engine)
+    # Experiment.__table__.create(bind=engine, checkfirst=True)
+    # Region.__table__.create(bind=engine, checkfirst=True)
+    # MetricType.__table__.create(bind=engine, checkfirst=True)
+    # ExperimentMetric.__table__.create(bind=engine, checkfirst=True)
+    # StorageLocation.__table__.create(bind=engine, checkfirst=True)
+    # ExptStoredFileCount.__table__.create(bind=engine, checkfirst=True)
+    # FileType.__table__.create(bind=engine, checkfirst=True)
 
 
 # metadata = MetaData(engine)

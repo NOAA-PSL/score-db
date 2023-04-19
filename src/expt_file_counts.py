@@ -308,7 +308,7 @@ def get_experiment_id(experiment_name, wallclock_start):
         record = records[0]
         expt_id = record[exp.id.name].iat[0]
     except Exception as err:
-        error_msg = f'Problem finding experiment id from record: {record} '\
+        error_msg = f'Problem finding experiment id from request: {expt_request} '\
             f'- err: {err}'
         print(f'error_msg: {error_msg}')
         raise ExptFileCountsError(error_msg)
@@ -356,7 +356,7 @@ def get_file_type_id(file_type_name, file_extension):
         record = records[0]
         file_type_id = record[ft.id.name].iat[0]
     except Exception as err:
-        error_msg = f'Problem finding file type id from record: {record} '\
+        error_msg = f'Problem finding file type id from request: {type_request} '\
             f'- err: {err}'
         print(f'error_msg: {error_msg}')
         raise ExptFileCountsError(error_msg)
@@ -407,7 +407,7 @@ def get_storage_location_id(storage_loc_name, storage_loc_platform, storage_loc_
         record = records[0]
         storage_loc_id = record[sl.id.name].iat[0]
     except Exception as err:
-        error_msg = f'Problem finding storage location id from record: {record} '\
+        error_msg = f'Problem finding storage location id from request: {storage_loc_request} '\
             f'- err: {err}'
         print(f'error_msg: {error_msg}')
         raise ExptFileCountsError(error_msg)
