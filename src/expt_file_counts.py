@@ -64,7 +64,6 @@ ExptFileCountData = namedtuple(
         'experiment_id',
         'file_type_id',
         'storage_location_id',
-        'created_at'
     ]
 )
 
@@ -234,13 +233,13 @@ def get_file_types_filter(filter_dict, constructed_filter):
         filter_dict, ft, 'name', constructed_filter, 'file_type_name')
 
     constructed_filter = get_string_filter(
-        filter_dict, ft, 'file_extension', constructed_filter)
+        filter_dict, ft, 'file_extension', constructed_filter, 'file_extension')
 
     constructed_filter = get_string_filter(
-        filter_dict, ft, 'file_format', constructed_filter)
+        filter_dict, ft, 'file_format', constructed_filter, 'file_format')
 
     constructed_filter = get_string_filter(
-        filter_dict, ft, 'stat_type', constructed_filter)
+        filter_dict, ft, 'stat_type', constructed_filter, 'stat_type')
     
     return constructed_filter
 
@@ -249,16 +248,16 @@ def get_storage_locations_filter(filter_dict, constructed_filter):
         filter_dict, sl, 'name', constructed_filter, 'storage_location_name')
 
     constructed_filter = get_string_filter(
-        filter_dict, sl, 'bucket_name', constructed_filter)
+        filter_dict, sl, 'bucket_name', constructed_filter, 'bucket_name')
 
     constructed_filter = get_string_filter(
-        filter_dict, sl, 'platform', constructed_filter)
+        filter_dict, sl, 'platform', constructed_filter, 'platform')
 
     constructed_filter = get_string_filter(
-        filter_dict, sl, 'platform_region', constructed_filter)
+        filter_dict, sl, 'platform_region', constructed_filter, 'platform_region')
     
     constructed_filter = get_string_filter(
-        filter_dict, sl, 'key', constructed_filter)
+        filter_dict, sl, 'key', constructed_filter, 'key')
     
     return constructed_filter
 
@@ -305,8 +304,8 @@ def get_experiment_id(experiment_name, wallclock_start):
         raise ExptFileCountsError(msg)
     
     try:
-        record = records[0]
-        expt_id = record[exp.id.name].iat[0]
+        # record = records[0]
+        expt_id = records[exp.id.name].iat[0]
     except Exception as err:
         error_msg = f'Problem finding experiment id from request: {expt_request} '\
             f'- err: {err}'
@@ -353,8 +352,7 @@ def get_file_type_id(file_type_name, file_extension):
         raise ExptFileCountsError(msg)
     
     try:
-        record = records[0]
-        file_type_id = record[ft.id.name].iat[0]
+        file_type_id = records[ft.id.name].iat[0]
     except Exception as err:
         error_msg = f'Problem finding file type id from request: {type_request} '\
             f'- err: {err}'
@@ -404,8 +402,7 @@ def get_storage_location_id(storage_loc_name, storage_loc_platform, storage_loc_
         raise ExptFileCountsError(msg)
     
     try:
-        record = records[0]
-        storage_loc_id = record[sl.id.name].iat[0]
+        storage_loc_id = records[sl.id.name].iat[0]
     except Exception as err:
         error_msg = f'Problem finding storage location id from request: {storage_loc_request} '\
             f'- err: {err}'
@@ -444,7 +441,7 @@ class ExptFileCountRequest:
         else:
             print(f'In ExptFileCountRequest - params: {self.params}')
             if isinstance(self.params, dict):
-                self.filters = construct_filters(self.params.get('filters'))
+                self.filters = self.construct_filters(self.params.get('filters'))
                 self.ordering = self.params.get('ordering')
                 self.record_limit = self.params.get('record_limit')
 
@@ -464,27 +461,27 @@ class ExptFileCountRequest:
             errors=error_msg
         )
     
-    def construct_filters(self, query):
-        if not isinstance(self.filters, dict):
+    def construct_filters(self, filters):
+        if not isinstance(filters, dict):
             msg = f'Filters must be of the form dict, filters: {type(self.filters)}'
             raise ExptFileCountsError(msg)
         
         constructed_filter = {}
 
         constructed_filter = get_experiments_filter(
-            self.filters.get('experiment'), constructed_filter)
+            filters.get('experiment'), constructed_filter)
         
         constructed_filter = get_file_types_filter(
-            self.filters.get('file_types'), constructed_filter)
+            filters.get('file_types'), constructed_filter)
         
         constructed_filter = get_storage_locations_filter(
-            self.filters.get('storage_locations'), constructed_filter)
+            filters.get('storage_locations'), constructed_filter)
 
         constructed_filter = get_time_filter(
-            self.filters, esfc, 'time_valid', constructed_filter)
+            filters, esfc, 'time_valid', constructed_filter)
         
         constructed_filter = get_string_filter(
-            self.filters,
+            filters,
             esfc,
             'count',
             constructed_filter,
@@ -501,7 +498,7 @@ class ExptFileCountRequest:
                     f'filter: {value}, err: {err}'
                 raise ExptFileCountsError(msg) from err 
             
-        return query
+        return constructed_filter
 
     def submit(self):
         if self.method == db_utils.HTTP_GET:

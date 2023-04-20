@@ -40,11 +40,20 @@ def test_get_expt_file_counts_dict():
         'method': 'GET',
         'params' : {
             'filters': {
-                'file_type_name': {
-                    'exact': 'example_type',
+                'experiment': {
+                    'experiment_name': {
+                        'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016'
+                    }
                 },
-                'storage_loc_name' :{
-                    'exact': 's3_example_bucket',
+                'file_types': {
+                    'file_type_name': {
+                        'exact': 'example_type',
+                    },
+                },
+                'storage_locations': {
+                    'storage_loc_name' :{
+                        'exact': 's3_example_bucket',
+                    },
                 },
             }
         }
