@@ -52,6 +52,7 @@ ExptFileCountData = namedtuple(
     [
         'count',
         'folder_path',
+        'cycle',
         'time_valid',
         'experiment_id',
         'file_type_id',
@@ -70,6 +71,7 @@ class ExptFileCount:
     '''class for storing experiment file count values'''
     count: int
     folder_path: String
+    cycle: datetime
     time_valid: datetime 
     experiment_id: int
     file_type_id: int
@@ -80,6 +82,7 @@ class ExptFileCount:
         self.expt_file_count_data = ExptFileCountData(
             self.count,
             self.folder_path,
+            self.cycle,
             self.time_valid,
             self.experiment_id,
             self.file_type_id,
@@ -105,6 +108,7 @@ def get_file_count_from_body(body):
     file_count = ExptFileCount(
         body.get('count'),
         body.get('folder_path'),
+        body.get('cycle'),
         body.get('time_valid'),
         experiment_id,
         file_type_id,
@@ -488,6 +492,8 @@ class ExptFileCountRequest:
             'folder_path'
         )
 
+        constructed_filter = get_time_filter(filters, esfc, 'cycle', constructed_filter)
+
         if len(constructed_filter) > 0:
             try: 
                 for key,value in constructed_filter.items():
@@ -518,6 +524,7 @@ class ExptFileCountRequest:
         insert_stmt = insert(esfc).values(
             count=self.expt_file_count_data.count,
             folder_path=self.expt_file_count_data.folder_path,
+            cycle=self.expt_file_count_data.cycle,
             time_valid=self.expt_file_count_data.time_valid,
             experiment_id=self.expt_file_count_data.experiment_id,
             file_type_id=self.expt_file_count_data.file_type_id,
@@ -564,6 +571,7 @@ class ExptFileCountRequest:
             esfc.id,
             esfc.count,
             esfc.folder_path,
+            esfc.cycle,
             esfc.time_valid,
             esfc.experiment_id,
             esfc.file_type_id,

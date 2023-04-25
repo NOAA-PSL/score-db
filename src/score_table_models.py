@@ -190,6 +190,7 @@ class ExptStoredFileCount(Base):
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     count = Column(Float, nullable=False)
     folder_path = Column(String(255))
+    cycle = Column(DateTime)
     time_valid = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow())
 
