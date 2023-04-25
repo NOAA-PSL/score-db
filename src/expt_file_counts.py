@@ -44,22 +44,14 @@ import metric_types as mt
 import time_utils
 import db_utils
 
-
-ExptFileCountInputData = namedtuple(
-    'ExptFileCountInputData',
-    [
-        'count',
-        'time_valid',
-        'experiment_id',
-        'file_type_id',
-        'storage_location_id'
-    ]
-)
+psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
+psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
 
 ExptFileCountData = namedtuple(
     'ExptFileCountData',
     [
         'count',
+        'folder_path',
         'time_valid',
         'experiment_id',
         'file_type_id',
@@ -77,6 +69,7 @@ class ExptFileCountsError(Exception):
 class ExptFileCount:
     '''class for storing experiment file count values'''
     count: int
+    folder_path: String
     time_valid: datetime 
     experiment_id: int
     file_type_id: int
@@ -86,6 +79,7 @@ class ExptFileCount:
     def __post_init__(self):
         self.expt_file_count_data = ExptFileCountData(
             self.count,
+            self.folder_path,
             self.time_valid,
             self.experiment_id,
             self.file_type_id,
@@ -105,11 +99,12 @@ def get_file_count_from_body(body):
         raise TypeError(msg)
     
     experiment_id = get_experiment_id(body.get('experiment_name'), body.get('wallclock_start'))
-    file_type_id = get_file_type_id(body.get('file_type_name'), body.get('file_extension'))
+    file_type_id = get_file_type_id(body.get('file_type_name'))
     storage_location_id = get_storage_location_id(body.get('storage_loc_name'), body.get('storage_loc_platform'), body.get('storage_loc_key')) 
 
     file_count = ExptFileCount(
         body.get('count'),
+        body.get('folder_path'),
         body.get('time_valid'),
         experiment_id,
         file_type_id,
@@ -233,7 +228,7 @@ def get_file_types_filter(filter_dict, constructed_filter):
         filter_dict, ft, 'name', constructed_filter, 'file_type_name')
 
     constructed_filter = get_string_filter(
-        filter_dict, ft, 'file_extension', constructed_filter, 'file_extension')
+        filter_dict, ft, 'file_template', constructed_filter, 'file_template')
 
     constructed_filter = get_string_filter(
         filter_dict, ft, 'file_format', constructed_filter, 'file_format')
@@ -314,7 +309,7 @@ def get_experiment_id(experiment_name, wallclock_start):
     return expt_id
 
 
-def get_file_type_id(file_type_name, file_extension):
+def get_file_type_id(file_type_name):
     type_request = {
         'name': 'file_types',
         'method': db_utils.HTTP_GET,
@@ -323,9 +318,6 @@ def get_file_type_id(file_type_name, file_extension):
                 'name': {
                     'exact': file_type_name
                 },
-                'file_extension': {
-                    'exact': file_extension
-                }
             },
             'record_limit': 1
         }
@@ -456,7 +448,7 @@ class ExptFileCountRequest:
         return DbActionResponse(
             request=self.request_dict,
             success=False,
-            message= 'Failed file type request.',
+            message= 'Failed file count request.',
             details=None,
             errors=error_msg
         )
@@ -488,6 +480,14 @@ class ExptFileCountRequest:
             'count'
         )
 
+        constructed_filter = get_string_filter(
+            filters,
+            esfc,
+            'folder_path',
+            constructed_filter,
+            'folder_path'
+        )
+
         if len(constructed_filter) > 0:
             try: 
                 for key,value in constructed_filter.items():
@@ -517,51 +517,32 @@ class ExptFileCountRequest:
 
         insert_stmt = insert(esfc).values(
             count=self.expt_file_count_data.count,
+            folder_path=self.expt_file_count_data.folder_path,
             time_valid=self.expt_file_count_data.time_valid,
             experiment_id=self.expt_file_count_data.experiment_id,
             file_type_id=self.expt_file_count_data.file_type_id,
             storage_location_id=self.expt_file_count_data.storage_location_id,
-            created_at=datetime.utcnow(),
-            updated_at=None
+            created_at=datetime.utcnow()
         ).returning(esfc)
         print(f'insert_stmt: {insert_stmt}')
-
-        time_now = datetime.utcnow()
-
-        do_update_stmt = insert_stmt.on_conflict_do_update(
-            set_=dict(
-                count=self.expt_file_count_data.count,
-                time_valid=self.expt_file_count_data.time_valid,
-                experiment_id=self.expt_file_count_data.experiment_id,
-                file_type_id=self.expt_file_count_data.file_type_id,
-                storage_location_id=self.expt_file_count_data.storage_location_id,
-                updated_at=time_now
-            )
-        )
-
-        print(f'do_update_stmt: {do_update_stmt}')
-
+        result_row = None
         try:
-            result = session.execute(do_update_stmt)
+            result = session.execute(insert_stmt)
             session.flush()
             result_row = result.fetchone()
-            action = db_utils.INSERT
-            if result_row.updated_at is not None:
-                action = db_utils.UPDATE
-
             session.commit()
             session.close()
         except Exception as err:
-            message = f'Attempt to {action} experiment stored file counts record FAILED'
-            error_msg = f'Failed to insert/update record - err: {err}'
+            message = f'Attempt to insert experiment stored file counts record FAILED'
+            error_msg = f'Failed to insert record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:
-            message = f'Attempt to {action} experiment stored file counts record SUCCEEDED'
+            message = f'Attempt to insert experiment stored file counts record SUCCEEDED'
             error_msg = None
         
         results = {}
         if result_row is not None:
-            results['action'] = action
+            results['action'] = db_utils.INSERT
             results['data'] = [result_row._mapping]
             results['id'] = result_row.id
 
@@ -582,12 +563,12 @@ class ExptFileCountRequest:
         q = session.query(
             esfc.id,
             esfc.count,
+            esfc.folder_path,
             esfc.time_valid,
             esfc.experiment_id,
             esfc.file_type_id,
             esfc.storage_location_id,
-            esfc.created_at, 
-            esfc.updated_at
+            esfc.created_at
         ).select_from(
             esfc
         )
@@ -609,14 +590,14 @@ class ExptFileCountRequest:
         if self.record_limit is not None and self.record_limit > 0:
             q = q.limit(self.record_limit)
 
-        file_types = q.all()
+        file_counts = q.all()
 
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
-            if len(file_types) > 0:
-                results = DataFrame(file_types, columns = file_types[0]._fields)
+            if len(file_counts) > 0:
+                results = DataFrame(file_counts, columns = file_counts[0]._fields)
             
         except Exception as err:
             message = 'Request for expt file counts records FAILED'

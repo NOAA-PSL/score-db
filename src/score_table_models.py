@@ -189,9 +189,9 @@ class ExptStoredFileCount(Base):
     file_type_id = Column(Integer, ForeignKey('file_types.id'))
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     count = Column(Float, nullable=False)
+    folder_path = Column(String(255))
     time_valid = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow())
-    updated_at = Column(DateTime)
 
     experiment = relationship('Experiment', back_populates='file_counts')
     file_type = relationship('FileType', back_populates='file_counts')
@@ -203,15 +203,14 @@ class FileType(Base):
     __table_args__ = (
         UniqueConstraint(
             'name',
-            'file_extension',
             name='unique_file_type'
         ),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), nullable=False)
-    file_extension = Column(String(64), nullable=False)
-    file_format = Column(String(64), nullable=False)
+    file_template= Column(String(64), nullable=False)
+    file_format = Column(String(64))
     stat_type = Column(String(64))
     description = Column(JSONB(astext_type=sa.Text()), nullable=True)
     created_at = Column(DateTime, nullable=False)

@@ -26,7 +26,8 @@ def test_put_expt_file_counts_request_dict():
             'storage_loc_name' : 's3_example_bucket',
             'storage_loc_platform': 'aws_s3',
             'storage_loc_key': 'noaa-exmample-score-db-bucket/reanalysis',
-            'count': 1230
+            'count': 1230,
+            'folder_path': 'noaa-example-score-db-bucket/reanalysis/2023/02/23/2023022306'
         }
     }
 

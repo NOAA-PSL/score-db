@@ -30,7 +30,7 @@ FileTypeData = namedtuple(
     'FileTypeData',
     [
         'name',
-        'file_extension',
+        'file_template',
         'file_format',
         'stat_type',
         'description'
@@ -41,7 +41,7 @@ FileTypeData = namedtuple(
 class FileType:
     ''' file type object storing data related to the file info '''
     name: str
-    file_extension: str
+    file_template: str
     file_format: str
     stat_type: str
     description: dict
@@ -52,7 +52,7 @@ class FileType:
         print(f'description: {self.description}')
         self.file_type_data = FileTypeData(
             self.name,
-            self.file_extension,
+            self.file_template,
             self.file_format,
             self.stat_type,
             self.description
@@ -80,7 +80,7 @@ def get_file_type_from_body(body):
 
     file_type = FileType(
         body.get('name'),
-        body.get('file_extension'),
+        body.get('file_template'),
         body.get('file_format'),
         body.get('stat_type'),
         description
@@ -120,7 +120,7 @@ def construct_filters(filters):
         filters, ft, 'name', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, ft, 'file_extension', constructed_filter)
+        filters, ft, 'file_template', constructed_filter)
 
     constructed_filter = get_string_filter(
         filters, ft, 'file_format', constructed_filter)
@@ -209,7 +209,7 @@ class FileTypeRequest:
 
         insert_stmt = insert(ft).values(
             name=self.file_type_data.name,
-            file_extension=self.file_type_data.file_extension,
+            file_template=self.file_type_data.file_template,
             file_format=self.file_type_data.file_format,
             stat_type=self.file_type_data.stat_type,
             description=self.file_type_data.description,
@@ -223,6 +223,7 @@ class FileTypeRequest:
         do_update_stmt = insert_stmt.on_conflict_do_update(
             constraint='unique_file_type',
             set_=dict(
+                file_template=self.file_type_data.file_template,
                 file_format=self.file_type_data.file_format,
                 stat_type=self.file_type_data.stat_type,
                 description=self.file_type_data.description,
@@ -274,7 +275,7 @@ class FileTypeRequest:
         q = session.query(
             ft.id,
             ft.name,
-            ft.file_extension,
+            ft.file_template,
             ft.file_format,
             ft.stat_type,
             ft.description,
