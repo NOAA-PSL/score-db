@@ -22,7 +22,6 @@ def test_file_type_input_dict():
             'name': 'example_type',
             'file_template': '*.example',
             'file_format': 'text',
-            'stat_type': 'n/a',
             'description': json.dumps({"name": "example"})
         }
     }

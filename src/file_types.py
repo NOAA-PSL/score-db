@@ -32,7 +32,6 @@ FileTypeData = namedtuple(
         'name',
         'file_template',
         'file_format',
-        'stat_type',
         'description'
     ],
 )
@@ -43,7 +42,6 @@ class FileType:
     name: str
     file_template: str
     file_format: str
-    stat_type: str
     description: dict
     file_type_data: FileTypeData = field(init=False)
 
@@ -54,7 +52,6 @@ class FileType:
             self.name,
             self.file_template,
             self.file_format,
-            self.stat_type,
             self.description
         )
 
@@ -82,7 +79,6 @@ def get_file_type_from_body(body):
         body.get('name'),
         body.get('file_template'),
         body.get('file_format'),
-        body.get('stat_type'),
         description
     )
     
@@ -124,9 +120,6 @@ def construct_filters(filters):
 
     constructed_filter = get_string_filter(
         filters, ft, 'file_format', constructed_filter)
-
-    constructed_filter = get_string_filter(
-        filters, ft, 'stat_type', constructed_filter)
     
     return constructed_filter
 
@@ -211,7 +204,6 @@ class FileTypeRequest:
             name=self.file_type_data.name,
             file_template=self.file_type_data.file_template,
             file_format=self.file_type_data.file_format,
-            stat_type=self.file_type_data.stat_type,
             description=self.file_type_data.description,
             created_at=datetime.utcnow(),
             updated_at=None
@@ -225,7 +217,6 @@ class FileTypeRequest:
             set_=dict(
                 file_template=self.file_type_data.file_template,
                 file_format=self.file_type_data.file_format,
-                stat_type=self.file_type_data.stat_type,
                 description=self.file_type_data.description,
                 updated_at=time_now
             )
@@ -277,7 +268,6 @@ class FileTypeRequest:
             ft.name,
             ft.file_template,
             ft.file_format,
-            ft.stat_type,
             ft.description,
             ft.created_at,
             ft.updated_at

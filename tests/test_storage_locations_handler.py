@@ -17,7 +17,7 @@ def test_storage_location_input_dict():
             'name': 's3_example_bucket',
             'platform': 'aws_s3', 
             'bucket_name': 'noaa-example-score-db-bucket',
-            'key': 'noaa-exmample-score-db-bucket/reanalysis',
+            'key': 'reanalysis',
             'platform_region': 'n/a'
         }
     }

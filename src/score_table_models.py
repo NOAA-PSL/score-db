@@ -165,6 +165,7 @@ class StorageLocation(Base):
         UniqueConstraint(
             'name',
             'platform',
+            'bucket_name',
             'key',
             name='unique_storage_location'
         ),
@@ -173,8 +174,8 @@ class StorageLocation(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), nullable=False)
     platform = Column(String(128), nullable=False)   
-    bucket_name = Column(String(128))
-    key = Column(String(128), nullable=False)
+    bucket_name = Column(String(128), nullable=False)
+    key = Column(String(128))
     platform_region = Column(String(64))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
@@ -191,7 +192,7 @@ class ExptStoredFileCount(Base):
     count = Column(Float, nullable=False)
     folder_path = Column(String(255))
     cycle = Column(DateTime)
-    time_valid = Column(DateTime, nullable=False)
+    forecast_length = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='file_counts')
@@ -212,7 +213,6 @@ class FileType(Base):
     name = Column(String(128), nullable=False)
     file_template= Column(String(64), nullable=False)
     file_format = Column(String(64))
-    stat_type = Column(String(64))
     description = Column(JSONB(astext_type=sa.Text()), nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)

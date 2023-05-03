@@ -53,7 +53,7 @@ ExptFileCountData = namedtuple(
         'count',
         'folder_path',
         'cycle',
-        'time_valid',
+        'forecast_length',
         'experiment_id',
         'file_type_id',
         'storage_location_id',
@@ -72,7 +72,7 @@ class ExptFileCount:
     count: int
     folder_path: String
     cycle: datetime
-    time_valid: datetime 
+    forecast_length: datetime 
     experiment_id: int
     file_type_id: int
     storage_location_id: int
@@ -83,7 +83,7 @@ class ExptFileCount:
             self.count,
             self.folder_path,
             self.cycle,
-            self.time_valid,
+            self.forecast_length,
             self.experiment_id,
             self.file_type_id,
             self.storage_location_id
@@ -103,13 +103,13 @@ def get_file_count_from_body(body):
     
     experiment_id = get_experiment_id(body.get('experiment_name'), body.get('wallclock_start'))
     file_type_id = get_file_type_id(body.get('file_type_name'))
-    storage_location_id = get_storage_location_id(body.get('storage_loc_name'), body.get('storage_loc_platform'), body.get('storage_loc_key')) 
+    storage_location_id = get_storage_location_id(body.get('bucket_name'), body.get('platform'), body.get('key')) 
 
     file_count = ExptFileCount(
         body.get('count'),
         body.get('folder_path'),
         body.get('cycle'),
-        body.get('time_valid'),
+        body.get('forecast_length'),
         experiment_id,
         file_type_id,
         storage_location_id
@@ -236,9 +236,6 @@ def get_file_types_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_string_filter(
         filter_dict, ft, 'file_format', constructed_filter, 'file_format')
-
-    constructed_filter = get_string_filter(
-        filter_dict, ft, 'stat_type', constructed_filter, 'stat_type')
     
     return constructed_filter
 
@@ -357,20 +354,20 @@ def get_file_type_id(file_type_name):
 
     return file_type_id
 
-def get_storage_location_id(storage_loc_name, storage_loc_platform, storage_loc_key):
+def get_storage_location_id(bucket_name, platform, key):
     storage_loc_request = {
         'name': 'storage_locations',
         'method': db_utils.HTTP_GET,
         'params': {
             'filters': {
-                'name': {
-                    'exact': storage_loc_name
+                'bucket_name': {
+                    'exact': bucket_name
                 },
                 'platform': {
-                    'exact': storage_loc_platform
+                    'exact': platform
                 },
                 'key': {
-                    'exact': storage_loc_key
+                    'exact': key
                 }
             },
             'record_limit': 1
@@ -474,7 +471,7 @@ class ExptFileCountRequest:
             filters.get('storage_locations'), constructed_filter)
 
         constructed_filter = get_time_filter(
-            filters, esfc, 'time_valid', constructed_filter)
+            filters, esfc, 'forecast_length', constructed_filter)
         
         constructed_filter = get_string_filter(
             filters,
@@ -525,7 +522,7 @@ class ExptFileCountRequest:
             count=self.expt_file_count_data.count,
             folder_path=self.expt_file_count_data.folder_path,
             cycle=self.expt_file_count_data.cycle,
-            time_valid=self.expt_file_count_data.time_valid,
+            forecast_length=self.expt_file_count_data.forecast_length,
             experiment_id=self.expt_file_count_data.experiment_id,
             file_type_id=self.expt_file_count_data.file_type_id,
             storage_location_id=self.expt_file_count_data.storage_location_id,
@@ -572,7 +569,7 @@ class ExptFileCountRequest:
             esfc.count,
             esfc.folder_path,
             esfc.cycle,
-            esfc.time_valid,
+            esfc.forecast_length,
             esfc.experiment_id,
             esfc.file_type_id,
             esfc.storage_location_id,
