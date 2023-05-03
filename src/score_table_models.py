@@ -227,21 +227,3 @@ def get_session():
     Session = sessionmaker(bind=engine)
 
     return Session()
-
-
-
-# def init_tables():
-    
-    # Platforms.create(engine)
-    # Experiment.__table__.create(bind=engine, checkfirst=True)
-    # Region.__table__.create(bind=engine, checkfirst=True)
-    # MetricType.__table__.create(bind=engine, checkfirst=True)
-    # ExperimentMetric.__table__.create(bind=engine, checkfirst=True)
-    # StorageLocation.__table__.create(bind=engine, checkfirst=True)
-    # ExptStoredFileCount.__table__.create(bind=engine, checkfirst=True)
-    # FileType.__table__.create(bind=engine, checkfirst=True)
-
-
-# metadata = MetaData(engine)
-# session = sessionmaker(bind=engine)
-
