@@ -192,7 +192,8 @@ class ExptStoredFileCount(Base):
     count = Column(Float, nullable=False)
     folder_path = Column(String(255))
     cycle = Column(DateTime)
-    forecast_length = Column(DateTime, nullable=False)
+    time_valid = Column(DateTime)
+    forecast_length = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='file_counts')

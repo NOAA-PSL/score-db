@@ -53,6 +53,7 @@ ExptFileCountData = namedtuple(
         'count',
         'folder_path',
         'cycle',
+        'time_valid',
         'forecast_length',
         'experiment_id',
         'file_type_id',
@@ -72,7 +73,8 @@ class ExptFileCount:
     count: int
     folder_path: String
     cycle: datetime
-    forecast_length: datetime 
+    time_valid: datetime
+    forecast_length: float 
     experiment_id: int
     file_type_id: int
     storage_location_id: int
@@ -83,6 +85,7 @@ class ExptFileCount:
             self.count,
             self.folder_path,
             self.cycle,
+            self.time_valid,
             self.forecast_length,
             self.experiment_id,
             self.file_type_id,
@@ -109,6 +112,7 @@ def get_file_count_from_body(body):
         body.get('count'),
         body.get('folder_path'),
         body.get('cycle'),
+        body.get('time_valid'),
         body.get('forecast_length'),
         experiment_id,
         file_type_id,
@@ -469,9 +473,17 @@ class ExptFileCountRequest:
         
         constructed_filter = get_storage_locations_filter(
             filters.get('storage_locations'), constructed_filter)
+        
+        constructed_filter = get_string_filter(
+            filters,
+            esfc,
+            'forecast_length',
+            constructed_filter,
+            'forecast_length'
+        )
 
         constructed_filter = get_time_filter(
-            filters, esfc, 'forecast_length', constructed_filter)
+            filters, esfc, 'time_valid', constructed_filter)
         
         constructed_filter = get_string_filter(
             filters,
@@ -522,6 +534,7 @@ class ExptFileCountRequest:
             count=self.expt_file_count_data.count,
             folder_path=self.expt_file_count_data.folder_path,
             cycle=self.expt_file_count_data.cycle,
+            time_valid=self.expt_file_count.time_valid,
             forecast_length=self.expt_file_count_data.forecast_length,
             experiment_id=self.expt_file_count_data.experiment_id,
             file_type_id=self.expt_file_count_data.file_type_id,
@@ -569,6 +582,7 @@ class ExptFileCountRequest:
             esfc.count,
             esfc.folder_path,
             esfc.cycle,
+            esfc.time_valid,
             esfc.forecast_length,
             esfc.experiment_id,
             esfc.file_type_id,
