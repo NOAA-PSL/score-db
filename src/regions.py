@@ -128,7 +128,7 @@ DEFAULT_REGION_NAMES = [lambda x=x: x.name for x in DEFAULT_REGIONS]
 
 def validate_list_of_regions(regions):
     if not isinstance(regions, list):
-        raise TypeError(f'Must be list of Regions, actually {type(regions)}')
+        raise TypeError(f'Must be list of Regions, was {type(regions)}')
     
     unique_regions = set()
     try:
@@ -144,7 +144,7 @@ def validate_list_of_regions(regions):
 
 def validate_list_of_strings(values):
     if not isinstance(values, list):
-        raise TypeError(f'Must be list of strings, actually {type(values)}')
+        raise TypeError(f'Must be list of strings, was {type(values)}')
     if not all(isinstance(elem, str) for elem in values):
         raise TypeError(f'Not all members are strings - {values}')
     
@@ -156,7 +156,7 @@ def validate_list_of_strings(values):
 
 def validate_method(method):
     if method not in VALID_METHODS:
-        msg = f'Request type must be one of: {VALID_METHODS}, actually: {method}'
+        msg = f'Request type must be one of: {VALID_METHODS}, was: {method}'
         print(msg)
         raise ValueError(msg)
     

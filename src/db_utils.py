@@ -70,8 +70,7 @@ def validate_order_dir(value):
         raise TypeError(f'\'order_by\' must be a str, was {type(value)}')
     
     if value not in VALID_ORDER_BY:
-        raise TypeError(f'\'order_by\' must be one of {VALID_ORDER_BY}, ' \
-            f' was {value}')
+        raise TypeError(f'\'order_by\' must be one of {VALID_ORDER_BY}, was {value}')
     
     return value
 
@@ -101,8 +100,7 @@ def build_column_ordering(cls, ordering):
         return None
     
     if not isinstance(ordering, list):
-        msg = f'\'order_by\' must be a list - was: ' \
-            f'{type(ordering)}'
+        msg = f'\'order_by\' must be a list - was: {type(ordering)}'
         raise TypeError(msg)
 
     constructed_ordering = []

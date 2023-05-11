@@ -62,8 +62,8 @@ ExptFileCountData = namedtuple(
 )
 
 class ExptFileCountsError(Exception):
-    def __init__(self, m):
-        self.message = m
+    def __init__(self, message):
+        self.message = message
     def __str__(self):
         return self.message
     
@@ -100,7 +100,7 @@ class ExptFileCount:
     
 def get_file_count_from_body(body):
     if not isinstance(body, dict):
-        msg = 'The \'body\' key must be a type dict, actually ' \
+        msg = 'The \'body\' key must be a type dict, was ' \
             f'{type(body)}'
         raise TypeError(msg)
     
@@ -123,7 +123,7 @@ def get_file_count_from_body(body):
     
 def get_time_filter(filter_dict, cls, key, constructed_filter):
     if not isinstance(filter_dict, dict):
-        msg = f'Invalid type for filters, must be \'dict\', actually ' \
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
             f'type: {type(filter_dict)}'
         raise TypeError(msg)
 
@@ -169,20 +169,20 @@ def validate_list_of_strings(values):
         return val_list
 
     if not isinstance(values, list):
-        msg = f'string values must be a list - actually: {type(values)}'
+        msg = f'string values must be a list - was: {type(values)}'
         raise TypeError(msg)
     
     for value in values:
         if not isinstance(value, str):
             msg = 'all values must be string type - value: ' \
-                f'{value} is type: {type(value)}'
+                f'{value} was type: {type(value)}'
             raise TypeError(msg)
     
     return values
 
 def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     if not isinstance(filter_dict, dict):
-        msg = f'Invalid type for filters, must be \'dict\', actually ' \
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
             f'type: {type(filter_dict)}'
         raise TypeError(msg)
 
@@ -208,13 +208,13 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
 
 def get_experiments_filter(filter_dict, constructed_filter):
     if not isinstance(filter_dict, dict):
-        msg = f'Invalid type for filter, must be \'dict\', actually ' \
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
             f'type: {type(filter_dict)}'
         raise TypeError(msg)
     
     if not isinstance(constructed_filter, dict):
         msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
-            f'actually type: {type(filter_dict)}'
+            f'was type: {type(filter_dict)}'
         raise TypeError(msg)   
     
     constructed_filter = get_string_filter(

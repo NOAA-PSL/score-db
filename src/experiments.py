@@ -101,7 +101,7 @@ class Experiment:
 
 def get_experiment_from_body(body):
     if not isinstance(body, dict):
-        msg = 'The \'body\' key must be a type dict, actually ' \
+        msg = 'The \'body\' key must be a type dict, was ' \
             f'{type(body)}'
         raise TypeError(msg)
     
@@ -177,7 +177,7 @@ def get_time_filter(filters, cls, key, constructed_filter):
 
         """
     if not isinstance(filters, dict):
-        msg = f'Invalid type for filter, must be \'dict\', actually ' \
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
             f'type: {type(filters)}'
         raise TypeError(msg)
 
@@ -223,7 +223,7 @@ def get_time_filter(filters, cls, key, constructed_filter):
 
 def get_string_filter(filters, cls, key, constructed_filter):
     if not isinstance(filters, dict):
-        msg = f'Invalid type for filters, must be \'dict\', actually ' \
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
             f'type: {type(filters)}'
         raise TypeError(msg)
 
