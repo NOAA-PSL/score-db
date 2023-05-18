@@ -66,6 +66,7 @@ class ExptFileCountsError(Exception):
         self.message = message
     def __str__(self):
         return self.message
+
     
 @dataclass
 class ExptFileCount:
@@ -408,7 +409,10 @@ def get_storage_location_id(bucket_name, platform, key):
 
     return storage_loc_id
 
-
+"""
+This class handles interaction requests with the expt_stored_file_counts table.
+For calls to the database regarding inputing and reading experiment file counts. 
+"""
 @dataclass
 class ExptFileCountRequest:
     request_dict: dict
