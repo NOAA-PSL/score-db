@@ -16,6 +16,7 @@ DEFAULT_START_TIME = datetime(year=1990, month=1, day=1)
 DEFAULT_END_TIME = datetime.utcnow()
 DEFAULT_DATE_STR = '%Y%m%dT%H%M%SZ'
 DEFAULT_CYCLE_INTERVALS = [0, 21600, 43200, 64800]
+DEFAULT_DATETIME_FORMAT_STR = '%Y-%m-%d %H:%M:%S'
 
 DEFAULT_DATE_RANGE_CONFIG = {
     'datestr': DEFAULT_DATE_STR,
@@ -24,6 +25,8 @@ DEFAULT_DATE_RANGE_CONFIG = {
 }
 
 DEFAULT_OBS_CYCLE_INTERVALS = [0, 3600*6, 3600*12, 3600*18]
+
+EXAMPLE_TIME = datetime(2022, 1, 14, 6, 23, 41)
 
 
 def default_datetime_converter(obj):
@@ -46,6 +49,27 @@ def is_valid_increment_type(value):
         return False
     return True
 
+def get_time(value, datetime_format=None):
+    if value is None:
+        return None
+
+    if datetime_format is None:
+        datetime_format = DEFAULT_DATETIME_FORMAT_STR
+    
+    example_time = get_datetime_str(EXAMPLE_TIME, datetime_format)
+        
+    try:
+        parsed_time = datetime.strptime(
+            value, DEFAULT_DATETIME_FORMAT_STR
+        )
+    except Exception as err:
+        msg = 'Invalid datetime format, must be ' \
+            f'of \'{datetime_format}\'. ' \
+            f'For example: \'{example_time}\'.' \
+            f' Error: {err}.'
+        raise ValueError(msg) from err
+    
+    return parsed_time
 
 def set_datetime(time_str, format_str):
     try:

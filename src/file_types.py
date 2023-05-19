@@ -1,5 +1,5 @@
 """
-Copyright 2022 NOAA
+Copyright 2023 NOAA
 All rights reserved.
 
 Collection of methods to facilitate handling of score db requests
@@ -14,7 +14,7 @@ import json
 import pprint
 from db_action_response import DbActionResponse
 import score_table_models as stm
-from score_table_models import MetricType as mt
+from score_table_models import FileType as ft
 import time_utils
 import db_utils
 
@@ -26,48 +26,44 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy import asc, desc
 from sqlalchemy.sql import func
 
-MetricTypeData = namedtuple(
-    'MetricTypeData',
+FileTypeData = namedtuple(
+    'FileTypeData',
     [
         'name',
-        'measurement_type',
-        'measurement_units',
-        'stat_type',
+        'file_template',
+        'file_format',
         'description'
     ],
 )
 
 @dataclass
-class MetricType:
-    ''' metric type object storing data related to the measurement type '''
+class FileType:
+    ''' file type object storing data related to the file info '''
     name: str
-    measurement_type: str
-    measurement_units: str
-    stat_type: str
+    file_template: str
+    file_format: str
     description: dict
-    metric_type_data: MetricTypeData = field(init=False)
+    file_type_data: FileTypeData = field(init=False)
 
     def __post_init__(self):
         print(f'in post init name: {self.name}')
         print(f'description: {self.description}')
-        self.metric_type_data = MetricTypeData(
+        self.file_type_data = FileTypeData(
             self.name,
-            self.measurement_type,
-            self.measurement_units,
-            self.stat_type,
+            self.file_template,
+            self.file_format,
             self.description
         )
 
 
     def __repr__(self):
-        return f'metric_type_data: {self.metric_type_data}'
+        return f'file_type_data: {self.file_type_data}'
 
 
-    def get_metric_type_data(self):
-        return self.metric_type_data
-
-
-def get_metric_type_from_body(body):
+    def get_file_type_data(self):
+        return self.file_type_data
+    
+def get_file_type_from_body(body):
     if not isinstance(body, dict):
         msg = 'The \'body\' key must be a type dict, was ' \
             f'{type(body)}'
@@ -79,15 +75,14 @@ def get_metric_type_from_body(body):
         msg = 'Error loading \'description\', must be valid JSON - err: {err}'
         raise ValueError(msg) from err
 
-    metric_type = MetricType(
+    file_type = FileType(
         body.get('name'),
-        body.get('measurement_type'),
-        body.get('measurement_units'),
-        body.get('stat_type'),
+        body.get('file_template'),
+        body.get('file_format'),
         description
     )
     
-    return metric_type
+    return file_type
 
 def get_string_filter(filters, cls, key, constructed_filter):
     if not isinstance(filters, dict):
@@ -114,37 +109,31 @@ def get_string_filter(filters, cls, key, constructed_filter):
 
     return constructed_filter
 
-
 def construct_filters(filters):
     constructed_filter = {}
 
     constructed_filter = get_string_filter(
-        filters, mt, 'name', constructed_filter)
+        filters, ft, 'name', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, mt, 'measurement_type', constructed_filter)
+        filters, ft, 'file_template', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, mt, 'measurement_units', constructed_filter)
-
-    constructed_filter = get_string_filter(
-        filters, mt, 'stat_type', constructed_filter)
+        filters, ft, 'file_format', constructed_filter)
     
     return constructed_filter
 
-
-def get_all_metric_types():
+def get_all_file_types():
     request_dict = {
-        'name': 'metric_type',
-        'method': 'GET'
+        'name': 'file_type',
+        'method': db_utils.HTTP_GET
     }
 
-    mtr = MetricTypeRequest(request_dict)
-    return mtr.submit()
-
+    ftr = FileTypeRequest(request_dict)
+    return ftr.submit()
 
 @dataclass
-class MetricTypeRequest:
+class FileTypeRequest:
     request_dict: dict
     method: str = field(default_factory=str, init=False)
     params: dict = field(default_factory=dict, init=False)
@@ -152,10 +141,9 @@ class MetricTypeRequest:
     ordering: list = field(default_factory=list, init=False)
     record_limit: int = field(default_factory=int, init=False)
     body: dict = field(default_factory=dict, init=False)
-    metric_type: MetricType = field(init=False)
-    metric_type_data: namedtuple = field(init=False)
+    file_type: FileType = field(init=False)
+    file_type_data: namedtuple = field(init=False)
     response: dict = field(default_factory=dict, init=False)
-
 
     def __post_init__(self):
         self.method = db_utils.validate_method(self.request_dict.get('method'))
@@ -163,16 +151,15 @@ class MetricTypeRequest:
 
         self.body = self.request_dict.get('body')
         if self.method == db_utils.HTTP_PUT:
-            self.metric_type = get_metric_type_from_body(self.body)
-            # pprint(f'metric_type : {repr(self.metric_type)}')
-            self.metric_type_data = self.metric_type.get_metric_type_data()
+            self.file_type = get_file_type_from_body(self.body)
+            self.file_type_data = self.file_type.get_file_type_data()
             for k, v in zip(
-                self.metric_type_data._fields, self.metric_type_data
+                self.file_type_data._fields, self.file_type_data
             ):
                 val = pprint.pformat(v, indent=4)
                 print(f'exp_data: k: {k}, v: {val}')
         else:
-            print(f'In MetricTypeRequest - params: {self.params}')
+            print(f'In FileTypeRequest - params: {self.params}')
             if isinstance(self.params, dict):
                 self.filters = construct_filters(self.params.get('filters'))
                 self.ordering = self.params.get('ordering')
@@ -190,51 +177,47 @@ class MetricTypeRequest:
         return DbActionResponse(
             request=self.request_dict,
             success=False,
-            message='Failed metric type request.',
+            message='Failed file type request.',
             details=None,
             errors=error_msg
         )
 
 
     def submit(self):
-
         if self.method == db_utils.HTTP_GET:
-            return self.get_metric_types()
+            return self.get_file_types()
         elif self.method == db_utils.HTTP_PUT:
             # becomes an update if record exists
             try:
-                return self.put_metric_type()
+                return self.put_file_type()
             except Exception as err:
-                error_msg = 'Failed to insert metric type record -' \
+                error_msg = 'Failed to insert file type record -' \
                     f' err: {err}'
                 print(f'Submit PUT error: {error_msg}')
                 return self.failed_request(error_msg)
 
     
-    def put_metric_type(self):
-        engine = stm.get_engine_from_settings()
+    def put_file_type(self):
         session = stm.get_session()
 
-        insert_stmt = insert(mt).values(
-            name=self.metric_type_data.name,
-            measurement_type=self.metric_type_data.measurement_type,
-            measurement_units=self.metric_type_data.measurement_units,
-            stat_type=self.metric_type_data.stat_type,
-            description=self.metric_type_data.description,
+        insert_stmt = insert(ft).values(
+            name=self.file_type_data.name,
+            file_template=self.file_type_data.file_template,
+            file_format=self.file_type_data.file_format,
+            description=self.file_type_data.description,
             created_at=datetime.utcnow(),
             updated_at=None
-        ).returning(mt)
+        ).returning(ft)
         print(f'insert_stmt: {insert_stmt}')
 
         time_now = datetime.utcnow()
 
         do_update_stmt = insert_stmt.on_conflict_do_update(
-            constraint='unique_metric_type',
+            constraint='unique_file_type',
             set_=dict(
-                # group_id=self.experiment_data.group_id,
-                measurement_units=self.metric_type_data.measurement_units,
-                stat_type=self.metric_type_data.stat_type,
-                description=self.metric_type_data.description,
+                file_template=self.file_type_data.file_template,
+                file_format=self.file_type_data.file_format,
+                description=self.file_type_data.description,
                 updated_at=time_now
             )
         )
@@ -248,18 +231,15 @@ class MetricTypeRequest:
             action = db_utils.INSERT
             if result_row.updated_at is not None:
                 action = db_utils.UPDATE
-            # print(f'result.fetchone(): {result_row}')
-            # print(f'updated_at: {result_row.updated_at}')
-            # print(f'result.fetchone().keys(): {result_row._mapping}')
 
             session.commit()
             session.close()
         except Exception as err:
-            message = f'Attempt to {action} metric type record FAILED'
+            message = f'Attempt to {action} file type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:
-            message = f'Attempt to {action} metric type record SUCCEEDED'
+            message = f'Attempt to {action} file type record SUCCEEDED'
             error_msg = None
         
         results = {}
@@ -280,32 +260,30 @@ class MetricTypeRequest:
         return response
 
     
-    def get_metric_types(self):
-        engine = stm.get_engine_from_settings()
+    def get_file_types(self):
         session = stm.get_session()
 
         q = session.query(
-            mt.id,
-            mt.name,
-            mt.measurement_type,
-            mt.measurement_units,
-            mt.stat_type,
-            mt.description,
-            mt.created_at,
-            mt.updated_at
+            ft.id,
+            ft.name,
+            ft.file_template,
+            ft.file_format,
+            ft.description,
+            ft.created_at,
+            ft.updated_at
         ).select_from(
-            mt
+            ft
         )
 
-        print('Before adding filters to metric types request########################')
+        print('Before adding filters to file types request########################')
         if self.filters is not None and len(self.filters) > 0:
             for key, value in self.filters.items():
                 q = q.filter(value)
         
-        print('After adding filters to metric types request########################')
+        print('After adding filters to file types request########################')
         
         # add column ordering
-        column_ordering = db_utils.build_column_ordering(mt, self.ordering)
+        column_ordering = db_utils.build_column_ordering(ft, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)
@@ -314,26 +292,25 @@ class MetricTypeRequest:
         if self.record_limit is not None and self.record_limit > 0:
             q = q.limit(self.record_limit)
 
-        metric_types = q.all()
+        file_types = q.all()
 
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
-            if len(metric_types) > 0:
-                results = DataFrame(metric_types, columns = metric_types[0]._fields)
+            if len(file_types) > 0:
+                results = DataFrame(file_types, columns = file_types[0]._fields)
             
         except Exception as err:
-            message = 'Request for metric type records FAILED'
-            error_msg = f'Failed to get metric type  records - err: {err}'
+            message = 'Request for file type records FAILED'
+            error_msg = f'Failed to get file type  records - err: {err}'
         else:
-            message = 'Request for metric type records SUCCEEDED'
+            message = 'Request for file type records SUCCEEDED'
             for idx, row in results.iterrows():
                 print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)
         
         details = {}
-        # details['filters'] = self.filters
         details['record_count'] = record_count
 
         if record_count > 0:

@@ -1,5 +1,5 @@
 """
-Copyright 2022 NOAA
+Copyright 2023 NOAA
 All rights reserved.
 
 Collection of methods to facilitate handling of score db requests
@@ -14,7 +14,7 @@ import json
 import pprint
 from db_action_response import DbActionResponse
 import score_table_models as stm
-from score_table_models import MetricType as mt
+from score_table_models import StorageLocation as sl
 import time_utils
 import db_utils
 
@@ -26,68 +26,58 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy import asc, desc
 from sqlalchemy.sql import func
 
-MetricTypeData = namedtuple(
-    'MetricTypeData',
+StorageLocationData = namedtuple(
+    'StorageLocationData',
     [
         'name',
-        'measurement_type',
-        'measurement_units',
-        'stat_type',
-        'description'
-    ],
+        'bucket_name',
+        'platform',
+        'platform_region',
+        'key'
+    ]
 )
 
 @dataclass
-class MetricType:
-    ''' metric type object storing data related to the measurement type '''
+class StorageLocation:
+    ''' storage location object storing data related to file storage '''
     name: str
-    measurement_type: str
-    measurement_units: str
-    stat_type: str
-    description: dict
-    metric_type_data: MetricTypeData = field(init=False)
+    bucket_name: str
+    platform: str
+    platform_region: str
+    key: str 
+    storage_location_data: StorageLocationData = field(init=False)
 
     def __post_init__(self):
         print(f'in post init name: {self.name}')
-        print(f'description: {self.description}')
-        self.metric_type_data = MetricTypeData(
+        self.storage_location_data = StorageLocationData(
             self.name,
-            self.measurement_type,
-            self.measurement_units,
-            self.stat_type,
-            self.description
+            self.bucket_name,
+            self.platform,
+            self.platform_region,
+            self.key
         )
-
-
+    
     def __repr__(self):
-        return f'metric_type_data: {self.metric_type_data}'
+        return f'storage_location_data: {self.storage_location_data}'
 
-
-    def get_metric_type_data(self):
-        return self.metric_type_data
-
-
-def get_metric_type_from_body(body):
+    def get_storage_location_data(self):
+        return self.storage_location_data
+    
+def get_storage_location_from_body(body):
     if not isinstance(body, dict):
         msg = 'The \'body\' key must be a type dict, was ' \
             f'{type(body)}'
         raise TypeError(msg)
     
-    try:
-        description = json.loads(body.get('description'))
-    except Exception as err:
-        msg = 'Error loading \'description\', must be valid JSON - err: {err}'
-        raise ValueError(msg) from err
-
-    metric_type = MetricType(
+    storage_location = StorageLocation(
         body.get('name'),
-        body.get('measurement_type'),
-        body.get('measurement_units'),
-        body.get('stat_type'),
-        description
+        body.get('bucket_name'),
+        body.get('platform'),
+        body.get('platform_region'),
+        body.get('key')
     )
-    
-    return metric_type
+
+    return storage_location
 
 def get_string_filter(filters, cls, key, constructed_filter):
     if not isinstance(filters, dict):
@@ -114,37 +104,37 @@ def get_string_filter(filters, cls, key, constructed_filter):
 
     return constructed_filter
 
-
 def construct_filters(filters):
     constructed_filter = {}
 
     constructed_filter = get_string_filter(
-        filters, mt, 'name', constructed_filter)
+        filters, sl, 'name', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, mt, 'measurement_type', constructed_filter)
+        filters, sl, 'bucket_name', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, mt, 'measurement_units', constructed_filter)
+        filters, sl, 'platform', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, mt, 'stat_type', constructed_filter)
+        filters, sl, 'platform_region', constructed_filter)
+    
+    constructed_filter = get_string_filter(
+        filters, sl, 'key', constructed_filter)
     
     return constructed_filter
 
-
-def get_all_metric_types():
+def get_all_storage_locations():
     request_dict = {
-        'name': 'metric_type',
-        'method': 'GET'
+        'name': 'storage_location',
+        'method': db_utils.HTTP_GET
     }
-
-    mtr = MetricTypeRequest(request_dict)
-    return mtr.submit()
-
+    
+    slr = StorageLocationRequest(request_dict)
+    return slr.submit()
 
 @dataclass
-class MetricTypeRequest:
+class StorageLocationRequest:
     request_dict: dict
     method: str = field(default_factory=str, init=False)
     params: dict = field(default_factory=dict, init=False)
@@ -152,10 +142,9 @@ class MetricTypeRequest:
     ordering: list = field(default_factory=list, init=False)
     record_limit: int = field(default_factory=int, init=False)
     body: dict = field(default_factory=dict, init=False)
-    metric_type: MetricType = field(init=False)
-    metric_type_data: namedtuple = field(init=False)
+    storage_location: StorageLocation = field(init=False)
+    storage_location_data: namedtuple = field(init=False)
     response: dict = field(default_factory=dict, init=False)
-
 
     def __post_init__(self):
         self.method = db_utils.validate_method(self.request_dict.get('method'))
@@ -163,16 +152,15 @@ class MetricTypeRequest:
 
         self.body = self.request_dict.get('body')
         if self.method == db_utils.HTTP_PUT:
-            self.metric_type = get_metric_type_from_body(self.body)
-            # pprint(f'metric_type : {repr(self.metric_type)}')
-            self.metric_type_data = self.metric_type.get_metric_type_data()
+            self.storage_location = get_storage_location_from_body(self.body)
+            self.storage_location_data = self.storage_location.get_storage_location_data()
             for k, v in zip(
-                self.metric_type_data._fields, self.metric_type_data
+                self.storage_location_data._fields, self.storage_location_data
             ):
                 val = pprint.pformat(v, indent=4)
                 print(f'exp_data: k: {k}, v: {val}')
         else:
-            print(f'In MetricTypeRequest - params: {self.params}')
+            print(f'In StorageLocationRequest - params: {self.params}')
             if isinstance(self.params, dict):
                 self.filters = construct_filters(self.params.get('filters'))
                 self.ordering = self.params.get('ordering')
@@ -185,56 +173,51 @@ class MetricTypeRequest:
                 self.ordering = None
                 self.record_limit = None
 
-
     def failed_request(self, error_msg):
         return DbActionResponse(
             request=self.request_dict,
             success=False,
-            message='Failed metric type request.',
+            message='Failed storage location request.',
             details=None,
             errors=error_msg
         )
-
-
+    
     def submit(self):
-
         if self.method == db_utils.HTTP_GET:
-            return self.get_metric_types()
+            return self.get_storage_locations()
         elif self.method == db_utils.HTTP_PUT:
             # becomes an update if record exists
             try:
-                return self.put_metric_type()
+                return self.put_storage_location()
             except Exception as err:
-                error_msg = 'Failed to insert metric type record -' \
+                error_msg = 'Failed to insert storage location record -' \
                     f' err: {err}'
                 print(f'Submit PUT error: {error_msg}')
                 return self.failed_request(error_msg)
-
-    
-    def put_metric_type(self):
-        engine = stm.get_engine_from_settings()
+            
+    def put_storage_location(self):
         session = stm.get_session()
 
-        insert_stmt = insert(mt).values(
-            name=self.metric_type_data.name,
-            measurement_type=self.metric_type_data.measurement_type,
-            measurement_units=self.metric_type_data.measurement_units,
-            stat_type=self.metric_type_data.stat_type,
-            description=self.metric_type_data.description,
+        insert_stmt = insert(sl).values(
+            name=self.storage_location_data.name,
+            bucket_name=self.storage_location_data.bucket_name,
+            platform=self.storage_location_data.platform,
+            platform_region=self.storage_location_data.platform_region,
+            key=self.storage_location_data.key,
             created_at=datetime.utcnow(),
             updated_at=None
-        ).returning(mt)
+        ).returning(sl)
         print(f'insert_stmt: {insert_stmt}')
 
         time_now = datetime.utcnow()
 
         do_update_stmt = insert_stmt.on_conflict_do_update(
-            constraint='unique_metric_type',
+            constraint='unique_storage_location',
             set_=dict(
-                # group_id=self.experiment_data.group_id,
-                measurement_units=self.metric_type_data.measurement_units,
-                stat_type=self.metric_type_data.stat_type,
-                description=self.metric_type_data.description,
+                bucket_name=self.storage_location_data.bucket_name,
+                platform=self.storage_location_data.platform,
+                platform_region=self.storage_location_data.platform_region,
+                key=self.storage_location_data.key,
                 updated_at=time_now
             )
         )
@@ -248,18 +231,14 @@ class MetricTypeRequest:
             action = db_utils.INSERT
             if result_row.updated_at is not None:
                 action = db_utils.UPDATE
-            # print(f'result.fetchone(): {result_row}')
-            # print(f'updated_at: {result_row.updated_at}')
-            # print(f'result.fetchone().keys(): {result_row._mapping}')
-
             session.commit()
             session.close()
         except Exception as err:
-            message = f'Attempt to {action} metric type record FAILED'
+            message = f'Attempt to {action} storage location record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:
-            message = f'Attempt to {action} metric type record SUCCEEDED'
+            message = f'Attempt to {action} storage location record SUCCEEDED'
             error_msg = None
         
         results = {}
@@ -278,34 +257,32 @@ class MetricTypeRequest:
 
         print(f'response: {response}')
         return response
-
     
-    def get_metric_types(self):
-        engine = stm.get_engine_from_settings()
+    def get_storage_locations(self):
         session = stm.get_session()
 
         q = session.query(
-            mt.id,
-            mt.name,
-            mt.measurement_type,
-            mt.measurement_units,
-            mt.stat_type,
-            mt.description,
-            mt.created_at,
-            mt.updated_at
+            sl.id,
+            sl.name,
+            sl.bucket_name,
+            sl.platform,
+            sl.platform_region,
+            sl.key,
+            sl.created_at,
+            sl.updated_at
         ).select_from(
-            mt
+            sl
         )
 
-        print('Before adding filters to metric types request########################')
+        print('Before adding filters to storage locations request########################')
         if self.filters is not None and len(self.filters) > 0:
             for key, value in self.filters.items():
                 q = q.filter(value)
         
-        print('After adding filters to metric types request########################')
+        print('After adding filters to storage location request########################')
         
         # add column ordering
-        column_ordering = db_utils.build_column_ordering(mt, self.ordering)
+        column_ordering = db_utils.build_column_ordering(sl, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)
@@ -314,26 +291,25 @@ class MetricTypeRequest:
         if self.record_limit is not None and self.record_limit > 0:
             q = q.limit(self.record_limit)
 
-        metric_types = q.all()
+        storage_locations = q.all()
 
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
-            if len(metric_types) > 0:
-                results = DataFrame(metric_types, columns = metric_types[0]._fields)
+            if len(storage_locations) > 0:
+                results = DataFrame(storage_locations, columns = storage_locations[0]._fields)
             
         except Exception as err:
-            message = 'Request for metric type records FAILED'
-            error_msg = f'Failed to get metric type  records - err: {err}'
+            message = 'Request for storage location records FAILED'
+            error_msg = f'Failed to get storage location records - err: {err}'
         else:
-            message = 'Request for metric type records SUCCEEDED'
+            message = 'Request for storage location records SUCCEEDED'
             for idx, row in results.iterrows():
                 print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)
         
         details = {}
-        # details['filters'] = self.filters
         details['record_count'] = record_count
 
         if record_count > 0:
