@@ -13,6 +13,7 @@ import score_table_models as scr_models
 from score_table_models import Region as regions_table
 import regions as rgs
 from regions import RegionData, Region, RegionRequest
+import db_utils
 
 from score_db_base import handle_request
 
@@ -58,38 +59,38 @@ def test_validate_list_of_regions():
 
 def test_validate_body():
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, None)
+        rgs.validate_body(db_utils.HTTP_GET, None)
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, None)
+        rgs.validate_body(db_utils.HTTP_GET, None)
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, [])
+        rgs.validate_body(db_utils.HTTP_GET, [])
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, 'foo')
+        rgs.validate_body(db_utils.HTTP_GET, 'foo')
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, 1)
+        rgs.validate_body(db_utils.HTTP_GET, 1)
     
 
     body = {'regions': {}}
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
+        rgs.validate_body(db_utils.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
     
     body = {'regions': [1, 2, 9]}
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
+        rgs.validate_body(db_utils.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
 
     body = {'regions': ['foo', 'bar', 'foo']}
-    [region_names, regions] = rgs.validate_body(rgs.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
+    [region_names, regions] = rgs.validate_body(db_utils.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
     for name in region_names:
         assert region_names.count(name) == 1
     
     assert regions is None
 
     body = {'regions': [rgs.GLOBAL, rgs.EQUATORIAL, rgs.GLOBAL]}
-    [region_names, regions] = rgs.validate_body(rgs.HTTP_PUT, body)
+    [region_names, regions] = rgs.validate_body(db_utils.HTTP_PUT, body)
     for name in region_names:
         assert region_names.count(name) == 1
         print(f'name: {name}')
@@ -101,7 +102,7 @@ def test_validate_body():
 def test_request_put_regions():
     request_dict = {
         'name': 'region',
-        'method': 'PUT',
+        'method': db_utils.HTTP_PUT,
         'body': {
             'regions': [
                 rgs.GLOBAL,
@@ -120,7 +121,7 @@ def test_request_put_regions():
 def test_request_get_specific_regions_by_name():
     request_dict = {
         'name': 'region',
-        'method': 'GET',
+        'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'by_name'},
         'body': {
             'regions': [
@@ -138,7 +139,7 @@ def test_request_get_specific_regions_by_name():
 def test_request_get_specific_regions_by_region_data():
     request_dict = {
         'name': 'region',
-        'method': 'GET',
+        'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'by_data', 'filters': {'min_lon': 0.0},},
     }
 
@@ -149,7 +150,7 @@ def test_request_get_specific_regions_by_region_data():
 def test_request_all_regions():
     request_dict = {
         'name': 'region',
-        'method': 'GET',
+        'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'none'},
         'body': {
             'regions': [

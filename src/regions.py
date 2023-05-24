@@ -153,7 +153,9 @@ def validate_list_of_strings(values):
 
 
 def validate_body(method, body, filter_type=None):
-    
+    if method == db_utils.HTTP_GET and filter_type == FILTER__BY_REGION_DATA:
+        return [None, None]
+
     if not isinstance(body, dict):
         msg = f'Request body must be a dict type, was: {type(body)}'
         raise TypeError(msg)
@@ -276,7 +278,14 @@ class RegionRequest:
                 matched_json = matched_records.to_json(orient = 'records')
             except Exception as err:
                 error_msg = f'Problems encountered requesting regions - {err}'
-            print(f'matched_records: {matched_records}')
+                return DbActionResponse(
+                    request=self.request_dict,
+                    success=False,
+                    message='Failed region GET request.',
+                    details=None,
+                    errors=error_msg
+                )
+
             response = DbActionResponse(
                 self.request_dict,
                 (error_msg is None),
@@ -295,7 +304,13 @@ class RegionRequest:
             except Exception as err:
                 error_msg = f'Failed to put region record - err: {err}'
                 print(f'Submit PUT error: {error_msg}')
-                return self.failed_request(error_msg)
+                return DbActionResponse(
+                    request=self.request_dict,
+                    success=False,
+                    message='Failed region PUT request.',
+                    details=None,
+                    errors=error_msg
+                    )
 
     #get regions filtered by name 
     def get_regions_by_name(self):
@@ -355,14 +370,16 @@ class RegionRequest:
     
     #get regions based on filters on user provided restrictions on values 
     def get_regions_by_data(self):
-        if self.params.len() < 0:
+        if len(self.params) < 0:
             msg = f'To filter regions by data, there must be a params which includes filters for the data'
             raise RegionError(msg)
         
-        filters = self.request_dict.params.get('filters')
+        filters = self.params.get('filters')
         if not isinstance(filters, dict):
             msg = f'Filters must be in teh form dict, filters: {type(filters)}'
             raise RegionError(msg)
+
+        constructed_filters = construct_filters(filters)
         
         session = stm.get_session()
 
@@ -380,7 +397,7 @@ class RegionRequest:
         )
 
         print('Before addinng filters to region request###')
-        for key, value in filters.items():
+        for key, value in constructed_filters.items():
             q = q.filter(value)
         print('After adding regions filter')
 
@@ -406,12 +423,12 @@ class RegionRequest:
                 min_lon=region.min_lon,
                 max_lon=region.max_lon,
                 created_at=time_now,
-                update_at=None
+                updated_at=None
             ).returning(rg)
 
             do_update_stmt = insert_stmt.on_conflict_do_update(
                 constraint='unique_region',
-                set=dict(
+                set_=dict(
                     name=region.name,
                     min_lat=region.min_lat,
                     max_lat=region.max_lat,
@@ -431,7 +448,7 @@ class RegionRequest:
                 session.commit()
                 session.close()
             except Exception as err:
-                message = f'Attempt to {action} region record FAILED'
+                message = f'Attempt to insert/update region record FAILED'
                 error_msg = f'Failed to insert/update record -err: {err}'
                 print(f'error_msg: {error_msg}')
             else:
@@ -445,8 +462,8 @@ class RegionRequest:
                 results['data'] = [result_row._mapping]
                 results['id'] = result_row.index
             
-            if results.len() > 0:
-                all_results.add(results)
+            if len(results) > 0:
+                all_results.append(results)
 
             if error_msg is not None:
                 error_msgs += error_msg + "\n"
