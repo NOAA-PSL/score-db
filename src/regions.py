@@ -37,14 +37,12 @@ FILTER__BY_REGION_DATA = 'by_data'
 VALID_FILTER_TYPES = [
     FILTER__NONE, FILTER__BY_REGION_NAME, FILTER__BY_REGION_DATA]
 
-EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0}
-GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0}
-NORTH_HEMIS = {'name': 'north_hemis', 'min_lat': 20.0, 'max_lat': 60.0}
-TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0}
-SOUTH_HEMIS = {'name': 'south_hemis', 'min_lat': -60.0, 'max_lat': -20.0}
-TEST_SOUTH_HEMIS = {'name': 'test_south_hemis', 'min_lat': -50.0, 'max_lat': -35.0}
-
-DEFAULT_REGION_DEFS = [EQUATORIAL, GLOBAL, NORTH_HEMIS, TROPICS, SOUTH_HEMIS]
+EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'min_lon': 0.0, 'max_lon': 360.0}
+GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'min_lon': 0.0, 'max_lon': 360.0}
+NORTH_MIDLAT = {'name': 'north_midlatitudes', 'min_lat': 20.0, 'max_lat': 60.0, 'min_lon': 0.0, 'max_lon': 360.0}
+TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0, 'min_lon': 0.0, 'max_lon': 360.0}
+SOUTH_MIDLAT = {'name': 'south_midlatitudes', 'min_lat': -60.0, 'max_lat': -20.0, 'min_lon': 0.0, 'max_lon': 360.0}
+TEST_SOUTH_HEMIS = {'name': 'test_south_hemis', 'min_lat': -50.0, 'max_lat': -35.0, 'min_lon': 0.0, 'max_lon': 360.0}
 
 RegionData = namedtuple(
     'RegionData',
@@ -101,6 +99,12 @@ class Region:
             msg = f'min and max lon must be floats - min lon: {self.min_lon}' \
                 f', max lon: {self.max_lon}'
             raise ValueError(msg)
+        #convert from -180 to 0 to 0 to 360 if necessary 
+        if self.min_lon < 0:
+            self.min_lon = 360 + self.min_lon
+        if self.max_lon < 0:
+            self.max_lon = 360 + self.max_lon
+        #check values     
         if self.min_lon > self.max_lon:
             msg = f'min_lon must be less than max_lon - ' \
                 f'min_lon: {self.min_lon}, max_lon: {self.max_lon}'
@@ -109,8 +113,6 @@ class Region:
             msg = f'max_lon must be greater than min_lon - min_lon: {self.min_lon}, '\
                 f'max_lon: {self.max_lon}'
             raise ValueError(msg)
-        
-        #TODO--- THIS IS WHERE WE NEED TO HANDLE THE -180 TO 180 SYSTEM
         if self.min_lon < 0 or self.max_lon > 360:
             msg = f'min_lon or max_lon is out of allowed range, must be greater' \
                 f' than 0 and less than 360 - min_lon: {self.min_lon}, ' \
@@ -120,17 +122,6 @@ class Region:
     
     def get_region_data(self):
         return RegionData(self.name, self.min_lat, self.max_lat, self.min_lon, self.max_lon)
-
-
-DEFAULT_REGIONS = [
-    Region(EQUATORIAL['name'], EQUATORIAL['min_lat'], EQUATORIAL['max_lat']),
-    Region(GLOBAL['name'], GLOBAL['min_lat'], GLOBAL['max_lat']),
-    Region(NORTH_HEMIS['name'], NORTH_HEMIS['min_lat'], NORTH_HEMIS['max_lat']),
-    Region(TROPICS['name'], TROPICS['min_lat'], TROPICS['max_lat']),
-    Region(SOUTH_HEMIS['name'], SOUTH_HEMIS['min_lat'], SOUTH_HEMIS['max_lat'])
-]
-
-DEFAULT_REGION_NAMES = [lambda x=x: x.name for x in DEFAULT_REGIONS]
 
 def validate_list_of_regions(regions):
     if not isinstance(regions, list):
@@ -173,12 +164,8 @@ def validate_body(method, body, filter_type=None):
     if method == db_utils.HTTP_GET:
         if filter_type is None:
             raise ValueError('\'filter_type\' param must be specified.')
-        
         if filter_type == FILTER__BY_REGION_NAME:
-            region_names = validate_list_of_strings(body.get('regions'))
-        elif filter_type == FILTER__BY_REGION_DATA:
-            regions = validate_list_of_regions(body.get('regions'))
-            region_names = [x.name for x in regions] 
+            region_names = validate_list_of_strings(body.get('regions')) 
         
     elif method == db_utils.HTTP_PUT:
         regions = validate_list_of_regions(body.get('regions'))
@@ -200,8 +187,7 @@ def get_filter_type(params):
             f'Must be one of [{VALID_FILTER_TYPES}]')
     return filter_type
 
-
-# THIS WILL LIKELY BE REMOVED AFTER REWRITING METRICS 
+#used in expt metrics to check for existing regions / should get removed
 def get_regions_from_name_list(region_names):
     request_dict = {
         'name': 'region',

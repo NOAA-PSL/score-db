@@ -267,6 +267,14 @@ def get_regions_filter(filter_dict, constructed_filter):
     constructed_filter = get_string_filter(
         filter_dict, rgs, 'name', constructed_filter, 'rgs_name')
 
+    constructed_filter = get_string_filter(filter_dict, rgs, 'min_lat', constructed_filter, 'min_lat')
+
+    constructed_filter = get_string_filter(filter_dict, rgs, 'max_lat', constructed_filter, 'max_lat')
+
+    constructed_filter = get_string_filter(filter_dict, rgs, 'min_lon', constructed_filter, 'min_lon')
+
+    constructed_filter = get_string_filter(filter_dict, rgs, 'max_lon', constructed_filter, 'max_lon')
+
     return constructed_filter
 
 def get_expt_record(body):
