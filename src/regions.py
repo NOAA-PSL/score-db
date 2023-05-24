@@ -4,7 +4,7 @@ All rights reserved.
 
 Collection of methods and classes to facilitate insertion and selection
 of records into/from the 'regions' table.  The region table includes the
-following columns ['name', 'bounds', 'created_at', 'updated_at'] and each
+following columns ['name', 'min_lat', 'max_lat', 'min_lon', 'max_lon', 'created_at', 'updated_at'] and each
 row's id serves as a foreign key to the 'expt_metrics' table.  A unique
 region consists of a combination of the name and the bounds values.
 Multiple regions with the same 'name' value are allowed as long as the
@@ -22,16 +22,11 @@ import json
 from db_action_response import DbActionResponse
 import score_table_models as stm
 from score_table_models import Region as rg
+import db_utils
 
 from pandas import DataFrame
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.inspection import inspect
-
-MIN_LONG = -180.0
-MAX_LONG = 180.0
-
-HTTP_GET = 'GET'
-HTTP_PUT = 'PUT'
 
 PARAM_FILTER_TYPE = 'filter_type'
 
@@ -39,7 +34,6 @@ FILTER__NONE = 'none'
 FILTER__BY_REGION_NAME = 'by_name'
 FILTER__BY_REGION_DATA = 'by_data'
 
-VALID_METHODS = [HTTP_GET, HTTP_PUT]
 VALID_FILTER_TYPES = [
     FILTER__NONE, FILTER__BY_REGION_NAME, FILTER__BY_REGION_DATA]
 
@@ -58,29 +52,31 @@ RegionData = namedtuple(
         'name',
         'min_lat',
         'max_lat',
-        'grid',
-        'hash_val'
+        'min_lon',
+        'max_lon'
     ],
 )
 
-
-def RegionsError(Exception):
-    pass
-
+class RegionError(Exception):
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return self.message
 
 @dataclass
 class Region:
-    ''' region object storing region name and min/max latitude bounds '''
+    ''' region object storing region name and min/max latitude/longitude bounds '''
     name: str
     min_lat: float
     max_lat: float
-    grid: str = field(default_factory=str, init=False)
-    hash_val: str = field(default_factory=str, init=False)
+    min_lon: float
+    max_lon: float
 
     def __post_init__(self):
         if not isinstance(self.name, str):
             msg = f'name must be a string - name {self.name}'
             raise TypeError(msg)
+        #latitude checks
         if (not isinstance(self.min_lat, float) or
             not isinstance(self.max_lat, float)):
             msg = f'min and max lat must be floats - min lat: {self.min_lat}' \
@@ -94,26 +90,36 @@ class Region:
             msg = f'max_lat must be greater than min_lat - min_lat: {self.min_lat}, '\
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
-
         if abs(self.min_lat) > 90 or abs(self.max_lat) > 90:
             msg = f'min_lat or max_lat is out of allowed range, must be greater' \
                 f' than -90 and less than 90 - min_lat: {self.min_lat}, ' \
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
-
-        self.grid = 'POLYGON('
-        self.grid = f'({float(MIN_LONG)} {float(self.max_lat)}),'
-        self.grid += f'({float(MAX_LONG)} {float(self.max_lat)}),'
-        self.grid += f'({float(MAX_LONG)} {float(self.min_lat)}),'
-        self.grid += f'({float(MIN_LONG)} {float(self.min_lat)}),'
-        self.grid += f'({float(MIN_LONG)} {float(self.max_lat)})'
-        self.grid += ')'
-
-        self.hash_val = self.name + self.grid
+        #longitude checks
+        if (not isinstance(self.min_lon, float) or
+            not isinstance(self.max_lon, float)):
+            msg = f'min and max lon must be floats - min lon: {self.min_lon}' \
+                f', max lon: {self.max_lon}'
+            raise ValueError(msg)
+        if self.min_lon > self.max_lon:
+            msg = f'min_lon must be less than max_lon - ' \
+                f'min_lon: {self.min_lon}, max_lon: {self.max_lon}'
+            raise ValueError(msg)
+        if self.max_lon < self.min_lon:
+            msg = f'max_lon must be greater than min_lon - min_lon: {self.min_lon}, '\
+                f'max_lon: {self.max_lon}'
+            raise ValueError(msg)
+        
+        #TODO--- THIS IS WHERE WE NEED TO HANDLE THE -180 TO 180 SYSTEM
+        if self.min_lon < 0 or self.max_lon > 360:
+            msg = f'min_lon or max_lon is out of allowed range, must be greater' \
+                f' than 0 and less than 360 - min_lon: {self.min_lon}, ' \
+                f'max_lon: {self.max_lon}'
+            raise ValueError(msg)
 
     
     def get_region_data(self):
-        return RegionData(self.name, self.min_lat, self.max_lat, self.grid, self.hash_val)
+        return RegionData(self.name, self.min_lat, self.max_lat, self.min_lon, self.max_lon)
 
 
 DEFAULT_REGIONS = [
@@ -133,8 +139,8 @@ def validate_list_of_regions(regions):
     unique_regions = set()
     try:
         for r in regions:
-            validated_region = Region(
-                r.get('name'), r.get('min_lat'), r.get('max_lat'))
+            validated_region = Region(r.get('name'), r.get('min_lat'), r.get('max_lat'), 
+                                      r.get('min_lon'), r.get('max_lon'))
             unique_regions.add(validated_region.get_region_data())
     except Exception as err:
         msg = f'problem parsing region data, regions: {regions}, err: {err}'
@@ -154,14 +160,6 @@ def validate_list_of_strings(values):
     
     return list(unique_string_list)
 
-def validate_method(method):
-    if method not in VALID_METHODS:
-        msg = f'Request type must be one of: {VALID_METHODS}, was: {method}'
-        print(msg)
-        raise ValueError(msg)
-    
-    return method
-
 
 def validate_body(method, body, filter_type=None):
     
@@ -172,7 +170,7 @@ def validate_body(method, body, filter_type=None):
     region_names = None
     regions = None
     
-    if method == HTTP_GET:
+    if method == db_utils.HTTP_GET:
         if filter_type is None:
             raise ValueError('\'filter_type\' param must be specified.')
         
@@ -182,12 +180,12 @@ def validate_body(method, body, filter_type=None):
             regions = validate_list_of_regions(body.get('regions'))
             region_names = [x.name for x in regions] 
         
-    elif method == HTTP_PUT:
+    elif method == db_utils.HTTP_PUT:
         regions = validate_list_of_regions(body.get('regions'))
         region_names = [x.name for x in regions]
     
     else:
-        raise ValueError(f'Invalid method, must be one of {VALID_METHODS}')
+        raise ValueError(f'Invalid method, must be one of {db_utils.VALID_METHODS}')
 
     print(f'region_names: {region_names}, regions: {regions}')
     return [region_names, regions]
@@ -203,6 +201,7 @@ def get_filter_type(params):
     return filter_type
 
 
+# THIS WILL LIKELY BE REMOVED AFTER REWRITING METRICS 
 def get_regions_from_name_list(region_names):
     request_dict = {
         'name': 'region',
@@ -216,6 +215,45 @@ def get_regions_from_name_list(region_names):
     rr = RegionRequest(request_dict)
     return rr.submit()
     
+def get_string_filter(filters, cls, key, constructed_filter):
+        if not isinstance(filters, dict):
+            msg = f'Invalid type for filters, must be \'dict\', was ' \
+                f'type: {type(filters)}'
+            raise TypeError(msg)
+
+        print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+        string_flt = filters.get(key)
+
+        if string_flt is None:
+            print(f'No \'{key}\' filter detected')
+            return constructed_filter
+
+        like_filter = string_flt.get('like')
+        # prefer like search over exact match if both exist
+        if like_filter is not None:
+            constructed_filter[key] = (getattr(cls, key).like(like_filter))
+            return constructed_filter
+
+        exact_match_filter = string_flt.get('exact')
+        if exact_match_filter is not None:
+            constructed_filter[key] = (getattr(cls, key) == exact_match_filter)
+
+        return constructed_filter
+
+def construct_filters(filters):
+        constructed_filter = {}
+
+        constructed_filter = get_string_filter(filters, rg, 'name', constructed_filter)
+
+        constructed_filter = get_string_filter(filters, rg, 'min_lat', constructed_filter)
+
+        constructed_filter = get_string_filter(filters, rg, 'max_lat', constructed_filter)
+
+        constructed_filter = get_string_filter(filters, rg, 'min_lon', constructed_filter)
+
+        constructed_filter = get_string_filter(filters, rg, 'max_lon', constructed_filter)
+
+        return constructed_filter
 
 @dataclass
 class RegionRequest:
@@ -229,38 +267,25 @@ class RegionRequest:
     response: dict = field(default_factory=dict, init=False)
 
     def __post_init__(self):
-        self.method = validate_method(self.request_dict.get('method'))
+        self.method = db_utils.validate_method(self.request_dict.get('method'))
         self.params = self.request_dict.get('params', {})
         self.filter_type = get_filter_type(self.params)
         self.body = self.request_dict.get('body')
         [self.region_names, self.regions] = validate_body(
             self.method, self.body, self.filter_type)
-        
-
-    def get_regions_hash_vals(self):
-        hash_vals = []
-        for region in self.regions:
-            hash_vals.append(region.hash_val)
-        return hash_vals
 
     def submit(self):
-        engine = stm.get_engine_from_settings()
-        session = stm.get_session()
-
-        if self.method == HTTP_GET:
+        if self.method == db_utils.HTTP_GET:
             error_msg = None
             message = None
             matched_json = None
             try:
                 if self.filter_type == FILTER__NONE:
-                    matched_records = self.get_regions()
+                    matched_records = self.get_all_regions()
                 elif self.filter_type == FILTER__BY_REGION_NAME:
                     matched_records = self.get_regions_by_name()
-                else:
-                    hash_vals = self.get_regions_hash_vals()
-                    if len(hash_vals) == 0:
-                        hash_vals = None
-                    matched_records = self.get_regions(hash_vals)
+                else: #Filter by Region Data
+                    matched_records = self.get_regions_by_data()
                 message = f'Request returned {len(matched_records)} record/s'
                 matched_json = matched_records.to_json(orient = 'records')
             except Exception as err:
@@ -278,78 +303,27 @@ class RegionRequest:
             )
             print(f'response: {response}')
             return response
-        elif self.method == HTTP_PUT:
-            hash_vals = self.get_regions_hash_vals()
-            
-            existing_regions = self.get_regions(hash_vals)
-            print(f'existing_regions: {existing_regions}')
-
-            records = []
-            records_hash_vals = []
-
-            for region in self.regions:
-                if (
-                    existing_regions is None or
-                    len(existing_regions) == 0 or
-                    region.hash_val not in existing_regions['unique_region'].tolist()
-                ):
-                    item = rg(
-                        name=region.name,
-                        bounds=region.grid,
-                        created_at=datetime.utcnow(),
-                        updated_at=None
-                    )
-                    records.append(item)
-                    records_hash_vals.append(region.hash_val)
-
-            success = True
-            error_msg = None
-            record_count = 0
+        elif self.method == db_utils.HTTP_PUT:
             try:
-                inserted_records = DataFrame()
-                if len(records) > 0:
-                    session.bulk_save_objects(records)
-                    session.commit()
-                    inserted_records = self.get_region_set(records_hash_vals)
-
-                message = f'Inserted {len(inserted_records)} new region/s.'
-                print(f'inserts: {inserted_records}')
+                return self.put_regions()
             except Exception as err:
-                msg = f'Failed to insert {len(records)} records - err: {err}'
-                print(msg)
-                error_msg = msg
-                message = f'Inserted {len(inserted_records)} new region/s.'
-            
-            matched_records = self.get_regions(hash_vals)
+                error_msg = f'Failed to put region record - err: {err}'
+                print(f'Submit PUT error: {error_msg}')
+                return self.failed_request(error_msg)
 
-            inserts_json = inserted_records.to_json(orient = 'records')
-            matched_json = matched_records.to_json(orient = 'records')
-
-            response = DbActionResponse(
-                self.request_dict,
-                (error_msg is None),
-                message,
-                {
-                    'inserted_records': inserts_json,
-                    'matched_records': matched_json,
-                    'records': matched_records
-                },
-                error_msg
-            )
-            print(f'response: {response}')
-            return response
-
-
+    #get regions filtered by name 
     def get_regions_by_name(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
         try:
             existing_regions = session.query(
                 rg.id,
                 rg.name,
-                rg.bounds,
+                rg.min_lat,
+                rg.max_lat,
+                rg.min_lon,
+                rg.max_lon,
                 rg.created_at,
-                rg.name.concat(rg.bounds).label('unique_region')
+                rg.updated_at
             ).select_from(
                 rg
             ).filter(
@@ -366,16 +340,19 @@ class RegionRequest:
 
         return DataFrame(existing_regions, columns = existing_regions[0]._fields)
 
+    #get all regions in database
     def get_all_regions(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
         try:
             existing_regions = session.query(
                 rg.id,
                 rg.name,
-                rg.bounds,
+                rg.min_lat,
+                rg.max_lat,
+                rg.min_lon,
+                rg.max_lon,
                 rg.created_at,
-                rg.name.concat(rg.bounds).label('unique_region')
+                rg.updated_at
             ).select_from(
                 rg
             ).all()
@@ -390,47 +367,113 @@ class RegionRequest:
 
         return DataFrame(existing_regions, columns = existing_regions[0]._fields)
     
-    def get_region_set(self, hash_vals):
-        if not isinstance(hash_vals, list):
-            msg = f'requested set must be in form of list - {type(hash_vals)}'
-            raise TypeError()
-
-        engine = stm.get_engine_from_settings()
+    #get regions based on filters on user provided restrictions on values 
+    def get_regions_by_data(self):
+        if self.params.len() < 0:
+            msg = f'To filter regions by data, there must be a params which includes filters for the data'
+            raise RegionError(msg)
+        
+        filters = self.request_dict.params.get('filters')
+        if not isinstance(filters, dict):
+            msg = f'Filters must be in teh form dict, filters: {type(filters)}'
+            raise RegionError(msg)
+        
         session = stm.get_session()
-        print(f'hash_vals: {hash_vals}')
-        # if no regions were specified in query, get all
 
-        try:
-            existing_regions = session.query(
-                rg.id,
-                rg.name,
-                rg.bounds,
-                rg.created_at,
-                rg.name.concat(rg.bounds).label('unique_region')
-            ).select_from(
-                rg
-            ).filter(
-                rg.name.concat(rg.bounds).in_(hash_vals)
-            ).all()
-        except Exception as err:
-            msg = f'Problem requesting region set - err: {err}'
-            print(msg)
-            return DataFrame()
+        q = session.query(
+            rg.id,
+            rg.name,
+            rg.min_lat,
+            rg.max_lat,
+            rg.min_lon,
+            rg.max_lon,
+            rg.created_at,
+            rg.updated_at
+        ).select_from(
+            rg
+        )
 
+        print('Before addinng filters to region request###')
+        for key, value in filters.items():
+            q = q.filter(value)
+        print('After adding regions filter')
+
+        regions = q.all()
         session.close()
-        if len(existing_regions) == 0:
-            return DataFrame()
+ 
+        results = DataFrame()
+        if len(regions) > 0:
+            results = DataFrame(regions, columns = regions[0]._fields)
+        return results
+    
+    def put_regions(self):
+        session = stm.get_session()
+        all_results = []
+        error_msgs = None
+        for region in self.regions:
+            time_now = datetime.utcnow()
 
-        return DataFrame(existing_regions, columns = existing_regions[0]._fields)
+            insert_stmt = insert(rg).values(
+                name=region.name, 
+                min_lat=region.min_lat, 
+                max_lat=region.max_lat,
+                min_lon=region.min_lon,
+                max_lon=region.max_lon,
+                created_at=time_now,
+                update_at=None
+            ).returning(rg)
 
+            do_update_stmt = insert_stmt.on_conflict_do_update(
+                constraint='unique_region',
+                set=dict(
+                    name=region.name,
+                    min_lat=region.min_lat,
+                    max_lat=region.max_lat,
+                    min_lon=region.min_lon,
+                    max_lon=region.max_lon,
+                    updated_at=time_now
+                )
+            )
 
-    def get_regions(self, hash_vals=None):
-        if hash_vals is None:
-            df = self.get_all_regions()
-        else:
-            df = self.get_region_set(hash_vals)
+            try:
+                result =session.execute(do_update_stmt)
+                session.flush()
+                result_row = result.fetchone()
+                action = db_utils.INSERT
+                if result_row.updated_at is not None:
+                    action = db_utils.UPDATE
+                session.commit()
+                session.close()
+            except Exception as err:
+                message = f'Attempt to {action} region record FAILED'
+                error_msg = f'Failed to insert/update record -err: {err}'
+                print(f'error_msg: {error_msg}')
+            else:
+                message = f'Attempt to {action} region record SUCCEEDED'
+                error_msg = None
             
+            results = {}
+            if result_row is not None:
+                results['region_name'] = region.name
+                results['action'] = action
+                results['data'] = [result_row._mapping]
+                results['id'] = result_row.index
+            
+            if results.len() > 0:
+                all_results.add(results)
+
+            if error_msg is not None:
+                error_msgs += error_msg + "\n"
+
+        
+        response = DbActionResponse(
+            self.request_dict,
+            (error_msgs is None),
+            message,
+            all_results,
+            error_msg
+        )
+        print(f'response: {response}')
+        return response   
 
             
-        print(f'df: {df}')
-        return df

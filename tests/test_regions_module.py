@@ -16,24 +16,6 @@ from regions import RegionData, Region, RegionRequest
 
 from score_db_base import handle_request
 
-
-
-# scr_models.init_tables()
-
-def test_validate_method():
-    with pytest.raises(ValueError):
-        rgs.validate_method('blah')
-    
-    with pytest.raises(ValueError):
-        rgs.validate_method(None)
-    
-    with pytest.raises(ValueError):
-        rgs.validate_method([])
-    
-    for method in rgs.VALID_METHODS:
-        rgs.validate_method(method)
-
-
 def test_validate_list_of_strings():
     with pytest.raises(TypeError):
         rgs.validate_list_of_strings({})

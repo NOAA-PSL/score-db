@@ -123,13 +123,16 @@ class ExperimentMetric(Base):
 class Region(Base):
     __tablename__ = REGIONS_TABLE
     __table_args__ = (
-        UniqueConstraint('name', 'bounds', name='unique_region'),
+        UniqueConstraint('min_lat', 'max_lat',
+                         'min_lon', 'max_lon', name='unique_region'),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(79), nullable=False)
-    # bounds = Column(Geography(geometry_type='POLYGON', srid=4326))
-    bounds = Column(String(255), nullable=False)
+    min_lat = Column(Float, nullable=False)
+    max_lat = Column(Float, nullable=False)
+    min_lon = Column(Float, nullable=False)
+    max_lon = Column(Float, nullable=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
 
