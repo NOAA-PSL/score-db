@@ -228,18 +228,35 @@ def get_string_filter(filters, cls, key, constructed_filter):
 
         return constructed_filter
 
+def get_float_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    float_flt = filters.get(key)
+
+    if float_flt is None:
+        print(f'No \'{key}\' filter detected')
+        return constructed_filter
+
+    constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    
+    return constructed_filter
+
 def construct_filters(filters):
         constructed_filter = {}
 
         constructed_filter = get_string_filter(filters, rg, 'name', constructed_filter)
 
-        constructed_filter = get_string_filter(filters, rg, 'min_lat', constructed_filter)
+        constructed_filter = get_float_filter(filters, rg, 'min_lat', constructed_filter)
 
-        constructed_filter = get_string_filter(filters, rg, 'max_lat', constructed_filter)
+        constructed_filter = get_float_filter(filters, rg, 'max_lat', constructed_filter)
 
-        constructed_filter = get_string_filter(filters, rg, 'min_lon', constructed_filter)
+        constructed_filter = get_float_filter(filters, rg, 'min_lon', constructed_filter)
 
-        constructed_filter = get_string_filter(filters, rg, 'max_lon', constructed_filter)
+        constructed_filter = get_float_filter(filters, rg, 'max_lon', constructed_filter)
 
         return constructed_filter
 
@@ -396,7 +413,7 @@ class RegionRequest:
             rg
         )
 
-        print('Before addinng filters to region request###')
+        print('Before adding filters to region request###')
         for key, value in constructed_filters.items():
             q = q.filter(value)
         print('After adding regions filter')
