@@ -189,7 +189,7 @@ def get_filter_type(params):
             f'Must be one of [{VALID_FILTER_TYPES}]')
     return filter_type
 
-#used in expt metrics to check for existing regions / should get removed
+#used in expt metrics to check for existing regions
 def get_regions_from_name_list(region_names):
     request_dict = {
         'name': 'region',
