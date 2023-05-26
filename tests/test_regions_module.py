@@ -106,6 +106,28 @@ def test_validate_body():
         assert regions.count(region) == 1
         assert isinstance(region, RegionData)
 
+def test_initialize_region_request_prep():
+    request_dict = {
+        'name': 'region',
+        'method': 'PUT',
+        'body': {
+            'regions': [
+                GLOBAL,
+                EQUATORIAL,
+                NORTH_MIDLAT,
+                SOUTH_MIDLAT,
+                TROPICS,
+                GLOBAL
+            ]
+        }
+    }
+
+    rr = RegionRequest(request_dict)
+    print(f'rr_prep: {rr}')
+
+    for name in rr.region_names:
+        print(f'region: {name}')
+
 def test_request_put_regions():
     request_dict = {
         'name': 'region',
