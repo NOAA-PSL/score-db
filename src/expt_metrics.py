@@ -177,14 +177,14 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
 
     return constructed_filter
 
-def get_float_filter(filters, cls, key, constructed_filter):
-    if not isinstance(filters, dict):
+def get_float_filter(filter_dict, cls, key, constructed_filter):
+    if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filters, must be \'dict\', was ' \
-            f'type: {type(filters)}'
+            f'type: {type(filter_dict)}'
         raise TypeError(msg)
 
     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-    float_flt = filters.get(key)
+    float_flt = filter_dict.get(key)
 
     if float_flt is None:
         print(f'No \'{key}\' filter detected')

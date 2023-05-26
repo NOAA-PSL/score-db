@@ -17,6 +17,13 @@ import db_utils
 
 from score_db_base import handle_request
 
+#test regions
+EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'min_lon': 0.0, 'max_lon': 360.0}
+GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'min_lon': 0.0, 'max_lon': 360.0}
+NORTH_MIDLAT = {'name': 'north_midlatitudes', 'min_lat': 20.0, 'max_lat': 60.0, 'min_lon': 0.0, 'max_lon': 360.0}
+TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0, 'min_lon': 0.0, 'max_lon': 360.0}
+SOUTH_MIDLAT = {'name': 'south_midlatitudes', 'min_lat': -60.0, 'max_lat': -20.0, 'min_lon': 0.0, 'max_lon': 360.0}
+
 def test_validate_list_of_strings():
     with pytest.raises(TypeError):
         rgs.validate_list_of_strings({})
@@ -49,7 +56,7 @@ def test_validate_list_of_regions():
     with pytest.raises(TypeError):
         rgs.validate_list_of_regions(1)
 
-    region_list = [rgs.EQUATORIAL, rgs.GLOBAL, rgs.SOUTH_MIDLAT, rgs.GLOBAL]
+    region_list = [EQUATORIAL, GLOBAL, SOUTH_MIDLAT, GLOBAL]
     validated_regions = rgs.validate_list_of_regions(region_list)
     print(f'validated_regions: {validated_regions}')
     for region in validated_regions:
@@ -89,7 +96,7 @@ def test_validate_body():
     
     assert regions is None
 
-    body = {'regions': [rgs.GLOBAL, rgs.EQUATORIAL, rgs.GLOBAL]}
+    body = {'regions': [GLOBAL, EQUATORIAL, GLOBAL]}
     [region_names, regions] = rgs.validate_body(db_utils.HTTP_PUT, body)
     for name in region_names:
         assert region_names.count(name) == 1
@@ -105,12 +112,12 @@ def test_request_put_regions():
         'method': db_utils.HTTP_PUT,
         'body': {
             'regions': [
-                rgs.GLOBAL,
-                rgs.EQUATORIAL,
-                rgs.NORTH_MIDLAT,
-                rgs.SOUTH_MIDLAT,
-                rgs.TROPICS,
-                rgs.GLOBAL,
+                GLOBAL,
+                EQUATORIAL,
+                NORTH_MIDLAT,
+                SOUTH_MIDLAT,
+                TROPICS,
+                GLOBAL,
             ]
         }
     }
@@ -125,10 +132,10 @@ def test_request_get_specific_regions_by_name():
         'params': {'filter_type': 'by_name'},
         'body': {
             'regions': [
-                rgs.GLOBAL.get('name'),
-                rgs.EQUATORIAL.get('name'),
-                rgs.NORTH_MIDLAT.get('name'),
-                rgs.SOUTH_MIDLAT.get('name'),
+                GLOBAL.get('name'),
+                EQUATORIAL.get('name'),
+                NORTH_MIDLAT.get('name'),
+                SOUTH_MIDLAT.get('name'),
             ]
         }
     }
@@ -154,10 +161,10 @@ def test_request_all_regions():
         'params': {'filter_type': 'none'},
         'body': {
             'regions': [
-                rgs.GLOBAL,
-                rgs.EQUATORIAL,
-                rgs.NORTH_MIDLAT,
-                rgs.SOUTH_MIDLAT,
+                GLOBAL,
+                EQUATORIAL,
+                NORTH_MIDLAT,
+                SOUTH_MIDLAT,
             ]
         }
     }

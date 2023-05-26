@@ -37,13 +37,6 @@ FILTER__BY_REGION_DATA = 'by_data'
 VALID_FILTER_TYPES = [
     FILTER__NONE, FILTER__BY_REGION_NAME, FILTER__BY_REGION_DATA]
 
-EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'min_lon': 0.0, 'max_lon': 360.0}
-GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'min_lon': 0.0, 'max_lon': 360.0}
-NORTH_MIDLAT = {'name': 'north_midlatitudes', 'min_lat': 20.0, 'max_lat': 60.0, 'min_lon': 0.0, 'max_lon': 360.0}
-TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0, 'min_lon': 0.0, 'max_lon': 360.0}
-SOUTH_MIDLAT = {'name': 'south_midlatitudes', 'min_lat': -60.0, 'max_lat': -20.0, 'min_lon': 0.0, 'max_lon': 360.0}
-TEST_SOUTH_HEMIS = {'name': 'test_south_hemis', 'min_lat': -50.0, 'max_lat': -35.0, 'min_lon': 0.0, 'max_lon': 360.0}
-
 RegionData = namedtuple(
     'RegionData',
     [
