@@ -287,9 +287,9 @@ def get_regions_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_float_filter(filter_dict, rgs, 'max_lat', constructed_filter)
 
-    constructed_filter = get_float_filter(filter_dict, rgs, 'min_lon', constructed_filter)
+    constructed_filter = get_float_filter(filter_dict, rgs, 'east_lon', constructed_filter)
 
-    constructed_filter = get_float_filter(filter_dict, rgs, 'max_lon', constructed_filter)
+    constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
 
     return constructed_filter
 

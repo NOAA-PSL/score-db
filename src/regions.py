@@ -4,7 +4,7 @@ All rights reserved.
 
 Collection of methods and classes to facilitate insertion and selection
 of records into/from the 'regions' table.  The region table includes the
-following columns ['name', 'min_lat', 'max_lat', 'min_lon', 'max_lon', 'created_at', 'updated_at'] and each
+following columns ['name', 'min_lat', 'max_lat', 'east_lon', 'west_lon', 'created_at', 'updated_at'] and each
 row's id serves as a foreign key to the 'expt_metrics' table.  A unique
 region consists of a combination of the name and the bounds values.
 Multiple regions with the same 'name' value are allowed as long as the
@@ -43,8 +43,8 @@ RegionData = namedtuple(
         'name',
         'min_lat',
         'max_lat',
-        'min_lon',
-        'max_lon'
+        'east_lon',
+        'west_lon'
     ],
 )
 
@@ -56,12 +56,12 @@ class RegionError(Exception):
 
 @dataclass
 class Region:
-    ''' region object storing region name and min/max latitude/longitude bounds '''
+    ''' region object storing region name and min/max latitude and east/west longitude bounds '''
     name: str
     min_lat: float
     max_lat: float
-    min_lon: float
-    max_lon: float
+    east_lon: float
+    west_lon: float
 
     def __post_init__(self):
         if not isinstance(self.name, str):
@@ -87,34 +87,21 @@ class Region:
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
         #longitude checks
-        if (not isinstance(self.min_lon, float) or
-            not isinstance(self.max_lon, float)):
-            msg = f'min and max lon must be floats - min lon: {self.min_lon}' \
-                f', max lon: {self.max_lon}'
+        if (not isinstance(self.east_lon, float) or
+            not isinstance(self.west_lon, float)):
+            msg = f'east and west lon must be floats - east lon: {self.east_lon}' \
+                f', west lon: {self.west_lon}'
             raise ValueError(msg)
-        #convert from -180 to 0 to 0 to 360 if necessary 
-        if self.min_lon < 0:
-            self.min_lon = 360 + self.min_lon
-        if self.max_lon < 0:
-            self.max_lon = 360 + self.max_lon
         #check values     
-        if self.min_lon > self.max_lon:
-            msg = f'min_lon must be less than max_lon - ' \
-                f'min_lon: {self.min_lon}, max_lon: {self.max_lon}'
-            raise ValueError(msg)
-        if self.max_lon < self.min_lon:
-            msg = f'max_lon must be greater than min_lon - min_lon: {self.min_lon}, '\
-                f'max_lon: {self.max_lon}'
-            raise ValueError(msg)
-        if self.min_lon < 0 or self.max_lon > 360:
-            msg = f'min_lon or max_lon is out of allowed range, must be greater' \
-                f' than 0 and less than 360 - min_lon: {self.min_lon}, ' \
-                f'max_lon: {self.max_lon}'
+        if self.east_lon < 0 or self.west_lon < 0 or self.east_lon > 360 or self.west_lon > 360:
+            msg = f'east_lon or west_lon is out of allowed range, must be greater' \
+                f' than 0 and less than 360 - east_lon: {self.east_lon}, ' \
+                f'west_lon: {self.west_lon}'
             raise ValueError(msg)
 
     
     def get_region_data(self):
-        return RegionData(self.name, self.min_lat, self.max_lat, self.min_lon, self.max_lon)
+        return RegionData(self.name, self.min_lat, self.max_lat, self.east_lon, self.west_lon)
 
 def validate_list_of_regions(regions):
     if not isinstance(regions, list):
@@ -124,7 +111,7 @@ def validate_list_of_regions(regions):
     try:
         for r in regions:
             validated_region = Region(r.get('name'), r.get('min_lat'), r.get('max_lat'), 
-                                      r.get('min_lon'), r.get('max_lon'))
+                                      r.get('east_lon'), r.get('west_lon'))
             unique_regions.add(validated_region.get_region_data())
     except Exception as err:
         msg = f'problem parsing region data, regions: {regions}, err: {err}'
@@ -247,9 +234,9 @@ def construct_filters(filters):
 
         constructed_filter = get_float_filter(filters, rg, 'max_lat', constructed_filter)
 
-        constructed_filter = get_float_filter(filters, rg, 'min_lon', constructed_filter)
+        constructed_filter = get_float_filter(filters, rg, 'east_lon', constructed_filter)
 
-        constructed_filter = get_float_filter(filters, rg, 'max_lon', constructed_filter)
+        constructed_filter = get_float_filter(filters, rg, 'west_lon', constructed_filter)
 
         return constructed_filter
 
@@ -331,8 +318,8 @@ class RegionRequest:
                 rg.name,
                 rg.min_lat,
                 rg.max_lat,
-                rg.min_lon,
-                rg.max_lon,
+                rg.east_lon,
+                rg.west_lon,
                 rg.created_at,
                 rg.updated_at
             ).select_from(
@@ -360,8 +347,8 @@ class RegionRequest:
                 rg.name,
                 rg.min_lat,
                 rg.max_lat,
-                rg.min_lon,
-                rg.max_lon,
+                rg.east_lon,
+                rg.west_lon,
                 rg.created_at,
                 rg.updated_at
             ).select_from(
@@ -386,7 +373,7 @@ class RegionRequest:
         
         filters = self.params.get('filters')
         if not isinstance(filters, dict):
-            msg = f'Filters must be in teh form dict, filters: {type(filters)}'
+            msg = f'Filters must be in the form dict, filters: {type(filters)}'
             raise RegionError(msg)
 
         constructed_filters = construct_filters(filters)
@@ -398,8 +385,8 @@ class RegionRequest:
             rg.name,
             rg.min_lat,
             rg.max_lat,
-            rg.min_lon,
-            rg.max_lon,
+            rg.east_lon,
+            rg.west_lon,
             rg.created_at,
             rg.updated_at
         ).select_from(
@@ -430,8 +417,8 @@ class RegionRequest:
                 name=region.name, 
                 min_lat=region.min_lat, 
                 max_lat=region.max_lat,
-                min_lon=region.min_lon,
-                max_lon=region.max_lon,
+                east_lon=region.east_lon,
+                west_lon=region.west_lon,
                 created_at=time_now,
                 updated_at=None
             ).returning(rg)
@@ -442,8 +429,8 @@ class RegionRequest:
                     name=region.name,
                     min_lat=region.min_lat,
                     max_lat=region.max_lat,
-                    min_lon=region.min_lon,
-                    max_lon=region.max_lon,
+                    east_lon=region.east_lon,
+                    west_lon=region.west_lon,
                     updated_at=time_now
                 )
             )

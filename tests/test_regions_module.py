@@ -18,11 +18,11 @@ import db_utils
 from score_db_base import handle_request
 
 #test regions
-EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'min_lon': 0.0, 'max_lon': 360.0}
-GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'min_lon': 0.0, 'max_lon': 360.0}
-NORTH_MIDLAT = {'name': 'north_midlatitudes', 'min_lat': 20.0, 'max_lat': 60.0, 'min_lon': 0.0, 'max_lon': 360.0}
-TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0, 'min_lon': 0.0, 'max_lon': 360.0}
-SOUTH_MIDLAT = {'name': 'south_midlatitudes', 'min_lat': -60.0, 'max_lat': -20.0, 'min_lon': 0.0, 'max_lon': 360.0}
+EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0}
+GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'east_lon': 0.0, 'west_lon': 360.0}
+NORTH_MIDLAT = {'name': 'north_midlatitudes', 'min_lat': 20.0, 'max_lat': 60.0, 'east_lon': 0.0, 'west_lon': 360.0}
+TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0, 'east_lon': 0.0, 'west_lon': 360.0}
+SOUTH_MIDLAT = {'name': 'south_midlatitudes', 'min_lat': -60.0, 'max_lat': -20.0, 'east_lon': 0.0, 'west_lon': 360.0}
 
 def test_validate_list_of_strings():
     with pytest.raises(TypeError):
@@ -147,7 +147,7 @@ def test_request_get_specific_regions_by_region_data():
     request_dict = {
         'name': 'region',
         'method': db_utils.HTTP_GET,
-        'params': {'filter_type': 'by_data', 'filters': {'min_lon': 0.0},},
+        'params': {'filter_type': 'by_data', 'filters': {'east_lon': 0.0},},
     }
 
     rr = RegionRequest(request_dict)
