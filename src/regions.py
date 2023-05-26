@@ -182,7 +182,8 @@ def get_regions_from_name_list(region_names):
 
     rr = RegionRequest(request_dict)
     return rr.submit()
-    
+
+#formats sqlalchmey where clause statements for sql to filter per user inputed string values     
 def get_string_filter(filters, cls, key, constructed_filter):
         if not isinstance(filters, dict):
             msg = f'Invalid type for filters, must be \'dict\', was ' \
@@ -208,6 +209,7 @@ def get_string_filter(filters, cls, key, constructed_filter):
 
         return constructed_filter
 
+#formats sqlalchmey where clause statements for sql to filter per user inputed float values
 def get_float_filter(filters, cls, key, constructed_filter):
     if not isinstance(filters, dict):
         msg = f'Invalid type for filters, must be \'dict\', was ' \
@@ -225,6 +227,7 @@ def get_float_filter(filters, cls, key, constructed_filter):
     
     return constructed_filter
 
+#constructs all sqlalchmey filter statements for region values
 def construct_filters(filters):
         constructed_filter = {}
 
