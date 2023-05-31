@@ -13,26 +13,16 @@ import score_table_models as scr_models
 from score_table_models import Region as regions_table
 import regions as rgs
 from regions import RegionData, Region, RegionRequest
+import db_utils
 
 from score_db_base import handle_request
 
-
-
-# scr_models.init_tables()
-
-def test_validate_method():
-    with pytest.raises(ValueError):
-        rgs.validate_method('blah')
-    
-    with pytest.raises(ValueError):
-        rgs.validate_method(None)
-    
-    with pytest.raises(ValueError):
-        rgs.validate_method([])
-    
-    for method in rgs.VALID_METHODS:
-        rgs.validate_method(method)
-
+#test regions
+EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0}
+GLOBAL = {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'east_lon': 0.0, 'west_lon': 360.0}
+NORTH_MIDLAT = {'name': 'north_midlatitudes', 'min_lat': 20.0, 'max_lat': 60.0, 'east_lon': 0.0, 'west_lon': 360.0}
+TROPICS = {'name': 'tropics', 'min_lat': -20.0, 'max_lat': 20.0, 'east_lon': 0.0, 'west_lon': 360.0}
+SOUTH_MIDLAT = {'name': 'south_midlatitudes', 'min_lat': -60.0, 'max_lat': -20.0, 'east_lon': 0.0, 'west_lon': 360.0}
 
 def test_validate_list_of_strings():
     with pytest.raises(TypeError):
@@ -66,7 +56,7 @@ def test_validate_list_of_regions():
     with pytest.raises(TypeError):
         rgs.validate_list_of_regions(1)
 
-    region_list = [rgs.EQUATORIAL, rgs.GLOBAL, rgs.SOUTH_HEMIS, rgs.GLOBAL]
+    region_list = [EQUATORIAL, GLOBAL, SOUTH_MIDLAT, GLOBAL]
     validated_regions = rgs.validate_list_of_regions(region_list)
     print(f'validated_regions: {validated_regions}')
     for region in validated_regions:
@@ -76,38 +66,38 @@ def test_validate_list_of_regions():
 
 def test_validate_body():
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, None)
+        rgs.validate_body(db_utils.HTTP_GET, None)
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, None)
+        rgs.validate_body(db_utils.HTTP_GET, None)
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, [])
+        rgs.validate_body(db_utils.HTTP_GET, [])
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, 'foo')
+        rgs.validate_body(db_utils.HTTP_GET, 'foo')
 
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, 1)
+        rgs.validate_body(db_utils.HTTP_GET, 1)
     
 
     body = {'regions': {}}
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
+        rgs.validate_body(db_utils.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
     
     body = {'regions': [1, 2, 9]}
     with pytest.raises(TypeError):
-        rgs.validate_body(rgs.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
+        rgs.validate_body(db_utils.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
 
     body = {'regions': ['foo', 'bar', 'foo']}
-    [region_names, regions] = rgs.validate_body(rgs.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
+    [region_names, regions] = rgs.validate_body(db_utils.HTTP_GET, body, rgs.FILTER__BY_REGION_NAME)
     for name in region_names:
         assert region_names.count(name) == 1
     
     assert regions is None
 
-    body = {'regions': [rgs.GLOBAL, rgs.EQUATORIAL, rgs.GLOBAL]}
-    [region_names, regions] = rgs.validate_body(rgs.HTTP_PUT, body)
+    body = {'regions': [GLOBAL, EQUATORIAL, GLOBAL]}
+    [region_names, regions] = rgs.validate_body(db_utils.HTTP_PUT, body)
     for name in region_names:
         assert region_names.count(name) == 1
         print(f'name: {name}')
@@ -116,82 +106,40 @@ def test_validate_body():
         assert regions.count(region) == 1
         assert isinstance(region, RegionData)
 
-
 def test_initialize_region_request_prep():
-
     request_dict = {
         'name': 'region',
         'method': 'PUT',
         'body': {
             'regions': [
-                rgs.GLOBAL,
-                rgs.EQUATORIAL,
-                rgs.NORTH_HEMIS,
-                rgs.SOUTH_HEMIS,
-                rgs.TROPICS,
-                rgs.GLOBAL
+                GLOBAL,
+                EQUATORIAL,
+                NORTH_MIDLAT,
+                SOUTH_MIDLAT,
+                TROPICS,
+                GLOBAL
             ]
         }
     }
 
     rr = RegionRequest(request_dict)
     print(f'rr_prep: {rr}')
-    
+
     for name in rr.region_names:
         print(f'region: {name}')
-
-# def test_get_all_records_param_check():
-#     params_forced_true = [
-#         {'all': True},
-#         {'all': 'true'},
-#         {'all': 'TRUE'},
-#         {'all': 't'},
-#         {'all': 'T'},
-#         {'all': 'yes'},
-#         {'all': 'YES'},
-#         {'all': 'Y'}
-#     ]
-
-#     for params in params_forced_true:
-#         print(f'params: {params}')
-#         assert rgs.get_all_records(params)
-    
-#     params_forced_false = [
-#         {},
-#         {'all': 0},
-#         {'all': 'F'},
-#         {'all': 'no'},
-#         {'all': 'N'}
-#     ]
-
-#     for params in params_forced_false:
-#         assert not rgs.get_all_records(params)
-
-    
-#     params_forced_invalid = [
-#         {'all': 'dude'},
-#         {'all': []},
-#         {'all': {}},
-#     ]
-
-#     for params in params_forced_invalid:
-#         with pytest.raises(ValueError):
-#             rgs.get_all_records(params)
-
 
 def test_request_put_regions():
     request_dict = {
         'name': 'region',
-        'method': 'PUT',
+        'method': db_utils.HTTP_PUT,
         'body': {
             'regions': [
-                rgs.GLOBAL,
-                rgs.EQUATORIAL,
-                rgs.NORTH_HEMIS,
-                rgs.SOUTH_HEMIS,
-                rgs.TROPICS,
-                rgs.GLOBAL,
-                rgs.TEST_SOUTH_HEMIS
+                GLOBAL,
+                EQUATORIAL,
+                NORTH_MIDLAT,
+                SOUTH_MIDLAT,
+                TROPICS,
+                GLOBAL,
             ]
         }
     }
@@ -202,14 +150,14 @@ def test_request_put_regions():
 def test_request_get_specific_regions_by_name():
     request_dict = {
         'name': 'region',
-        'method': 'GET',
+        'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'by_name'},
         'body': {
             'regions': [
-                rgs.GLOBAL.get('name'),
-                rgs.EQUATORIAL.get('name'),
-                rgs.NORTH_HEMIS.get('name'),
-                rgs.SOUTH_HEMIS.get('name'),
+                GLOBAL.get('name'),
+                EQUATORIAL.get('name'),
+                NORTH_MIDLAT.get('name'),
+                SOUTH_MIDLAT.get('name'),
             ]
         }
     }
@@ -220,16 +168,8 @@ def test_request_get_specific_regions_by_name():
 def test_request_get_specific_regions_by_region_data():
     request_dict = {
         'name': 'region',
-        'method': 'GET',
-        'params': {'filter_type': 'by_data'},
-        'body': {
-            'regions': [
-                rgs.GLOBAL,
-                rgs.EQUATORIAL,
-                rgs.NORTH_HEMIS,
-                rgs.SOUTH_HEMIS,
-            ]
-        }
+        'method': db_utils.HTTP_GET,
+        'params': {'filter_type': 'by_data', 'filters': {'east_lon': 0.0},},
     }
 
     rr = RegionRequest(request_dict)
@@ -239,14 +179,14 @@ def test_request_get_specific_regions_by_region_data():
 def test_request_all_regions():
     request_dict = {
         'name': 'region',
-        'method': 'GET',
+        'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'none'},
         'body': {
             'regions': [
-                rgs.GLOBAL,
-                rgs.EQUATORIAL,
-                rgs.NORTH_HEMIS,
-                rgs.SOUTH_HEMIS,
+                GLOBAL,
+                EQUATORIAL,
+                NORTH_MIDLAT,
+                SOUTH_MIDLAT,
             ]
         }
     }

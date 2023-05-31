@@ -177,6 +177,22 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
 
     return constructed_filter
 
+def get_float_filter(filter_dict, cls, key, constructed_filter):
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    float_flt = filter_dict.get(key)
+
+    if float_flt is None:
+        print(f'No \'{key}\' filter detected')
+        return constructed_filter
+
+    constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    
+    return constructed_filter
 
 def get_experiments_filter(filter_dict, constructed_filter):
     if not isinstance(filter_dict, dict):
@@ -266,6 +282,14 @@ def get_regions_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_string_filter(
         filter_dict, rgs, 'name', constructed_filter, 'rgs_name')
+
+    constructed_filter = get_float_filter(filter_dict, rgs, 'min_lat', constructed_filter)
+
+    constructed_filter = get_float_filter(filter_dict, rgs, 'max_lat', constructed_filter)
+
+    constructed_filter = get_float_filter(filter_dict, rgs, 'east_lon', constructed_filter)
+
+    constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
 
     return constructed_filter
 
