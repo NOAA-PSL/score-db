@@ -39,7 +39,7 @@ def test_run_atm_inc_log_harvester():
             'expt_wallclock_start': '2022-08-03 02:40:34', 
             'datetime_str': '%Y-%m-%d %H:%M:%S',
         },
-        'hv_translator': 'atm_inc_logs',
+        'hv_translator': 'inc_logs',
         'harvest_config': {
             'harvester_name': 'inc_logs',
             'filename': FILE_PATH_ATM_INC_LOGS,

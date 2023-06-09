@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 import json
 import pprint
 import traceback
+import hv_translator_registry as hvtr 
+from db_action_response import DbActionResponse
 
 import time_utils
 from time_utils import DateRange
@@ -26,7 +28,7 @@ class HarvestMetricsRequest(object):
     body: dict = field(default_factory=dict, init=False)
     harvest_config: dict = field(default_factory=dict, init=False)
     expt_name: str = field(default_factory=str, init=False)
-    expt_wallclk_strt: datetime = field(default_factory=datetime, init=False) 
+    expt_wallclock_start: datetime = field(default_factory=datetime, init=False) 
     datetime_str: str = field(default_factory=str, init=False)
     hv_translator: str = field(default_factory=str, init=False)
 
@@ -36,8 +38,17 @@ class HarvestMetricsRequest(object):
         self.hv_translator = self.request_dict.get('hv_translator')
 
         self.expt_name = self.body.get('expt_name')
-        self.expt_wallclk_strt = self.body.get('expt_wallclock_start')
+        self.expt_wallclock_start = self.body.get('expt_wallclock_start')
         self.datetime_str = self.body.get('datetime_str')
+
+    def failed_request(self, error_msg):
+        return DbActionResponse(
+            request=self.request_dict,
+            success=False,
+            message='Failed harvest metric request.',
+            details=None,
+            errors=error_msg
+        )
 
     def submit(self):
         # get harvested data
@@ -47,15 +58,23 @@ class HarvestMetricsRequest(object):
         expt_metrics = []
         print(f'harvested_data: type: {type(harvested_data)}')
         for row in harvested_data:
-            #Call appropriate translator if one is provided 
+            data = ""
+            #Call appropriate translator if one is provided
+            if self.hv_translator != "":
+                try:
+                    translator = hvtr.translator_registry.get(self.hv_translator)
+                    data = translator.translate(row)
+                except Exception as err: 
+                    error_message = f"An error occurred when translating the data with translator {self.hv_translator}. Error: {err}"
+                    return self.failed_request(error_message)
 
             item = ExptMetricInputData(
-                row.name,
-                row.region_name,
-                row.elevation,
-                row.elevation_units,
-                row.value,
-                row.cycletime
+                data.name,
+                data.region_name,
+                data.elevation,
+                data.elevation_units,
+                data.value,
+                data.cycletime
             )
 
             expt_metrics.append(item)
@@ -65,7 +84,7 @@ class HarvestMetricsRequest(object):
             'method': 'PUT',
             'body': {
                 'expt_name': self.expt_name,
-                'expt_wallclock_start': self.expt_wallclk_strt,
+                'expt_wallclock_start': self.expt_wallclock_start,
                 'metrics': expt_metrics,
                 'datestr_format': self.datetime_str
             }

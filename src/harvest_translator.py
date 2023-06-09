@@ -10,15 +10,16 @@ the db table models.
 
 from collections import namedtuple
 
+
 MetricData = namedtuple(
     'MetricData',
     [
         'name',
         'region_name',
         'elevation',
-        'elevation_unit',
+        'elevation_units',
         'value',
-        'time_valid'
+        'cycletime'
     ],
 )
 
