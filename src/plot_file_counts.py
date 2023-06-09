@@ -4,8 +4,6 @@ All rights reserved.
 
 Collection of methods to facilitate handling of score db requests
 
-
-from collections import namedtuple
 import copy
 
 from datetime import datetime
@@ -23,20 +21,36 @@ from time_utils import DateRange
 from score_hv.harvester_base import harvest
 """
 from dataclasses import dataclass, field
+from collections import namedtuple
+from datetime import datetime
 
 import pandas as pd
 from pandas import DataFrame
 from matplotlib import pyplot as plt
 
 
-from expt_metrics import ExptMetricInputData, ExptMetricRequest
+from expt_file_counts import ExptFileCountRequest
 from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
-
+plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2019-03-22 00:00:00',
+                                    'start': '2019-03-21 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay spinup stream 4',
+                                      'wallclock_start': '2023-01-01 00:00:00'}],
+                     'fig_base_fn': 'file_counts',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
 '''
 @dataclass
 class StatGroupData:
@@ -57,7 +71,7 @@ class StatGroupData:
         self.elevation_unit = self.stat_group_dict.get('elevation_unit')
 
 '''
-def get_experiment_metrics(request_data):
+def get_experiment_file_counts(request_data):
     
     expt_metric_name = request_data.metric_format_str.replace(
                                                         '{metric}', 
@@ -70,12 +84,12 @@ def get_experiment_metrics(request_data):
                                       request_data.datetime_str)
 
     request_dict = {
-     'name': 'expt_metrics',
+     'name': 'expt_file_counts',
      'method': 'GET',
      'params': {'datestr_format': request_data.datetime_str,
-                'filters': {'experiment': request_data.experiment,    
-                            'metric_types': {'name': {'exact': 
-                                                         [expt_metric_name]}},
+                'filters': {#'experiment': request_data.experiment,    
+                            #'metric_types': {'name': {'exact': 
+                            #                             [expt_metric_name]}},
                             'time_valid': {'from': time_valid_from,
                                            'to': time_valid_to,}},
                 'ordering': [{'name': 'time_valid', 'order_by': 'asc'},
@@ -83,8 +97,8 @@ def get_experiment_metrics(request_data):
 
     print(f'request_dict: {request_dict}')
 
-    emr = ExptMetricRequest(request_dict)
-    result = emr.submit()
+    efcr = ExptFileCountRequest(request_dict)
+    result = efcr.submit()
 
     return result.details['records']
 
@@ -104,7 +118,7 @@ def format_figure(ax, pa):
     ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
     
     plt.xticks(np.arange(pa.axes_attrs.xmin, (pa.axes_attrs.xmax + 1.e-6),
-                         pa.axes_attrs.xint)
+                         pa.axes_attrs.xint))
     
     plt.xlabel(xlabel=pa.xlabel.label,
                horizontalalignment=pa.xlabel.horizontalalignment)
@@ -218,7 +232,7 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                         metric,
                         self.date_range)
                         
-                    e_df = get_experiment_metrics(request_data)
+                    e_df = get_experiment_file_counts(request_data)
                     e_df = e_df.sort_values(['expt_name', 'count'])
                     m_df = pd.concat([m_df, e_df], axis=0)
 
@@ -231,5 +245,5 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                     self.date_range)
 
 if __name__=='__main__':
-    plot_request = PlotInnovStatsRequest(plot_control_dict)
+    plot_request = PlotFileCountRequest(plot_control_dict)
     plot_request.submit()
