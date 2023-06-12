@@ -6,12 +6,7 @@ Collection of methods to facilitate handling of score db requests
 
 import copy
 
-from datetime import datetime
 import json
-import matplotlib.pylab as pl
-import numpy as np
-import os
-import pathlib
 
 import pprint
 import traceback
@@ -20,10 +15,13 @@ import time_utils
 from time_utils import DateRange
 from score_hv.harvester_base import harvest
 """
+import os
+import pathlib
 from dataclasses import dataclass, field
 from collections import namedtuple
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from matplotlib import pyplot as plt
@@ -33,11 +31,13 @@ from expt_file_counts import ExptFileCountRequest
 from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
+import ipdb
+
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
 plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2019-03-22 00:00:00',
+                                    'end': '2019-09-21 00:00:00',
                                     'start': '2019-03-21 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -45,7 +45,7 @@ plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'graph_label': 'Number of files',
                                       'name': 'replay spinup stream 4',
                                       'wallclock_start': '2023-01-01 00:00:00'}],
-                     'fig_base_fn': 'file_counts',
+                     'fig_base_fn': 'file_count',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
@@ -83,10 +83,31 @@ def get_experiment_file_counts(request_data):
     time_valid_to = datetime.strftime(request_data.time_valid.end, 
                                       request_data.datetime_str)
 
-    request_dict = {
-     'name': 'expt_file_counts',
-     'method': 'GET',
-     'params': {'datestr_format': request_data.datetime_str,
+    request_dict = {'date_range':
+                       {'datetime_str': request_data.datetime_str,
+                        'end': time_valid_to,
+                        'start': time_valid_from},
+                    'db_request_name': plot_control_dict['db_request_name'],
+                    'method': plot_control_dict['method'],
+                    'experiments': [{'graph_color':
+                                         request_data.experiment['graph_color'],
+                                     'graph_label':
+                                         request_data.experiment['graph_label'],
+                                     'name':
+                                         request_data.experiment['name']['exact'],
+                                     'wallclock_start':
+                                         request_data.experiment['expt_start']}],
+                    'fig_base_fn': expt_metric_name,
+                    'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                     'metrics': [request_data.metric],
+                                     'stat_group_frmt_str': request_data.metric_format_str}],
+                    'work_dir': plot_control_dict['work_dir']}
+
+    '''
+    {
+    'db_request_name': 'expt_file_counts',
+    'method': 'GET',
+    'params': {'datestr_format': request_data.datetime_str,
                 'filters': {#'experiment': request_data.experiment,    
                             #'metric_types': {'name': {'exact': 
                             #                             [expt_metric_name]}},
@@ -94,7 +115,7 @@ def get_experiment_file_counts(request_data):
                                            'to': time_valid_to,}},
                 'ordering': [{'name': 'time_valid', 'order_by': 'asc'},
                              {'name': 'count', 'order_by': 'desc'}]}}
-
+    '''
     print(f'request_dict: {request_dict}')
 
     efcr = ExptFileCountRequest(request_dict)
@@ -116,10 +137,10 @@ def build_base_figure():
 def format_figure(ax, pa):
     ax.set_xlim([pa.axes_attrs.xmin, pa.axes_attrs.xmax])
     ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
-    
+    '''
     plt.xticks(np.arange(pa.axes_attrs.xmin, (pa.axes_attrs.xmax + 1.e-6),
                          pa.axes_attrs.xint))
-    
+    '''
     plt.xlabel(xlabel=pa.xlabel.label,
                horizontalalignment=pa.xlabel.horizontalalignment)
     
@@ -158,34 +179,52 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
                      date_range):
 
     if not isinstance(metrics_df, DataFrame):
-        msg = 'Input data to plot_innov_stats must be type pandas.DataFrame '\
+        msg = 'Input data to plot_file_counts must be type pandas.DataFrame '\
             f'was actually type: {type(metrics_df)}'
         raise TypeError(msg)
     
     plt_attr_key = f'{metric}'
     pa = plot_attrs[plt_attr_key]
     
-    ave_df = metrics_df.groupby(['expt_name', 'count'], 
+    '''
+    ave_df = metrics_df.groupby(['created_at', 'cycle'], 
                                 as_index=False)['value'].mean()
-    
     expt_names = ave_df.drop_duplicates(
-                    ['expt_name'], keep='last')['expt_name'].values.tolist()
+                    ['created_at'], keep='last')['created_at'].values.tolist()
+    '''
+    metrics_to_show = metrics_df.loc[metrics_df['file_type_id']==2]
 
     (fig, ax) = build_base_figure()
 
+    '''
     for expt in experiments:
-        expt_name = expt.get('expt_name')
-        stat_vals = ave_df.loc[(ave_df['expt_name'] == expt_name), 'value']
-
-        plt.plot(stat_vals, color=expt.get('graph_color'),
-                 label=expt.get('graph_label'))
-    
+        expt_name = expt.get('name')['exact']
+    ''' 
+    expt_name = experiments[0]['name']['exact']
+    timestamps = list()
+    labels = list()
+    for timestamp in metrics_to_show['cycle']:
+        timestamps.append(timestamp.timestamp())
+        labels.append('%s-%s %sZ' % (timestamp.month,
+                                        timestamp.day,
+                            #            timestamp.year,
+                                        timestamp.hour))
+    plt.bar(timestamps, metrics_to_show['count'],
+            tick_label=labels, alpha=0.1,
+            width=np.gradient(timestamps) / 6.,
+            color=experiments[0]['graph_color'],
+            label=timestamp.year,
+            #label=experiments[0]['graph_label']
+            )
+    plt.plot(timestamps, metrics_to_show['count'],
+             color=experiments[0]['graph_color'])
     format_figure(ax, pa)
-    fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, region, date_range)
-
+    fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)
+    plt.xticks(rotation=30, ha='right')
     save_figure(fig_fn)
 
-'''''
+"""
+
 @dataclass
 class ExperimentData(object):
     name: str
@@ -208,7 +247,8 @@ class ExperimentData(object):
             'graph_color': self.graph_color
         }
 
-'''
+"""
+
 @dataclass
 class PlotFileCountRequest(PlotInnovStatsRequest):
     def submit(self):
@@ -218,7 +258,6 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
 
         finished = False
         loop_count = 0
-        
         for stat_group in self.stat_groups:
             metrics_data = []
             # gather experiment metrics data for experiment and date range
@@ -233,7 +272,7 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                         self.date_range)
                         
                     e_df = get_experiment_file_counts(request_data)
-                    e_df = e_df.sort_values(['expt_name', 'count'])
+                    e_df = e_df.sort_values(['created_at', 'cycle'])
                     m_df = pd.concat([m_df, e_df], axis=0)
 
                 plot_file_counts(
