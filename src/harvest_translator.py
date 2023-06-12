@@ -24,7 +24,7 @@ MetricData = namedtuple(
 )
 
 
-inc_log_harvested_data = namedtuple(
+inc_logs_harvested_data = namedtuple(
     'HarvestedData',
     [
         'logfile',
@@ -34,14 +34,14 @@ inc_log_harvested_data = namedtuple(
         'units'
     ]
 )
-def inc_log_translator(harvested_data):
+def inc_logs_translator(harvested_data):
     result = MetricData(
         harvested_data.statistic + "_" + harvested_data.variable,
         'global',
         0,
         'N/A',
         harvested_data.value, 
-        'Jan 01 0001 00:00:00'
+        '0001-01-01 00:00:00'
     )
 
     return result

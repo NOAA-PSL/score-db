@@ -20,8 +20,11 @@ TranslatorHandler = namedtuple(
 )
 
 translator_registry = {
-    'inc_log': TranslatorHandler(
-        'translate harvest values from inc_log harvester',
-        harvest_translator.inc_log_translator
+    'inc_logs': TranslatorHandler(
+        'translate harvest values from inc_logs harvester',
+        harvest_translator.inc_logs_translator
     ),
 }
+
+valid_translators = list(translator_registry.keys())
+

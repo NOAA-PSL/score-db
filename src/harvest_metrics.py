@@ -28,7 +28,7 @@ class HarvestMetricsRequest(object):
     body: dict = field(default_factory=dict, init=False)
     harvest_config: dict = field(default_factory=dict, init=False)
     expt_name: str = field(default_factory=str, init=False)
-    expt_wallclock_start: datetime = field(default_factory=datetime, init=False) 
+    expt_wallclock_start: str = field(default_factory=str, init=False) 
     datetime_str: str = field(default_factory=str, init=False)
     hv_translator: str = field(default_factory=str, init=False)
 
@@ -65,7 +65,8 @@ class HarvestMetricsRequest(object):
                     translator = hvtr.translator_registry.get(self.hv_translator)
                     data = translator.translate(row)
                 except Exception as err: 
-                    error_message = f"An error occurred when translating the data with translator {self.hv_translator}. Error: {err}"
+                    error_message = f'An error occurred when translating the data with translator input {self.hv_translator}. ' \
+                          f'Valid translators: {hvtr.valid_translators}. Error: {err}'
                     return self.failed_request(error_message)
 
             item = ExptMetricInputData(

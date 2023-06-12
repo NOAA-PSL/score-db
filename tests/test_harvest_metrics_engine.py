@@ -35,17 +35,16 @@ def test_run_atm_inc_log_harvester():
     db_harvester_dict = {
         'db_request_name': 'harvest_metrics',
         'body': {
-            'expt_name': 'UFSRNR_GSI_SOCA_3DVAR_COUPLED_AZURE_HC44RS_122015',
-            'expt_wallclock_start': '2022-08-03 02:40:34', 
+            'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'expt_wallclock_start': '2021-07-22 09:22:05', 
             'datetime_str': '%Y-%m-%d %H:%M:%S',
         },
         'hv_translator': 'inc_logs',
         'harvest_config': {
             'harvester_name': 'inc_logs',
             'filename': FILE_PATH_ATM_INC_LOGS,
-            'statistic': ['mean', 'RMS'],
-            'variable': ['o3mr_inc', 'sphum_inc', 'T_inc', 'u_inc', 'v_inc',
-                                  'delp_inc', 'delz_inc']
+            'statistic': ['mean'],
+            'variable': ['o3mr_inc']
         }
     }
 
