@@ -199,7 +199,7 @@ class HarvestInnovStatsRequest(object):
                         row.name,
                         row.region_name,
                         row.elevation,
-                        row.elevation_units,
+                        row.elevation_unit,
                         row.value,
                         row.cycletime
                     )

@@ -17,7 +17,7 @@ MetricData = namedtuple(
         'name',
         'region_name',
         'elevation',
-        'elevation_units',
+        'elevation_unit',
         'value',
         'cycletime'
     ],

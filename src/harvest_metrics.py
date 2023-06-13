@@ -73,7 +73,7 @@ class HarvestMetricsRequest(object):
                 data.name,
                 data.region_name,
                 data.elevation,
-                data.elevation_units,
+                data.elevation_unit,
                 data.value,
                 data.cycletime
             )
