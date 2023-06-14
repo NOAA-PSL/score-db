@@ -7,19 +7,8 @@ Unit tests for io_utils
 """
 import os
 import pathlib
-import pytest
-import json
-import yaml
-
 
 from harvest_metrics import HarvestMetricsRequest
-import score_table_models as scr_models
-from score_table_models import Experiment as experiments_table
-from score_table_models import ExperimentMetric as exp_metrics_table
-import experiments as expts
-import expt_metrics
-from experiments import ExperimentData, Experiment, ExperimentRequest
-from expt_metrics import ExptMetricInputData, ExptMetricRequest
 
 from score_db_base import handle_request
 

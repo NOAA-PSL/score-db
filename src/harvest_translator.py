@@ -11,7 +11,7 @@ the db table models.
 from collections import namedtuple
 
 
-MetricData = namedtuple(
+MetricTableData = namedtuple(
     'MetricData',
     [
         'name',
@@ -23,7 +23,8 @@ MetricData = namedtuple(
     ],
 )
 
-
+"""
+Output from inc_logs harvester 
 inc_logs_harvested_data = namedtuple(
     'HarvestedData',
     [
@@ -34,11 +35,12 @@ inc_logs_harvested_data = namedtuple(
         'units'
     ]
 )
+"""
 def inc_logs_translator(harvested_data):
-    result = MetricData(
+    result = MetricTableData(
         harvested_data.statistic + "_" + harvested_data.variable,
         'global',
-        0,
+        None,
         'N/A',
         harvested_data.value, 
         '0001-01-01 00:00:00'
