@@ -29,6 +29,7 @@ inc_logs_harvested_data = namedtuple(
     'HarvestedData',
     [
         'logfile',
+        'cycletime',
         'statistic',
         'variable',
         'value',
@@ -43,7 +44,7 @@ def inc_logs_translator(harvested_data):
         None,
         'N/A',
         harvested_data.value, 
-        '0001-01-01 00:00:00'
+        harvested_data.cycletime
     )
 
     return result
