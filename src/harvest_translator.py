@@ -10,7 +10,7 @@ the db table models.
 
 from collections import namedtuple
 
-
+#data structure for what is stored in the database, corresponds to the db columns
 MetricTableData = namedtuple(
     'MetricData',
     [
@@ -24,7 +24,7 @@ MetricTableData = namedtuple(
 )
 
 """
-Output from inc_logs harvester 
+Expected output from inc_logs harvester 
 inc_logs_harvested_data = namedtuple(
     'HarvestedData',
     [
