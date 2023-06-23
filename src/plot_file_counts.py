@@ -37,8 +37,8 @@ RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
 plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2019-09-21 00:00:00',
-                                    'start': '2019-03-21 00:00:00'},
+                                    'end': '2020-01-01 00:00:00',
+                                    'start': '2019-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
@@ -135,12 +135,15 @@ def build_base_figure():
 
 
 def format_figure(ax, pa):
+    '''
     ax.set_xlim([pa.axes_attrs.xmin, pa.axes_attrs.xmax])
     ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
-    '''
     plt.xticks(np.arange(pa.axes_attrs.xmin, (pa.axes_attrs.xmax + 1.e-6),
                          pa.axes_attrs.xint))
     '''
+    ax.set_xlim([pd.Timestamp(plot_control_dict['date_range']['start']).timestamp(),
+                 pd.Timestamp(plot_control_dict['date_range']['end']).timestamp()])
+    ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
     plt.xlabel(xlabel=pa.xlabel.label,
                horizontalalignment=pa.xlabel.horizontalalignment)
     
@@ -210,17 +213,23 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
                             #            timestamp.year,
                                         timestamp.hour))
     plt.bar(timestamps, metrics_to_show['count'],
-            tick_label=labels, alpha=0.1,
+            #tick_label=labels,
+            alpha=0.1,
             width=np.gradient(timestamps) / 6.,
             color=experiments[0]['graph_color'],
-            label=timestamp.year,
+            #label=timestamp.year,
             #label=experiments[0]['graph_label']
             )
     plt.plot(timestamps, metrics_to_show['count'],
              color=experiments[0]['graph_color'])
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)
-    plt.xticks(rotation=30, ha='right')
+    
+    label_spacing = int(len(labels)/10.)
+    plt.xticks(ticks=np.linspace(timestamps[0], timestamps[-1],
+                                 num=10),
+               #labels=labels[:-1:label_spacing],
+               rotation=30, ha='right')
     save_figure(fig_fn)
 
 """
@@ -272,7 +281,7 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                         self.date_range)
                         
                     e_df = get_experiment_file_counts(request_data)
-                    e_df = e_df.sort_values(['created_at', 'cycle'])
+                    e_df = e_df.sort_values(['cycle', 'created_at'])
                     m_df = pd.concat([m_df, e_df], axis=0)
 
                 plot_file_counts(
