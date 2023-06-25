@@ -18,6 +18,7 @@ from plot_innov_stats import PlotInnovStatsRequest
 from file_types import FileTypeRequest
 from storage_locations import StorageLocationRequest
 from expt_file_counts import ExptFileCountRequest
+from harvest_metrics import HarvestMetricsRequest
 
 NAMED_TUPLES_LIST = 'tuples_list'
 PANDAS_DATAFRAME = 'pandas_dataframe'
@@ -78,6 +79,11 @@ request_registry = {
     'expt_file_counts': RequestHandler(
         'Add or get or update experiment file counts',
         ExptFileCountRequest,
+        DbActionResponse
+    ),
+    'harvest_metrics': RequestHandler(
+        'Harvest and store metrics',
+        HarvestMetricsRequest,
         DbActionResponse
     )
 }

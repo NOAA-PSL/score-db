@@ -301,10 +301,6 @@ def get_expt_record(body):
     expt_name = body.get('expt_name')
     datestr_format = body.get('datestr_format')
     wlclk_strt_str = body.get('expt_wallclock_start')
-    expt_wallclock_start = time_utils.get_time(
-        wlclk_strt_str,
-        datestr_format
-    )
     
     expt_request = {
         'name': 'experiment',
@@ -315,7 +311,7 @@ def get_expt_record(body):
                     'exact': expt_name
                 },
                 'wallclock_start': {
-                    'exact': expt_wallclock_start
+                    'exact': wlclk_strt_str
                 },
             },
             'ordering': [
@@ -336,6 +332,9 @@ def get_expt_record(body):
     try:
         if results.success is True:
             records = results.details.get('records')
+            if records is None:
+                msg = 'Request for experiment record did not return a record'
+                raise ExptMetricsError(msg)
             record_cnt = records.shape[0]
         else:
             msg = f'Problems encountered requesting experiment data.'
@@ -566,6 +565,14 @@ class ExptMetricRequest:
 
         except Exception as err:
             print(f'Failed to insert records: {err}')
+
+        return DbActionResponse(
+            request=self.request_dict,
+            success=True,
+            message="Attempt to insert expt metrics SUCCEEDED",
+            details=records,
+            errors=None
+        )
 
     
     def get_experiment_metrics(self):
