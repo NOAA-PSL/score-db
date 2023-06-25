@@ -68,6 +68,9 @@ def test_parse_request_dict():
     description_salinity_bias = {
         "details": "Innovation bias statistics of salinity."
     }
+    description_mean_o3mr_inc = {
+        "details": "Mean value of o3mr from inc log files."
+    }
 
     metric_types = [
         MetricType(
@@ -146,6 +149,13 @@ def test_parse_request_dict():
             'practical salinity',
             'rmsd',
             description_temperature_rmsd
+        ),
+        MetricType(
+            'mean_o3mr_inc',
+            'test',
+            'test',
+            'mean',
+            description_mean_o3mr_inc
         )
     ]
 

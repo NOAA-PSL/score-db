@@ -109,7 +109,7 @@ class ExperimentMetric(Base):
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     metric_type_id = Column(Integer, ForeignKey('metric_types.id'))
     region_id = Column(Integer, ForeignKey('regions.id'))
-    elevation = Column(Float, nullable=False)
+    elevation = Column(Float)
     elevation_unit = Column(String(32))
     value = Column(Float)
     time_valid = Column(DateTime, nullable=False)
