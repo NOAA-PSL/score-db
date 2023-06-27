@@ -82,7 +82,7 @@ def get_experiment_file_counts(request_data):
 
     time_valid_to = datetime.strftime(request_data.time_valid.end, 
                                       request_data.datetime_str)
-
+    '''
     request_dict = {'date_range':
                        {'datetime_str': request_data.datetime_str,
                         'end': time_valid_to,
@@ -103,7 +103,7 @@ def get_experiment_file_counts(request_data):
                                      'stat_group_frmt_str': request_data.metric_format_str}],
                     'work_dir': plot_control_dict['work_dir']}
 
-    '''
+    
     {
     'db_request_name': 'expt_file_counts',
     'method': 'GET',
@@ -116,6 +116,14 @@ def get_experiment_file_counts(request_data):
                 'ordering': [{'name': 'time_valid', 'order_by': 'asc'},
                              {'name': 'count', 'order_by': 'desc'}]}}
     '''
+    
+    request_dict = {'name' : 'expt_file_counts', 'method': 'GET',
+                    'params' : {'filters':
+                                   {'experiment': {'experiment_name': {
+                                           'exact': request_data.experiment['name']['exact']}},
+                                    'file_types': {'file_type_name': {'exact': 'example_type'}},
+                                    'storage_locations': {'storage_loc_name':
+                                                            {'exact': 's3_example_bucket'}}}}}
     print(f'request_dict: {request_dict}')
 
     efcr = ExptFileCountRequest(request_dict)
@@ -176,7 +184,7 @@ def build_fig_dest(work_dir, fig_base_fn, metric, date_range):
 
 def save_figure(dest_full_path):
     print(f'saving figure to {dest_full_path}')
-    plt.savefig(dest_full_path)
+    plt.savefig(dest_full_path, dpi=600)
 
 def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
                      date_range):
@@ -195,8 +203,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
     expt_names = ave_df.drop_duplicates(
                     ['created_at'], keep='last')['created_at'].values.tolist()
     '''
-    metrics_to_show = metrics_df.loc[metrics_df['file_type_id']==2]
-
+    #metrics_to_show = metrics_df.loc[metrics_df['file_type_id']==2]
     (fig, ax) = build_base_figure()
 
     '''
@@ -206,29 +213,39 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
     expt_name = experiments[0]['name']['exact']
     timestamps = list()
     labels = list()
-    for timestamp in metrics_to_show['cycle']:
-        timestamps.append(timestamp.timestamp())
-        labels.append('%s-%s %sZ' % (timestamp.month,
-                                        timestamp.day,
-                            #            timestamp.year,
-                                        timestamp.hour))
-    plt.bar(timestamps, metrics_to_show['count'],
+    counts = list()
+    #for i, timestamp in enumerate(metrics_df['cycle']):#metrics_to_show['cycle']:
+    for row in metrics_df.itertuples():
+        if row.cycle.year == 2019:
+            counts.append(row.count)
+            timestamps.append(row.cycle.timestamp())
+            labels.append('%02d-%02d' % (row.cycle.month,
+                                         row.cycle.day,
+                                #        timestamp.year,
+                              #          timestamp.hour
+                                          ))
+    plt.bar(timestamps, counts,
             #tick_label=labels,
-            alpha=0.1,
-            width=np.gradient(timestamps) / 6.,
+            alpha=0.2,
+            width=21600.,
             color=experiments[0]['graph_color'],
-            #label=timestamp.year,
+            #label=2019,#timestamp.year,
             #label=experiments[0]['graph_label']
             )
-    plt.plot(timestamps, metrics_to_show['count'],
+    plt.plot(timestamps, counts, ls='None', marker='_', label=2019,
              color=experiments[0]['graph_color'])
+    plt.title(expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)
     
-    label_spacing = int(len(labels)/10.)
-    plt.xticks(ticks=np.linspace(timestamps[0], timestamps[-1],
+    all_labels = sorted(set(labels))
+    label_spacing = len(all_labels)//10
+    remainder = len(all_labels)%10
+    #ipdb.set_trace()
+    plt.xticks(ticks=np.linspace(sorted(set(timestamps))[0],
+                                 sorted(set(timestamps))[-remainder-1],
                                  num=10),
-               #labels=labels[:-1:label_spacing],
+               labels=sorted(set(labels))[:-remainder:label_spacing],
                rotation=30, ha='right')
     save_figure(fig_fn)
 

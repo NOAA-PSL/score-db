@@ -31,8 +31,11 @@ from expt_metrics import ExptMetricRequest
 from increments_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
+import ipdb
+
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
+                                         'stat',
                                          'time_valid'],)
 plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2020-01-01 00:00:00',
@@ -41,13 +44,19 @@ plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'increments',
-                                      'name': 'replay spinup stream 4',
+                                      'name': 'replay_stream4',
                                       'wallclock_start': '2023-01-01 00:00:00'}],
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
-                                      'metrics': ['increment'],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
                                       'stat_group_frmt_str':
-                                      'file_{metric}'}],
+                                      'metric_type_{stat}_{metric}'}],
                      'work_dir': '/contrib/Adam.Schneider/replay/results'}
 '''
 @dataclass
@@ -74,46 +83,32 @@ def get_experiment_increments(request_data):
     expt_metric_name = request_data.metric_format_str.replace(
                                                         '{metric}', 
                                                         request_data.metric)
-
+   
+    expt_metric_name = expt_metric_name.replace(
+        '{stat}', request_data.stat
+    )
+   
     time_valid_from = datetime.strftime(request_data.time_valid.start, 
                                         request_data.datetime_str)
 
     time_valid_to = datetime.strftime(request_data.time_valid.end, 
                                       request_data.datetime_str)
+    request_dict = {'name': 'expt_metrics', 'method': 'GET',
+                    'params': {'datestr_format': '%Y-%m-%d %H:%M:%S',
+                               'filters':
+                                 {'experiment':
+                                   {'name': {
+                                      'exact': request_data.experiment['name']['exact']},
+                                    'wallclock_start':
+                                      {'from': request_data.experiment['wallclock_start']['from'],
+                                       'to': request_data.experiment['wallclock_start']['to']}},
+                                  'metric_types': {'measurement_type': {'exact': [request_data.metric]},
+                                                   'stat_type': {'exact': [request_data.stat]}},
+                                  'regions': {'rgs_name': {'exact': ['global']}},
+                                  'time_valid': {'from': time_valid_from,
+                                                 'to': time_valid_to}},
+                                 'ordering': [{'name': 'time_valid', 'order_by': 'asc'}]}}
 
-    request_dict = {'date_range':
-                       {'datetime_str': request_data.datetime_str,
-                        'end': time_valid_to,
-                        'start': time_valid_from},
-                    'db_request_name': plot_control_dict['db_request_name'],
-                    'method': plot_control_dict['method'],
-                    'experiments': [{'graph_color':
-                                         request_data.experiment['graph_color'],
-                                     'graph_label':
-                                         request_data.experiment['graph_label'],
-                                     'name':
-                                         request_data.experiment['name']['exact'],
-                                     'wallclock_start':
-                                         request_data.experiment['expt_start']}],
-                    'fig_base_fn': expt_metric_name,
-                    'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
-                                     'metrics': [request_data.metric],
-                                     'stat_group_frmt_str': request_data.metric_format_str}],
-                    'work_dir': plot_control_dict['work_dir']}
-
-    '''
-    {
-    'db_request_name': 'expt_file_counts',
-    'method': 'GET',
-    'params': {'datestr_format': request_data.datetime_str,
-                'filters': {#'experiment': request_data.experiment,    
-                            #'metric_types': {'name': {'exact': 
-                            #                             [expt_metric_name]}},
-                            'time_valid': {'from': time_valid_from,
-                                           'to': time_valid_to,}},
-                'ordering': [{'name': 'time_valid', 'order_by': 'asc'},
-                             {'name': 'count', 'order_by': 'desc'}]}}
-    '''
     print(f'request_dict: {request_dict}')
 
     emr = ExptMetricRequest(request_dict)
@@ -158,12 +153,12 @@ def format_figure(ax, pa):
                shadow=pa.legend.shadow,
                facecolor=pa.legend.facecolor)
 
-def build_fig_dest(work_dir, fig_base_fn, metric, date_range):
+def build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range):
     
     start = datetime.strftime(date_range.start, '%Y%m%dT%HZ')
     end = datetime.strftime(date_range.end, '%Y%m%dT%HZ')
     dest_fn = fig_base_fn
-    dest_fn += f'__{metric}_{start}_to_{end}.png'
+    dest_fn += f'_{stat}_{metric}_{start}_to_{end}.png'
     
     dest_full_path = os.path.join(work_dir, dest_fn)
     
@@ -174,9 +169,9 @@ def build_fig_dest(work_dir, fig_base_fn, metric, date_range):
 
 def save_figure(dest_full_path):
     print(f'saving figure to {dest_full_path}')
-    plt.savefig(dest_full_path)
+    plt.savefig(dest_full_path, dpi=600)
 
-def plot_increments(experiments, metric, metrics_df, work_dir, fig_base_fn,
+def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn,
                      date_range):
 
     if not isinstance(metrics_df, DataFrame):
@@ -184,49 +179,50 @@ def plot_increments(experiments, metric, metrics_df, work_dir, fig_base_fn,
             f'was actually type: {type(metrics_df)}'
         raise TypeError(msg)
     
-    plt_attr_key = f'{metric}'
+    #plt_attr_key = f'{metric}'
+    plt_attr_key = 'increment'
     pa = plot_attrs[plt_attr_key]
-    
-    '''
-    ave_df = metrics_df.groupby(['created_at', 'cycle'], 
-                                as_index=False)['value'].mean()
-    expt_names = ave_df.drop_duplicates(
-                    ['created_at'], keep='last')['created_at'].values.tolist()
-    '''
-    metrics_to_show = metrics_df.loc[metrics_df['file_type_id']==2]
-
     (fig, ax) = build_base_figure()
 
     '''
     for expt in experiments:
         expt_name = expt.get('name')['exact']
-    ''' 
+    '''
     expt_name = experiments[0]['name']['exact']
     timestamps = list()
     labels = list()
-    for timestamp in metrics_to_show['cycle']:
-        timestamps.append(timestamp.timestamp())
-        labels.append('%s-%s %sZ' % (timestamp.month,
-                                        timestamp.day,
-                            #            timestamp.year,
-                                        timestamp.hour))
-    plt.bar(timestamps, metrics_to_show['increment'],
+    values = list()
+    #for i, timestamp in enumerate(metrics_df['time_valid']):#metrics_to_show['cycle']:
+    for row in metrics_df.itertuples():
+        if row.time_valid.year == 2019:
+            values.append(row.value)
+            timestamps.append(row.time_valid.timestamp())
+            labels.append('%02d-%02d' % (row.time_valid.month,
+                                         row.time_valid.day,
+                                          ))
+    plt.bar(timestamps, values,
             #tick_label=labels,
-            alpha=0.1,
-            width=np.gradient(timestamps) / 6.,
+            alpha=0.2,
+            width=21600.,
             color=experiments[0]['graph_color'],
-            #label=timestamp.year,
+            #label=2019,#timestamp.year,
             #label=experiments[0]['graph_label']
             )
-    plt.plot(timestamps, metrics_to_show['increment'],
-             color=experiments[0]['graph_color'])
+    plt.plot(timestamps, values, lw=0.5,#ls='None', marker='.',
+             color=experiments[0]['graph_color'], label=2019)
+    plt.title(expt_name)
     format_figure(ax, pa)
-    fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)
+    fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
+    plt.ylabel('%s %s' % (stat, metric))
     
-    label_spacing = int(len(labels)/10.)
-    plt.xticks(ticks=np.linspace(timestamps[0], timestamps[-1],
+    all_labels = sorted(set(labels))
+    label_spacing = len(all_labels)//10
+    remainder = len(all_labels)%10
+    #ipdb.set_trace()
+    plt.xticks(ticks=np.linspace(sorted(set(timestamps))[0],
+                                 sorted(set(timestamps))[-remainder-1],
                                  num=10),
-               #labels=labels[:-1:label_spacing],
+               labels=sorted(set(labels))[:-remainder:label_spacing],
                rotation=30, ha='right')
     save_figure(fig_fn)
 
@@ -269,26 +265,28 @@ class PlotIncrementRequest(PlotInnovStatsRequest):
             metrics_data = []
             # gather experiment metrics data for experiment and date range
             for metric in stat_group.metrics:
-                m_df = DataFrame()
-                for experiment in self.experiments:
-                    request_data = RequestData(
-                        self.datetime_str,
-                        experiment,
-                        stat_group.stat_group_frmt_str,
-                        metric,
-                        self.date_range)
+                for stat in stat_group.stats:
+                    m_df = DataFrame()
+                    for experiment in self.experiments:
+                        request_data = RequestData(
+                            self.datetime_str,
+                            experiment,
+                            stat_group.stat_group_frmt_str,
+                            metric, stat,
+                            self.date_range)
                         
-                    e_df = get_experiment_increments(request_data)
-                    #e_df = e_df.sort_values(['cycle', 'created_at'])
-                    m_df = pd.concat([m_df, e_df], axis=0)
+                        e_df = get_experiment_increments(request_data)
+                        e_df = e_df.sort_values(['time_valid', 'created_at'])
+                        m_df = pd.concat([m_df, e_df], axis=0)
 
-                plot_increments(
-                    self.experiments,
-                    metric,
-                    m_df,
-                    self.work_dir,
-                    self.fig_base_fn,
-                    self.date_range)
+                    plot_increments(
+                        self.experiments,
+                        stat,
+                        metric,
+                        m_df,
+                        self.work_dir,
+                        self.fig_base_fn,
+                        self.date_range)
 
 if __name__=='__main__':
     plot_request = PlotIncrementRequest(plot_control_dict)
