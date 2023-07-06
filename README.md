@@ -73,6 +73,23 @@ Each of the APIs is structured in a similar way and are meant to be
 accessible via either a direct library call or via a command line call
 with a yaml file or a python dictionary as the only accepted arguments.
 
+## Input values 
+Every action made through the API requires a name and method. Valid methods are GET or PUT. The name must be a registered value in the db_request_regsitry. 
+Currently valid registry options are:
+'region' : 'Add or get regions'
+'experiment' : 'Add, get, or update experiment registration data'
+'expt_metrics' : 'Add or update experiment metrics data'
+'metric_types' : 'Add, get, or update metric types'
+'harvest_innov_stats' : 'Gather and store innovationo statistics from diagnostics files'
+'plot_innov_stats' : 'Plot innovation statistics'
+'file_types' : 'Add, get, or update file types'
+'storage_locations' : 'Add, get, or update storage locations'
+'expt_file_counts' : 'Add or get experiment file counts'
+'harvest_metrics' : 'Harvest and store metrics'
+
+Example request dictionaries for each registry option are provided in the index.
+
+### Examples 
 #### How to Register an Experiment
 This API helps the user register an experiment's meta data into the score-db
 `experiments` table.
@@ -348,7 +365,9 @@ def plot_innov_stats_for_date_range():
 plot_innov_stats_for_date_range()
 ```
 
-# Table Schemas
+# Appendix
+
+## Table Schemas
 
 The score-db backend package is comprised of four tables and several APIs
 which are meant to help the user insert and select data from the score-db
@@ -466,3 +485,396 @@ expt_stored_file_counts
     file_type = relationship('FileType', back_populates='file_counts')
     storage_location = relationship('StorageLocation', back_populates='file_counts')
 ```
+
+## Request Dictionaries / YAML Formats
+
+For each request, a dictionary of values or yaml file containing the same information are necessary with relevant data for that call. GET calls use filters and ordering data. PUT calls must contain the data to be put into the database. This is a list of example calls only. Each call should be customized with the appropriate input data. While the examples are in a dictionary format, all the values could be similarly input as a yaml file with the same hierachy provided by the examples.
+
+### Experiment Dictionaries
+Example format of request dictionaries for 'experiment' calls.
+GET: 
+request_dict = {
+        'name': 'experiment',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': 'C96L64.UFSRNR.GSI_SOCA_3DVAR.012016'
+                },
+                'cycle_start': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2018-01-01 00:00:00'
+                },
+                'cycle_stop': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2018-01-01 00:00:00'
+                },
+                'owner_id': {
+                    'exact': 'first.last@noaa.gov'
+                },
+                'experiment_type': {
+                    'like': '%COUPLED%'
+                },
+                'platform': {
+                    'exact': 'pw_awv1'
+                },
+                'wallclock_start': {
+                    'from': '2022-01-01 00:00:00',
+                    'to': '2022-07-01 00:00:00'
+                },
+
+            },
+            'ordering': [
+                {'name': 'group_id', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 4
+        }
+    }
+PUT:
+request_dict = {
+        'name': 'experiment',
+        'method': 'PUT',
+        'body': {
+            'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'cycle_start': '2016-01-01 00:00:00',
+            'cycle_stop': '2016-01-31 18:00:00',
+            'owner_id': 'first.last@noaa.gov',
+            'group_id': 'gsienkf',
+            'experiment_type': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'platform': 'pw_awv1',
+            'wallclock_start': '2021-07-22 09:22:05',
+            'wallclock_end': '2021-07-24 05:31:14',
+            'description': #JSON VALUE OF DESCRIPTION
+        }
+    }
+
+### Experiment Metric Dictionaries
+Example format of request dictionaries for 'expt_metrics' calls.
+PUT:
+request_dict = {
+        'db_request_name' : 'expt_metrics',
+        'method': 'PUT',
+        'body' : {
+            'expt_name': experiment_name,
+            'expt_wallclock_start': experiment_wallclock,
+            'metrics': {
+                'name': name,
+                'region_name': region,
+                'elevation': elevation,
+                'elevation_unit':elevation_unit,
+                'value': value,
+                'time_valid': time_valid
+            },
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+        }
+    }
+
+Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered. 
+
+GET:
+request_dict = {
+        'name': 'expt_metrics',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'experiment': {
+                    'name': {
+                        'exact': 'UFSRNR_GSI_SOCA_3DVAR_COUPLED_122015_HC44RS_lstr_tst',
+                    },
+                    'wallclock_start': {
+                        'from': '2022-08-03 02:00:00',
+                        'to': '2022-08-03 06:00:00'
+                    }
+                },
+                'metric_types': {
+                    'name': {
+                        'exact': ['innov_stats_temperature_rmsd']
+                    },
+                    'stat_type': {
+                        'exact': ['rmsd']
+                    }
+                },
+                'regions': {
+                    'name': {
+                        'exact': ['global']
+                    },
+                },
+
+                'time_valid': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2016-01-03 00:00:00',
+                },
+            },
+            'ordering': [
+                {'name': 'time_valid', 'order_by': 'asc'}
+            ]
+        }
+    }
+
+### Harvest Metrics Dictionary 
+Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
+
+request_dict = {
+        'db_request_name' : 'harvest_metrics',
+        'body' : {
+            'expt_name': experiment_name,
+            'expt_wallclock_start': experiment_wallclock,
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+        },
+        'hv_translator': hv_translator,
+        'harvest_config': THIS IS A DICTIONARY FOR A SCORE-HV CONFIG
+    }
+
+Note the format of 'harvest_config' is required to be a valid config for 
+score-hv calls. 'hv_translator' needs to be a string value for a registered harvester. 
+
+### Harvest Innov Stats Dictionary
+Harvest innov stats only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'.
+
+request_dict = {
+        'db_request_name': 'harvest_innov_stats',
+        'date_range': {
+            'datetime_str': '%Y-%m-%d %H:%M:%S',
+            'start': '2015-12-01 0:00:00',
+            'end': '2015-12-01 0:00:00'
+        },
+
+        'files': [
+            {
+                'filepath': 'path/to/file/to/harvest',
+                'filename': 'innov_stats.metric.%Y%m%d%H.nc',
+                'cycles': CYCLES,
+                'harvester': 'innov_stats_netcdf',
+                'metrics': ['temperature','spechumid','uvwind'],
+                'stats': ['bias', 'count', 'rmsd'],
+                'elevation_unit': 'plevs'
+            },
+        ],
+        'output_format': 'tuples_list'
+    }
+
+### Metric Types Dictionaries
+Example format of request dictionaries for 'metric_types' calls.
+
+GET: 
+request_dict = {
+        'name': 'metric_type',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': 'innov_stats_temperature_rmsd',
+                    'in': ['innov_stats_temperature_rmsd', 'innov_stats_uvwind_rmsd']
+                },
+                'measurement_type': {
+                    'exact': 'temperature'
+                },
+                'measurement_unit': {
+                    'like': 'celsius'
+                },
+                'stat_type': {
+                    'exact': 'rmsd'
+                },
+            },
+            'ordering': [
+                {'name': 'name', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 4
+        }
+    }
+
+PUT:
+request_types = {
+        'db_request_name' : 'metric_types',
+        'method': 'PUT',
+        'body' : {
+            'name': name,
+            'measurement_type': measurement_type,
+            'measurement_units': units,
+            'stat_type': stat_type,
+            'description': JSON FORMAT OF DESCRIPTION
+        }
+    }
+
+### Regions Dictionaries
+Example format of request dictionary for 'regions' calls.
+
+PUT:
+request_dict = {
+        'name': 'region',
+        'method': 'PUT',
+        'body': {
+            'regions': [
+                {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'east_lon': 0.0, 'west_lon': 360.0},
+                {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0},
+            ]
+        }
+    }
+
+GET:
+request_dict = {
+        'name': 'region',
+        'method': 'GET',
+        'params': {'filter_type': 'by_name'},
+        'body': {
+            'regions': [
+                'global',
+                'equatorial',
+            ]
+        }
+    }
+
+### Storage Location Dictionaries 
+Example format of request dictionary for 'storage_locations' calls.
+
+GET:
+request_dict = {
+        'name': 'storage_locations',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'name': {
+                    'exact': 's3_example_bucket'
+                },
+            }
+        }
+    }
+
+PUT:
+request_dict = {
+        'name': 'storage_locations',
+        'method': 'PUT',
+        'body': {
+            'name': 's3_example_bucket',
+            'platform': 'aws_s3', 
+            'bucket_name': 'noaa-example-score-db-bucket',
+            'key': 'reanalysis',
+            'platform_region': 'n/a'
+        }
+    }
+
+### File Types Dictionaries
+Example request dictionaries for the 'file_types' calls.
+
+PUT:
+request_dict = {
+        'name': 'file_types',
+        'method' : 'PUT',
+        'body' :{
+            'name': 'example_type',
+            'file_template': '*.example',
+            'file_format': 'text',
+            'description': json.dumps({"name": "example"})
+        }
+    }
+
+GET:
+request_dict = {
+        'name': 'file_types',
+        'method': 'GET',
+        'params' : {
+            'filters': {
+                'name' :{
+                    'exact' : 'example_type'
+                }
+            }
+        }
+    }
+
+### Experiment File Counts Dictionaries
+Example request dictionaries for the 'expt_file_counts' calls. 
+
+PUT:
+  request_dict = {
+        'name': 'expt_file_counts',
+        'method': 'PUT',
+        'body': {
+            'experiment_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'wallclock_start': '2021-07-22 09:22:05',
+            'file_type_name': 'example_type',
+            'file_extension': '.example',
+            'time_valid': '2023-02-05 06:00:00',
+            'forecast_length' : 120,
+            'bucket_name' : 'noaa-example-score-db-bucket',
+            'platform': 'aws_s3',
+            'key': 'reanalysis',
+            'count': 1230,
+            'folder_path': 'noaa-example-score-db-bucket/reanalysis/2023/02/23/2023022306',
+            'cycle': '2023-02-03 06:00:00'
+        }
+    }
+Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call.
+
+GET:
+request_dict = {
+        'name' : 'expt_file_counts',
+        'method': 'GET',
+        'params' : {
+            'filters': {
+                'experiment': {
+                    'experiment_name': {
+                        'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016'
+                    }
+                },
+                'file_types': {
+                    'file_type_name': {
+                        'exact': 'example_type',
+                    },
+                },
+                'storage_locations': {
+                    'storage_loc_name' :{
+                        'exact': 's3_example_bucket',
+                    },
+                },
+            }
+        }
+    }
+
+### Plot Innovation Stats Dictionary
+Example request dictionary of a call to 'plot_innov_stats'.
+
+plot_control_dict = {
+        'db_request_name': 'plot_innov_stats',
+        'date_range': {
+            'datetime_str': '%Y-%m-%d %H:%M:%S',
+            'start': '2016-01-01 00:00:00',
+            'end': '2016-01-31 18:00:00'
+        },
+        'experiments': [
+            {
+                'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+                'wallclock_start': '2021-07-22 09:22:05',
+                'graph_label': 'C96L64 GSI Uncoupled 3DVAR Experiment',
+                'graph_color': 'blue'
+            },
+            {
+                'name': 'C96L64.UFSRNR.GSI_SOCA_3DVAR.012016',
+                'wallclock_start':  '2021-07-24 11:31:16',
+                'graph_label': 'C96L64 GSI and SOCA Coupled 3DVAR Experiment',
+                'graph_color': 'red'
+            }
+        ],
+        'stat_groups': [
+            {
+                'cycles': CYCLES,
+                'stat_group_frmt_str': 'innov_stats_{metric}_{stat}',
+                'metrics': ['temperature','spechumid','uvwind'],
+                'stats': ['bias', 'rmsd'],
+                'elevation_unit': 'plevs',
+                'regions': [
+                    'equatorial',
+                    'global',
+                    'north_hemis',
+                    'south_hemis',
+                    'tropics'
+                ]
+            }
+        ],
+        'work_dir': '/absolute/path/to/desired/figure/location',
+        'fig_base_fn': 'C96L64_GSI_3DVAR_VS_GSI_SOCA_3DVAR'
+    }

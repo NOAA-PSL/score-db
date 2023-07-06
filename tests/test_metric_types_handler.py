@@ -161,7 +161,7 @@ def test_parse_request_dict():
 
     for m_type in metric_types:
         request_dict = {
-            'name': 'metric_type',
+            'name': 'metric_types',
             'method': 'PUT',
             'body': {
                 'name': m_type.name,
@@ -179,7 +179,7 @@ def test_parse_request_dict():
 def test_send_get_request():
 
     request_dict = {
-        'name': 'metric_type',
+        'name': 'metric_types',
         'method': 'GET',
         'params': {
             'filters': {

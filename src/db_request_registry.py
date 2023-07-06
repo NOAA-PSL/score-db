@@ -47,7 +47,7 @@ request_registry = {
         DbActionResponse
     ),
     'expt_metrics': RequestHandler(
-        'Add or get or update experiment metrics data',
+        'Add or get experiment metrics data',
         ExptMetricRequest,
         DbActionResponse
     ),
@@ -77,7 +77,7 @@ request_registry = {
         DbActionResponse
     ),
     'expt_file_counts': RequestHandler(
-        'Add or get or update experiment file counts',
+        'Add or get experiment file counts',
         ExptFileCountRequest,
         DbActionResponse
     ),
