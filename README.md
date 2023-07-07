@@ -76,16 +76,18 @@ with a yaml file or a python dictionary as the only accepted arguments.
 ## Input values 
 Every action made through the API requires a name and method. Valid methods are GET or PUT. The name must be a registered value in the db_request_regsitry. 
 Currently valid registry options are:
+```sh
 'region' : 'Add or get regions'
 'experiment' : 'Add, get, or update experiment registration data'
 'expt_metrics' : 'Add or update experiment metrics data'
 'metric_types' : 'Add, get, or update metric types'
-'harvest_innov_stats' : 'Gather and store innovationo statistics from diagnostics files'
+'harvest_innov_stats' : 'Gather and store innovation statistics from diagnostics files'
 'plot_innov_stats' : 'Plot innovation statistics'
 'file_types' : 'Add, get, or update file types'
 'storage_locations' : 'Add, get, or update storage locations'
 'expt_file_counts' : 'Add or get experiment file counts'
 'harvest_metrics' : 'Harvest and store metrics'
+```
 
 Example request dictionaries for each registry option are provided in the index.
 
@@ -657,7 +659,6 @@ request_dict = {
             'start': '2015-12-01 0:00:00',
             'end': '2015-12-01 0:00:00'
         },
-
         'files': [
             {
                 'filepath': 'path/to/file/to/harvest',
