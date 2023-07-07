@@ -492,7 +492,10 @@ For each request, a dictionary of values or yaml file containing the same inform
 
 ### Experiment Dictionaries
 Example format of request dictionaries for 'experiment' calls.
+
 GET: 
+
+```sh
 request_dict = {
         'name': 'experiment',
         'method': 'GET',
@@ -531,7 +534,10 @@ request_dict = {
             'record_limit': 4
         }
     }
+```
+
 PUT:
+```sh
 request_dict = {
         'name': 'experiment',
         'method': 'PUT',
@@ -549,10 +555,13 @@ request_dict = {
             'description': #JSON VALUE OF DESCRIPTION
         }
     }
+```
 
 ### Experiment Metric Dictionaries
 Example format of request dictionaries for 'expt_metrics' calls.
+
 PUT:
+```sh
 request_dict = {
         'db_request_name' : 'expt_metrics',
         'method': 'PUT',
@@ -570,10 +579,13 @@ request_dict = {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
         }
     }
+```
 
 Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered. 
 
 GET:
+
+```sh
 request_dict = {
         'name': 'expt_metrics',
         'method': 'GET',
@@ -613,10 +625,12 @@ request_dict = {
             ]
         }
     }
+```    
 
 ### Harvest Metrics Dictionary 
 Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
 
+```sh
 request_dict = {
         'db_request_name' : 'harvest_metrics',
         'body' : {
@@ -627,6 +641,7 @@ request_dict = {
         'hv_translator': hv_translator,
         'harvest_config': THIS IS A DICTIONARY FOR A SCORE-HV CONFIG
     }
+```
 
 Note the format of 'harvest_config' is required to be a valid config for 
 score-hv calls. 'hv_translator' needs to be a string value for a registered harvester. 
@@ -634,6 +649,7 @@ score-hv calls. 'hv_translator' needs to be a string value for a registered harv
 ### Harvest Innov Stats Dictionary
 Harvest innov stats only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'.
 
+```sh
 request_dict = {
         'db_request_name': 'harvest_innov_stats',
         'date_range': {
@@ -655,11 +671,13 @@ request_dict = {
         ],
         'output_format': 'tuples_list'
     }
+```
 
 ### Metric Types Dictionaries
 Example format of request dictionaries for 'metric_types' calls.
 
 GET: 
+```sh
 request_dict = {
         'name': 'metric_type',
         'method': 'GET',
@@ -686,8 +704,10 @@ request_dict = {
             'record_limit': 4
         }
     }
+```
 
 PUT:
+```sh
 request_types = {
         'db_request_name' : 'metric_types',
         'method': 'PUT',
@@ -699,11 +719,13 @@ request_types = {
             'description': JSON FORMAT OF DESCRIPTION
         }
     }
+```
 
 ### Regions Dictionaries
 Example format of request dictionary for 'regions' calls.
 
 PUT:
+```sh
 request_dict = {
         'name': 'region',
         'method': 'PUT',
@@ -714,8 +736,10 @@ request_dict = {
             ]
         }
     }
+```
 
 GET:
+```sh
 request_dict = {
         'name': 'region',
         'method': 'GET',
@@ -727,11 +751,13 @@ request_dict = {
             ]
         }
     }
+```
 
 ### Storage Location Dictionaries 
 Example format of request dictionary for 'storage_locations' calls.
 
 GET:
+```sh
 request_dict = {
         'name': 'storage_locations',
         'method': 'GET',
@@ -744,8 +770,10 @@ request_dict = {
             }
         }
     }
+```
 
 PUT:
+```sh
 request_dict = {
         'name': 'storage_locations',
         'method': 'PUT',
@@ -757,11 +785,13 @@ request_dict = {
             'platform_region': 'n/a'
         }
     }
+```
 
 ### File Types Dictionaries
 Example request dictionaries for the 'file_types' calls.
 
 PUT:
+```sh
 request_dict = {
         'name': 'file_types',
         'method' : 'PUT',
@@ -772,8 +802,10 @@ request_dict = {
             'description': json.dumps({"name": "example"})
         }
     }
+```
 
 GET:
+```sh
 request_dict = {
         'name': 'file_types',
         'method': 'GET',
@@ -785,11 +817,13 @@ request_dict = {
             }
         }
     }
+```
 
 ### Experiment File Counts Dictionaries
 Example request dictionaries for the 'expt_file_counts' calls. 
 
 PUT:
+```sh
   request_dict = {
         'name': 'expt_file_counts',
         'method': 'PUT',
@@ -808,9 +842,12 @@ PUT:
             'cycle': '2023-02-03 06:00:00'
         }
     }
+```
+
 Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call.
 
 GET:
+```sh
 request_dict = {
         'name' : 'expt_file_counts',
         'method': 'GET',
@@ -834,10 +871,12 @@ request_dict = {
             }
         }
     }
+```
 
 ### Plot Innovation Stats Dictionary
 Example request dictionary of a call to 'plot_innov_stats'.
 
+```sh
 plot_control_dict = {
         'db_request_name': 'plot_innov_stats',
         'date_range': {
@@ -878,3 +917,4 @@ plot_control_dict = {
         'work_dir': '/absolute/path/to/desired/figure/location',
         'fig_base_fn': 'C96L64_GSI_3DVAR_VS_GSI_SOCA_3DVAR'
     }
+```
