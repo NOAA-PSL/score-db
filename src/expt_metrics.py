@@ -55,7 +55,9 @@ ExptMetricInputData = namedtuple(
         'elevation',
         'elevation_unit',
         'value',
-        'time_valid'
+        'time_valid',
+        'forecast_hour',
+        'ensemble_member'
     ],
 )
 
@@ -69,6 +71,8 @@ ExptMetricsData = namedtuple(
         'elevation_unit',
         'value',
         'time_valid',
+        'forecast_hour',
+        'ensemble_member'
         'expt_id',
         'expt_name',
         'wallclock_start',
@@ -441,6 +445,10 @@ class ExptMetricRequest:
             constructed_filter,
             'elevation_unit'
         )
+
+        constructed_filter = get_float_filter(self.filters, ex_mt, 'forecast_hour', constructed_filter)
+
+        constructed_filter = get_float_filter(self.filters, ex_mt, 'ensemble_member', constructed_filter)
 
         if len(constructed_filter) > 0:
             try:

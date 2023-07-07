@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, MetaData, ForeignKey
-from sqlalchemy import Integer, String, Boolean, DateTime, Float
+from sqlalchemy import Integer, String, Boolean, DateTime, Float, BigInteger
 
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
@@ -113,6 +113,8 @@ class ExperimentMetric(Base):
     elevation_unit = Column(String(32))
     value = Column(Float)
     time_valid = Column(DateTime, nullable=False)
+    forecast_hour = Column(Float)
+    ensemble_member = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='metrics')
@@ -196,7 +198,8 @@ class ExptStoredFileCount(Base):
     folder_path = Column(String(255))
     cycle = Column(DateTime)
     time_valid = Column(DateTime)
-    forecast_length = Column(Float)
+    forecast_hour = Column(Float)
+    file_size_bytes = Column(BigInteger)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='file_counts')
