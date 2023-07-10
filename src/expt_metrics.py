@@ -524,7 +524,9 @@ class ExptMetricRequest:
                 elevation=row.elevation,
                 elevation_unit=row.elevation_unit,
                 value=value,
-                time_valid=row.time_valid
+                time_valid=row.time_valid,
+                forecast_hour=row.forecase_hour,
+                ensemble_member=row.ensemble_member
             )
 
             records.append(item)
@@ -564,6 +566,8 @@ class ExptMetricRequest:
                     msg += f'record.elevation_unit: {record.elevation_unit}, '
                     msg += f'record.value: {record.value}, '
                     msg += f'record.time_valid: {record.time_valid}, '
+                    msg += f'record.forecast_hour: {record.forecast_hour},'
+                    msg += f'record.ensemble_member: {record.ensemble_member},'
                     msg += f'record.created_at: {record.created_at}'
                     print(f'record: {msg}')
 
@@ -619,6 +623,8 @@ class ExptMetricRequest:
                 elevation_unit=metric.elevation_unit,
                 value=metric.value,
                 time_valid=metric.time_valid,
+                forecast_hour=metric.forecast_hour,
+                ensemble_member=metric.ensemble_member,
                 expt_id=metric.experiment.id,
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
@@ -695,6 +701,8 @@ class ExptMetricRequest:
                     'elevation',
                     'elevation_unit',
                     'time_valid',
+                    'forecast_hour',
+                    'ensemble_member',
                     'expt_id',
                     'metric_id',
                     'region_id'
