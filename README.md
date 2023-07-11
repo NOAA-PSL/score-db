@@ -434,6 +434,8 @@ expt_metrics
     elevation_unit = Column(String(32))
     value = Column(Float)
     time_valid = Column(DateTime, nullable=False)
+    forecast_hour = Column(Float)
+    ensemble_member = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='metrics')
@@ -480,7 +482,8 @@ expt_stored_file_counts
     folder_path = Column(String(255))
     cycle = Column(DateTime)
     time_valid = Column(DateTime)
-    forecast_length = Column(Float)
+    forecast_hour = Column(Float)
+    file_size_bytes = Column(BigInteger)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='file_counts')
@@ -574,9 +577,11 @@ request_dict = {
                 'name': name,
                 'region_name': region,
                 'elevation': elevation,
-                'elevation_unit':elevation_unit,
+                'elevation_unit': elevation_unit,
                 'value': value,
-                'time_valid': time_valid
+                'time_valid': time_valid,
+                'forecast_hour' : forecast_hour,
+                'ensemble_member' : ensemble_member
             },
             'datestr_format': '%Y-%m-%d %H:%M:%S',
         }
@@ -641,7 +646,7 @@ request_dict = {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
         },
         'hv_translator': hv_translator,
-        'harvest_config': THIS IS A DICTIONARY FOR A SCORE-HV CONFIG
+        'harvest_config': Dictionary configuration for harvest
     }
 ```
 
