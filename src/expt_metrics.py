@@ -525,7 +525,7 @@ class ExptMetricRequest:
                 elevation_unit=row.elevation_unit,
                 value=value,
                 time_valid=row.time_valid,
-                forecast_hour=row.forecase_hour,
+                forecast_hour=row.forecast_hour,
                 ensemble_member=row.ensemble_member
             )
 
