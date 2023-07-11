@@ -72,7 +72,7 @@ ExptMetricsData = namedtuple(
         'value',
         'time_valid',
         'forecast_hour',
-        'ensemble_member'
+        'ensemble_member',
         'expt_id',
         'expt_name',
         'wallclock_start',
