@@ -35,11 +35,11 @@ def test_put_exp_metrics_request_dict():
         'name': 'expt_metrics',
         'method': 'PUT',
         'body': {
-            'expt_name': 'UFSRNR_GSI_SOCA_3DVAR_COUPLED_AZURE_HC44RS_122015',
-            'expt_wallclock_start': '2022-08-03 02:40:34',
+            'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'expt_wallclock_start': '2021-07-22 09:22:05',
             'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', '0', 'kpa', 2.6, '2015-12-02 06:00:00'),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', '50', 'kpa', 2.8, '2015-12-02 06:00:00')
+                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
@@ -62,8 +62,8 @@ def test_send_get_request():
                         'exact': 'UFSRNR_GSI_SOCA_3DVAR_COUPLED_122015_HC44RS_lstr_tst',
                     },
                     'wallclock_start': {
-                        'from': '2022-08-03 02:00:00',
-                        'to': '2022-08-03 06:00:00'
+                        'from': '2021-07-22 02:22:05',
+                        'to': '2021-07-22 10:22:05'
                     }
                 },
                 'metric_types': {

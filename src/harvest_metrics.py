@@ -68,6 +68,8 @@ class HarvestMetricsRequest(object):
                     error_message = f'An error occurred when translating the data with translator input {self.hv_translator}. ' \
                           f'Valid translators: {hvtr.valid_translators}. Error: {err}'
                     return self.failed_request(error_message)
+            else:
+                data = row
 
             item = ExptMetricInputData(
                 data.name,
@@ -75,7 +77,9 @@ class HarvestMetricsRequest(object):
                 data.elevation,
                 data.elevation_unit,
                 data.value,
-                data.cycletime
+                data.cycletime,
+                data.forecast_hour,
+                data.ensemble_member
             )
 
             expt_metrics.append(item)

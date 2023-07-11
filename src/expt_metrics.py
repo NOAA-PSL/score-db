@@ -55,7 +55,9 @@ ExptMetricInputData = namedtuple(
         'elevation',
         'elevation_unit',
         'value',
-        'time_valid'
+        'time_valid',
+        'forecast_hour',
+        'ensemble_member'
     ],
 )
 
@@ -69,6 +71,8 @@ ExptMetricsData = namedtuple(
         'elevation_unit',
         'value',
         'time_valid',
+        'forecast_hour',
+        'ensemble_member',
         'expt_id',
         'expt_name',
         'wallclock_start',
@@ -442,6 +446,10 @@ class ExptMetricRequest:
             'elevation_unit'
         )
 
+        constructed_filter = get_float_filter(self.filters, ex_mt, 'forecast_hour', constructed_filter)
+
+        constructed_filter = get_float_filter(self.filters, ex_mt, 'ensemble_member', constructed_filter)
+
         if len(constructed_filter) > 0:
             try:
                 for key, value in constructed_filter.items():
@@ -516,7 +524,9 @@ class ExptMetricRequest:
                 elevation=row.elevation,
                 elevation_unit=row.elevation_unit,
                 value=value,
-                time_valid=row.time_valid
+                time_valid=row.time_valid,
+                forecast_hour=row.forecast_hour,
+                ensemble_member=row.ensemble_member
             )
 
             records.append(item)
@@ -556,6 +566,8 @@ class ExptMetricRequest:
                     msg += f'record.elevation_unit: {record.elevation_unit}, '
                     msg += f'record.value: {record.value}, '
                     msg += f'record.time_valid: {record.time_valid}, '
+                    msg += f'record.forecast_hour: {record.forecast_hour},'
+                    msg += f'record.ensemble_member: {record.ensemble_member},'
                     msg += f'record.created_at: {record.created_at}'
                     print(f'record: {msg}')
 
@@ -611,6 +623,8 @@ class ExptMetricRequest:
                 elevation_unit=metric.elevation_unit,
                 value=metric.value,
                 time_valid=metric.time_valid,
+                forecast_hour=metric.forecast_hour,
+                ensemble_member=metric.ensemble_member,
                 expt_id=metric.experiment.id,
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
@@ -687,6 +701,8 @@ class ExptMetricRequest:
                     'elevation',
                     'elevation_unit',
                     'time_valid',
+                    'forecast_hour',
+                    'ensemble_member',
                     'expt_id',
                     'metric_id',
                     'region_id'

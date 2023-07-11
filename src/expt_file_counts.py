@@ -54,7 +54,8 @@ ExptFileCountData = namedtuple(
         'folder_path',
         'cycle',
         'time_valid',
-        'forecast_length',
+        'forecast_hour',
+        'file_size_bytes',
         'experiment_id',
         'file_type_id',
         'storage_location_id',
@@ -75,7 +76,8 @@ class ExptFileCount:
     folder_path: String
     cycle: datetime
     time_valid: datetime
-    forecast_length: float 
+    forecast_hour: float 
+    file_size_bytes: int
     experiment_id: int
     file_type_id: int
     storage_location_id: int
@@ -87,7 +89,8 @@ class ExptFileCount:
             self.folder_path,
             self.cycle,
             self.time_valid,
-            self.forecast_length,
+            self.forecast_hour,
+            self.file_size_bytes,
             self.experiment_id,
             self.file_type_id,
             self.storage_location_id
@@ -114,7 +117,8 @@ def get_file_count_from_body(body):
         body.get('folder_path'),
         body.get('cycle'),
         body.get('time_valid'),
-        body.get('forecast_length'),
+        body.get('forecast_hour'),
+        body.get('file_size_bytes'),
         experiment_id,
         file_type_id,
         storage_location_id
@@ -205,6 +209,23 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     if exact_match_filter is not None:
         constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
 
+    return constructed_filter
+
+def get_float_filter(filter_dict, cls, key, constructed_filter):
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    float_flt = filter_dict.get(key)
+
+    if float_flt is None:
+        print(f'No \'{key}\' filter detected')
+        return constructed_filter
+
+    constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    
     return constructed_filter
 
 def get_experiments_filter(filter_dict, constructed_filter):
@@ -478,23 +499,20 @@ class ExptFileCountRequest:
         constructed_filter = get_storage_locations_filter(
             filters.get('storage_locations'), constructed_filter)
         
-        constructed_filter = get_string_filter(
+        constructed_filter = get_float_filter(
             filters,
             esfc,
-            'forecast_length',
-            constructed_filter,
-            'forecast_length'
-        )
+            'forecast_hour',
+            constructed_filter)
 
         constructed_filter = get_time_filter(
             filters, esfc, 'time_valid', constructed_filter)
         
-        constructed_filter = get_string_filter(
+        constructed_filter = get_float_filter(
             filters,
             esfc,
             'count',
-            constructed_filter,
-            'count'
+            constructed_filter
         )
 
         constructed_filter = get_string_filter(
@@ -506,6 +524,8 @@ class ExptFileCountRequest:
         )
 
         constructed_filter = get_time_filter(filters, esfc, 'cycle', constructed_filter)
+
+        constructed_filter = get_float_filter(filters, esfc, 'file_size_bytes', constructed_filter)
 
         if len(constructed_filter) > 0:
             try: 
@@ -539,7 +559,8 @@ class ExptFileCountRequest:
             folder_path=self.expt_file_count_data.folder_path,
             cycle=self.expt_file_count_data.cycle,
             time_valid=self.expt_file_count.time_valid,
-            forecast_length=self.expt_file_count_data.forecast_length,
+            forecast_hour=self.expt_file_count_data.forecast_hour,
+            file_size_bytes=self.expt_file_count.file_size_bytes,
             experiment_id=self.expt_file_count_data.experiment_id,
             file_type_id=self.expt_file_count_data.file_type_id,
             storage_location_id=self.expt_file_count_data.storage_location_id,
@@ -587,7 +608,8 @@ class ExptFileCountRequest:
             esfc.folder_path,
             esfc.cycle,
             esfc.time_valid,
-            esfc.forecast_length,
+            esfc.forecast_hour,
+            esfc.file_size_bytes,
             esfc.experiment_id,
             esfc.file_type_id,
             esfc.storage_location_id,
