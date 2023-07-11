@@ -24,7 +24,7 @@ def test_put_expt_file_counts_request_dict():
             'file_extension': '.example',
             'time_valid': '2023-02-05 06:00:00',
             'forecast_hour' : 120,
-            'file_size_bytes': 1203949459, 
+            'file_size_bytes': 120394945934, 
             'bucket_name' : 'noaa-example-score-db-bucket',
             'platform': 'aws_s3',
             'key': 'reanalysis',
