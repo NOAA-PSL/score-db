@@ -462,7 +462,7 @@ file_types
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), nullable=False)
-    file_template= Column(String(64), nullable=False)
+    file_template = Column(String(64), nullable=False)
     file_format = Column(String(64))
     description = Column(JSONB(astext_type=sa.Text()), nullable=True)
     created_at = Column(DateTime, nullable=False)
@@ -561,8 +561,9 @@ request_dict = {
         }
     }
 ```
+Values which can be null or not provided: group_id, experiment_type, wallclock_end, description
 
-### Experiment Metric Dictionaries
+#### Experiment Metric Dictionaries
 Example format of request dictionaries for 'expt_metrics' calls.
 
 PUT:
@@ -587,6 +588,7 @@ request_dict = {
         }
     }
 ```
+Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member
 
 Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered. 
 
@@ -634,7 +636,7 @@ request_dict = {
     }
 ```    
 
-### Harvest Metrics Dictionary 
+#### Harvest Metrics Dictionary 
 Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
 
 ```sh
@@ -653,7 +655,7 @@ request_dict = {
 Note the format of 'harvest_config' is required to be a valid config for 
 score-hv calls. 'hv_translator' needs to be a string value for a registered harvester. 
 
-### Harvest Innov Stats Dictionary
+#### Harvest Innov Stats Dictionary
 Harvest innov stats only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'.
 
 ```sh
@@ -679,7 +681,7 @@ request_dict = {
     }
 ```
 
-### Metric Types Dictionaries
+#### Metric Types Dictionaries
 Example format of request dictionaries for 'metric_types' calls.
 
 GET: 
@@ -727,7 +729,9 @@ request_types = {
     }
 ```
 
-### Regions Dictionaries
+Values which can be null or not provided: measurement_units, stat_type, description
+
+#### Regions Dictionaries
 Example format of request dictionary for 'regions' calls.
 
 PUT:
@@ -759,7 +763,7 @@ request_dict = {
     }
 ```
 
-### Storage Location Dictionaries 
+#### Storage Location Dictionaries 
 Example format of request dictionary for 'storage_locations' calls.
 
 GET:
@@ -793,7 +797,9 @@ request_dict = {
     }
 ```
 
-### File Types Dictionaries
+Values which can be null or not provided: key, platform_region
+
+#### File Types Dictionaries
 Example request dictionaries for the 'file_types' calls.
 
 PUT:
@@ -824,8 +830,9 @@ request_dict = {
         }
     }
 ```
+Values which can be null or not provided: file_format, description
 
-### Experiment File Counts Dictionaries
+#### Experiment File Counts Dictionaries
 Example request dictionaries for the 'expt_file_counts' calls. 
 
 PUT:
@@ -839,7 +846,8 @@ PUT:
             'file_type_name': 'example_type',
             'file_extension': '.example',
             'time_valid': '2023-02-05 06:00:00',
-            'forecast_length' : 120,
+            'forecast_hour' : 120,
+            'file_size_bytes' : 1234567890,
             'bucket_name' : 'noaa-example-score-db-bucket',
             'platform': 'aws_s3',
             'key': 'reanalysis',
@@ -849,6 +857,7 @@ PUT:
         }
     }
 ```
+Values which can be null or not provided: folder_path, cycle, time_valid, forecast_hour, file_size_bytes
 
 Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call.
 
@@ -879,7 +888,7 @@ request_dict = {
     }
 ```
 
-### Plot Innovation Stats Dictionary
+#### Plot Innovation Stats Dictionary
 Example request dictionary of a call to 'plot_innov_stats'.
 
 ```sh
