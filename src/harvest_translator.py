@@ -19,7 +19,9 @@ MetricTableData = namedtuple(
         'elevation',
         'elevation_unit',
         'value',
-        'cycletime'
+        'cycletime',
+        'forecast_hour',
+        'ensemble_member'
     ],
 )
 
@@ -44,7 +46,9 @@ def inc_logs_translator(harvested_data):
         None,
         'N/A',
         harvested_data.value, 
-        harvested_data.cycletime
+        harvested_data.cycletime,
+        None, 
+        None
     )
 
     return result

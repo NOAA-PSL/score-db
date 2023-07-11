@@ -201,7 +201,9 @@ class HarvestInnovStatsRequest(object):
                         row.elevation,
                         row.elevation_unit,
                         row.value,
-                        row.cycletime
+                        row.cycletime, 
+                        None,
+                        None
                     )
 
                     expt_metrics.append(item)
