@@ -949,15 +949,15 @@ The db_action_response.py file defines the response code structure that is expec
 The score_table_models.py file defines all the of the tables in the database using SQLAlchemy and contains the code to build those repsective tables. 
 
 Majority of the files are used for calls to manipulate specific database tables. The relationship between those files and the tables is as follows: 
-'''
-experiments: experiments.py
-regions: regions.py
-metric_types: metric_types.py
-expt_metrics: expt_metrics.py
-storage_locations: storage_locations.py
-file_types: file_types.py
-expt_stored_file_counts: expt_file_counts.py
-'''
+
+   experiments: experiments.py
+   regions: regions.py
+   metric_types: metric_types.py
+   expt_metrics: expt_metrics.py
+   storage_locations: storage_locations.py
+   file_types: file_types.py
+   expt_stored_file_counts: expt_file_counts.py
+
 The general structure of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handling any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
 
 The harvest_metrics.py and harvest_innov_stats.py files handle calls which require harvesting of data via score-hv and then inputs that info into the expt_metrics table via calls to the expt_metrics.py code. harvest_metrics.py is a more generic version of harvest_innov_stats.py and can process any type of harvested data if an appropriate translator is provided in harvest_translator.py. Only innov_stats files can be used with harvest_innov_stats.py. 
