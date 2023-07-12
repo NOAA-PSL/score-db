@@ -566,32 +566,6 @@ Values which can be null or not provided: group_id, experiment_type, wallclock_e
 ### Experiment Metric Dictionaries
 Example format of request dictionaries for 'expt_metrics' calls.
 
-PUT:
-```sh
-request_dict = {
-        'db_request_name' : 'expt_metrics',
-        'method': 'PUT',
-        'body' : {
-            'expt_name': experiment_name,
-            'expt_wallclock_start': experiment_wallclock,
-            'metrics': {
-                'name': name,
-                'region_name': region,
-                'elevation': elevation,
-                'elevation_unit': elevation_unit,
-                'value': value,
-                'time_valid': time_valid,
-                'forecast_hour' : forecast_hour,
-                'ensemble_member' : ensemble_member
-            },
-            'datestr_format': '%Y-%m-%d %H:%M:%S',
-        }
-    }
-```
-Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member
-
-Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered. 
-
 GET:
 
 ```sh
@@ -636,6 +610,32 @@ request_dict = {
     }
 ```    
 
+PUT:
+```sh
+request_dict = {
+        'db_request_name' : 'expt_metrics',
+        'method': 'PUT',
+        'body' : {
+            'expt_name': experiment_name,
+            'expt_wallclock_start': experiment_wallclock,
+            'metrics': {
+                'name': name,
+                'region_name': region,
+                'elevation': elevation,
+                'elevation_unit': elevation_unit,
+                'value': value,
+                'time_valid': time_valid,
+                'forecast_hour' : forecast_hour,
+                'ensemble_member' : ensemble_member
+            },
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+        }
+    }
+```
+Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member
+
+Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered. 
+
 ### Harvest Metrics Dictionary 
 Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
 
@@ -653,7 +653,7 @@ request_dict = {
 ```
 
 Note the format of 'harvest_config' is required to be a valid config for 
-score-hv calls. 'hv_translator' needs to be a string value for a registered harvester. 
+score-hv calls. 'hv_translator' needs to be a string value for a registered harvester translator in the hv_translator_registry.py. 
 
 ### Harvest Innov Stats Dictionary
 Harvest innov stats only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'.
@@ -734,20 +734,6 @@ Values which can be null or not provided: measurement_units, stat_type, descript
 ### Regions Dictionaries
 Example format of request dictionary for 'regions' calls.
 
-PUT:
-```sh
-request_dict = {
-        'name': 'region',
-        'method': 'PUT',
-        'body': {
-            'regions': [
-                {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'east_lon': 0.0, 'west_lon': 360.0},
-                {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0},
-            ]
-        }
-    }
-```
-
 GET:
 ```sh
 request_dict = {
@@ -762,6 +748,21 @@ request_dict = {
         }
     }
 ```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'region',
+        'method': 'PUT',
+        'body': {
+            'regions': [
+                {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'east_lon': 0.0, 'west_lon': 360.0},
+                {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0},
+            ]
+        }
+    }
+```
+
 
 ### Storage Location Dictionaries 
 Example format of request dictionary for 'storage_locations' calls.
@@ -802,20 +803,6 @@ Values which can be null or not provided: key, platform_region
 ### File Types Dictionaries
 Example request dictionaries for the 'file_types' calls.
 
-PUT:
-```sh
-request_dict = {
-        'name': 'file_types',
-        'method' : 'PUT',
-        'body' :{
-            'name': 'example_type',
-            'file_template': '*.example',
-            'file_format': 'text',
-            'description': json.dumps({"name": "example"})
-        }
-    }
-```
-
 GET:
 ```sh
 request_dict = {
@@ -827,6 +814,20 @@ request_dict = {
                     'exact' : 'example_type'
                 }
             }
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'file_types',
+        'method' : 'PUT',
+        'body' :{
+            'name': 'example_type',
+            'file_template': '*.example',
+            'file_format': 'text',
+            'description': json.dumps({"name": "example"})
         }
     }
 ```
@@ -950,13 +951,13 @@ The score_table_models.py file defines all the of the tables in the database usi
 
 Majority of the files are used for calls to manipulate specific database tables. The relationship between those files and the tables is as follows: 
 
-   experiments: experiments.py
-   regions: regions.py
-   metric_types: metric_types.py
-   expt_metrics: expt_metrics.py
-   storage_locations: storage_locations.py
-   file_types: file_types.py
-   expt_stored_file_counts: expt_file_counts.py
+- experiments: experiments.py
+- regions: regions.py
+- metric_types: metric_types.py
+- expt_metrics: expt_metrics.py
+- storage_locations: storage_locations.py
+- file_types: file_types.py
+- expt_stored_file_counts: expt_file_counts.py
 
 The general structure of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handling any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
 
