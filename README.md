@@ -836,32 +836,6 @@ Values which can be null or not provided: file_format, description
 ### Experiment File Counts Dictionaries
 Example request dictionaries for the 'expt_file_counts' calls. 
 
-PUT:
-```sh
-  request_dict = {
-        'name': 'expt_file_counts',
-        'method': 'PUT',
-        'body': {
-            'experiment_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
-            'wallclock_start': '2021-07-22 09:22:05',
-            'file_type_name': 'example_type',
-            'file_extension': '.example',
-            'time_valid': '2023-02-05 06:00:00',
-            'forecast_hour' : 120,
-            'file_size_bytes' : 1234567890,
-            'bucket_name' : 'noaa-example-score-db-bucket',
-            'platform': 'aws_s3',
-            'key': 'reanalysis',
-            'count': 1230,
-            'folder_path': 'noaa-example-score-db-bucket/reanalysis/2023/02/23/2023022306',
-            'cycle': '2023-02-03 06:00:00'
-        }
-    }
-```
-Values which can be null or not provided: folder_path, cycle, time_valid, forecast_hour, file_size_bytes
-
-Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call.
-
 GET:
 ```sh
 request_dict = {
@@ -888,6 +862,32 @@ request_dict = {
         }
     }
 ```
+
+PUT:
+```sh
+  request_dict = {
+        'name': 'expt_file_counts',
+        'method': 'PUT',
+        'body': {
+            'experiment_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'wallclock_start': '2021-07-22 09:22:05',
+            'file_type_name': 'example_type',
+            'file_extension': '.example',
+            'time_valid': '2023-02-05 06:00:00',
+            'forecast_hour' : 120,
+            'file_size_bytes' : 1234567890,
+            'bucket_name' : 'noaa-example-score-db-bucket',
+            'platform': 'aws_s3',
+            'key': 'reanalysis',
+            'count': 1230,
+            'folder_path': 'noaa-example-score-db-bucket/reanalysis/2023/02/23/2023022306',
+            'cycle': '2023-02-03 06:00:00'
+        }
+    }
+```
+Values which can be null or not provided: folder_path, cycle, time_valid, forecast_hour, file_size_bytes
+
+Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call.
 
 ### Plot Innovation Stats Dictionary
 Example request dictionary of a call to 'plot_innov_stats'.
