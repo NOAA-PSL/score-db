@@ -79,7 +79,7 @@ Currently valid registry options are:
 ```sh
 'region' : 'Add or get regions'
 'experiment' : 'Add, get, or update experiment registration data'
-'expt_metrics' : 'Add or update experiment metrics data'
+'expt_metrics' : 'Add or get experiment metrics data'
 'metric_types' : 'Add, get, or update metric types'
 'harvest_innov_stats' : 'Gather and store innovation statistics from diagnostics files'
 'plot_innov_stats' : 'Plot innovation statistics'
@@ -89,7 +89,7 @@ Currently valid registry options are:
 'harvest_metrics' : 'Harvest and store metrics'
 ```
 
-Example request dictionaries for each registry option are provided in the index.
+Example request dictionaries for each registry option are provided in the Appendix.
 
 ## Examples 
 ### How to Register an Experiment
@@ -634,7 +634,7 @@ request_dict = {
 ```
 Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member
 
-Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered. 
+Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
 ### Harvest Metrics Dictionary 
 Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
@@ -887,7 +887,7 @@ PUT:
 ```
 Values which can be null or not provided: folder_path, cycle, time_valid, forecast_hour, file_size_bytes
 
-Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call.
+Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call  using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
 ### Plot Innovation Stats Dictionary
 Example request dictionary of a call to 'plot_innov_stats'.
