@@ -493,7 +493,7 @@ expt_stored_file_counts
 
 ## Request Dictionaries / YAML Formats
 
-For each request, a dictionary of values or yaml file containing the same information are necessary with relevant data for that call. GET calls use filters and ordering data. PUT calls must contain the data to be put into the database. This is a list of example calls only. Each call should be customized with the appropriate input data. While the examples are in a dictionary format, all the values could be similarly input as a yaml file with the same hierachy provided by the examples.
+All requests require either a dictionary or a YAML file to configure the call to the database. GET calls, e.g., are requests to download subsets of data using filters that are specified with a nested dictionary or within a YAML file configuration hierarchy. PUT calls must similarly (via defining a key:value structured hierarchy) specify which data to upload to the database. Other calls must also be configured with a dictionary or YAML file. The following example configuration dictionaries (which could be similarly defined in a YAML file with the same hierarchy) are provided as templates for basic use cases.
 
 ### Experiment Dictionaries
 Example format of request dictionaries for 'experiment' calls.
@@ -937,7 +937,7 @@ plot_control_dict = {
 
 ## Code Structure
 
-The code base is developed into separate files to handling the interactions for separate tables as well as extra functionalities, i.e. harvester interactions. All of the code functionality resides with in the **src** folder. 
+The code base is structured using separate files to handle interactions for separate tables as well as extra functionalities, i.e., harvester interactions. All of the code functionality resides with in the **src** folder. 
 
 The main file is *score_db_base.py* which is the launch point for all calls made via command line or outside script. This file contains the code which parses the input yaml or dictionary into a useful dictionary format and assigns the call to the appropriate registry item. 
 
@@ -959,9 +959,9 @@ Majority of the files are used for calls to manipulate specific database tables.
 - file_types: *file_types.py*
 - expt_stored_file_counts: *expt_file_counts.py*
 
-The general structure of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handling any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
+The general purpose of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handle any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
 
-The *expt_metrics.py* and *expt_file_counts.py* files have interactions with the other codes files for the relevant tables related to the id relationships between those tables, for example both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
+The *expt_metrics.py* and *expt_file_counts.py* files have interactions with the other files for the relevant tables related to the id relationships between those tables, for example, both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
 
 The *harvest_metrics.py* and *harvest_innov_stats.py* files handle calls which require harvesting of data via score-hv and then inputs that info into the expt_metrics table via calls to the *expt_metrics.py* code. *harvest_metrics.py* is a more generic version of *harvest_innov_stats.py* and can process any type of harvested data if an appropriate translator is provided in *harvest_translator.py*. Only innov_stats files can be used with *harvest_innov_stats.py*. 
 
