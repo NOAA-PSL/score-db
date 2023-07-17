@@ -937,7 +937,7 @@ plot_control_dict = {
 
 ## Code Structure
 
-The code base is developed into separate files to handling the interactions for separate tables as well as extra functionalities, i.e. harvester interactions. All of the code functionality resides with in the **src** folder. 
+The code base is structured using separate files to handle interactions for separate tables as well as extra functionalities, i.e., harvester interactions. All of the code functionality resides with in the **src** folder. 
 
 The main file is *score_db_base.py* which is the launch point for all calls made via command line or outside script. This file contains the code which parses the input yaml or dictionary into a useful dictionary format and assigns the call to the appropriate registry item. 
 
