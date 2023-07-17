@@ -493,7 +493,7 @@ expt_stored_file_counts
 
 ## Request Dictionaries / YAML Formats
 
-For each request, a dictionary of values or yaml file containing the same information are necessary with relevant data for that call. GET calls use filters and ordering data. PUT calls must contain the data to be put into the database. This is a list of example calls only. Each call should be customized with the appropriate input data. While the examples are in a dictionary format, all the values could be similarly input as a yaml file with the same hierachy provided by the examples.
+All requests require either a dictionary or a YAML file to configure the call to the database. GET calls, e.g., are requests to download subsets of data using filters that are specified with a nested dictionary or within a YAML file configuration hierarchy. PUT calls must similarly (via defining a key:value structured hierarchy) specify which data to upload to the database. Other calls must also be configured with a dictionary or YAML file. The following example configuration dictionaries (which could be similarly defined in a YAML file with the same hierarchy) are provided as templates for basic use cases.
 
 ### Experiment Dictionaries
 Example format of request dictionaries for 'experiment' calls.
