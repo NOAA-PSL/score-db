@@ -959,9 +959,9 @@ Majority of the files are used for calls to manipulate specific database tables.
 - file_types: *file_types.py*
 - expt_stored_file_counts: *expt_file_counts.py*
 
-The general structure of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handling any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
+The general purpose of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handle any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
 
-The *expt_metrics.py* and *expt_file_counts.py* files have interactions with the other codes files for the relevant tables related to the id relationships between those tables, for example both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
+The *expt_metrics.py* and *expt_file_counts.py* files have interactions with the other files for the relevant tables related to the id relationships between those tables, for example, both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
 
 The *harvest_metrics.py* and *harvest_innov_stats.py* files handle calls which require harvesting of data via score-hv and then inputs that info into the expt_metrics table via calls to the *expt_metrics.py* code. *harvest_metrics.py* is a more generic version of *harvest_innov_stats.py* and can process any type of harvested data if an appropriate translator is provided in *harvest_translator.py*. Only innov_stats files can be used with *harvest_innov_stats.py*. 
 
