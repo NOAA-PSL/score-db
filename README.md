@@ -73,7 +73,26 @@ Each of the APIs is structured in a similar way and are meant to be
 accessible via either a direct library call or via a command line call
 with a yaml file or a python dictionary as the only accepted arguments.
 
-#### How to Register an Experiment
+## Input values 
+Every action made through the API requires a name and method. Valid methods are GET or PUT. The name must be a registered value in the db_request_regsitry. 
+Currently valid registry options are:
+```sh
+'region' : 'Add or get regions'
+'experiment' : 'Add, get, or update experiment registration data'
+'expt_metrics' : 'Add or get experiment metrics data'
+'metric_types' : 'Add, get, or update metric types'
+'harvest_innov_stats' : 'Gather and store innovation statistics from diagnostics files'
+'plot_innov_stats' : 'Plot innovation statistics'
+'file_types' : 'Add, get, or update file types'
+'storage_locations' : 'Add, get, or update storage locations'
+'expt_file_counts' : 'Add or get experiment file counts'
+'harvest_metrics' : 'Harvest and store metrics'
+```
+
+Example request dictionaries for each registry option are provided in the Appendix.
+
+## Examples 
+### How to Register an Experiment
 This API helps the user register an experiment's meta data into the score-db
 `experiments` table.
 
@@ -146,7 +165,7 @@ JSON ([JSON Functions and Operators](https://www.postgresql.org/docs/12/function
 help the user understand how to query data stored in the json `description`
 column)
 
-#### How to Harvest Innovation Stats Produced by the UFS-RNR Workflow
+### How to Harvest Innovation Stats Produced by the UFS-RNR Workflow
 This API will collect innovation statistics diagnostic data produced by the
 UFS-RNR workflow.  This diagnostics data consists of bias, rmsd, and count
 statistics of temperature, specific humidity, and uv wind and is stored in
@@ -241,7 +260,7 @@ hc = HarvestInnovStatsRequest(harvester_control_dict)
 hc.submit()
 ```
 
-#### How to Plot Innovation Statistics
+### How to Plot Innovation Statistics
 This API will collect innovation statistics produced by one or more UFS-RNR
 experiments.  The statistics must already be inserted into the `expt_metrics`
 table and the experiments must already be registered.
@@ -348,7 +367,9 @@ def plot_innov_stats_for_date_range():
 plot_innov_stats_for_date_range()
 ```
 
-# Table Schemas
+# Appendix
+
+## Table Schemas
 
 The score-db backend package is comprised of four tables and several APIs
 which are meant to help the user insert and select data from the score-db
@@ -413,6 +434,8 @@ expt_metrics
     elevation_unit = Column(String(32))
     value = Column(Float)
     time_valid = Column(DateTime, nullable=False)
+    forecast_hour = Column(Float)
+    ensemble_member = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='metrics')
@@ -439,7 +462,7 @@ file_types
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), nullable=False)
-    file_template= Column(String(64), nullable=False)
+    file_template = Column(String(64), nullable=False)
     file_format = Column(String(64))
     description = Column(JSONB(astext_type=sa.Text()), nullable=True)
     created_at = Column(DateTime, nullable=False)
@@ -459,10 +482,500 @@ expt_stored_file_counts
     folder_path = Column(String(255))
     cycle = Column(DateTime)
     time_valid = Column(DateTime)
-    forecast_length = Column(Float)
+    forecast_hour = Column(Float)
+    file_size_bytes = Column(BigInteger)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='file_counts')
     file_type = relationship('FileType', back_populates='file_counts')
     storage_location = relationship('StorageLocation', back_populates='file_counts')
 ```
+
+## Request Dictionaries / YAML Formats
+
+All requests require either a dictionary or a YAML file to configure the call to the database. GET calls, e.g., are requests to download subsets of data using filters that are specified with a nested dictionary or within a YAML file configuration hierarchy. PUT calls must similarly (via defining a key:value structured hierarchy) specify which data to upload to the database. Other calls must also be configured with a dictionary or YAML file. The following example configuration dictionaries (which could be similarly defined in a YAML file with the same hierarchy) are provided as templates for basic use cases.
+
+### Experiment Dictionaries
+Example format of request dictionaries for 'experiment' calls.
+
+GET: 
+
+```sh
+request_dict = {
+        'name': 'experiment',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': 'C96L64.UFSRNR.GSI_SOCA_3DVAR.012016'
+                },
+                'cycle_start': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2018-01-01 00:00:00'
+                },
+                'cycle_stop': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2018-01-01 00:00:00'
+                },
+                'owner_id': {
+                    'exact': 'first.last@noaa.gov'
+                },
+                'experiment_type': {
+                    'like': '%COUPLED%'
+                },
+                'platform': {
+                    'exact': 'pw_awv1'
+                },
+                'wallclock_start': {
+                    'from': '2022-01-01 00:00:00',
+                    'to': '2022-07-01 00:00:00'
+                },
+
+            },
+            'ordering': [
+                {'name': 'group_id', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 4
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'experiment',
+        'method': 'PUT',
+        'body': {
+            'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'cycle_start': '2016-01-01 00:00:00',
+            'cycle_stop': '2016-01-31 18:00:00',
+            'owner_id': 'first.last@noaa.gov',
+            'group_id': 'gsienkf',
+            'experiment_type': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'platform': 'pw_awv1',
+            'wallclock_start': '2021-07-22 09:22:05',
+            'wallclock_end': '2021-07-24 05:31:14',
+            'description': #JSON VALUE OF DESCRIPTION
+        }
+    }
+```
+Values which can be null or not provided: group_id, experiment_type, wallclock_end, description
+
+### Experiment Metric Dictionaries
+Example format of request dictionaries for 'expt_metrics' calls.
+
+GET:
+
+```sh
+request_dict = {
+        'name': 'expt_metrics',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'experiment': {
+                    'name': {
+                        'exact': 'UFSRNR_GSI_SOCA_3DVAR_COUPLED_122015_HC44RS_lstr_tst',
+                    },
+                    'wallclock_start': {
+                        'from': '2022-08-03 02:00:00',
+                        'to': '2022-08-03 06:00:00'
+                    }
+                },
+                'metric_types': {
+                    'name': {
+                        'exact': ['innov_stats_temperature_rmsd']
+                    },
+                    'stat_type': {
+                        'exact': ['rmsd']
+                    }
+                },
+                'regions': {
+                    'name': {
+                        'exact': ['global']
+                    },
+                },
+
+                'time_valid': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2016-01-03 00:00:00',
+                },
+            },
+            'ordering': [
+                {'name': 'time_valid', 'order_by': 'asc'}
+            ]
+        }
+    }
+```    
+
+PUT:
+```sh
+request_dict = {
+        'db_request_name' : 'expt_metrics',
+        'method': 'PUT',
+        'body' : {
+            'expt_name': experiment_name,
+            'expt_wallclock_start': experiment_wallclock,
+            'metrics': {
+                'name': name,
+                'region_name': region,
+                'elevation': elevation,
+                'elevation_unit': elevation_unit,
+                'value': value,
+                'time_valid': time_valid,
+                'forecast_hour' : forecast_hour,
+                'ensemble_member' : ensemble_member
+            },
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+        }
+    }
+```
+Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member
+
+Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
+
+### Harvest Metrics Dictionary 
+Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
+
+```sh
+request_dict = {
+        'db_request_name' : 'harvest_metrics',
+        'body' : {
+            'expt_name': experiment_name,
+            'expt_wallclock_start': experiment_wallclock,
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+        },
+        'hv_translator': hv_translator,
+        'harvest_config': #Dictionary configuration for harvest
+    }
+```
+
+Note the format of 'harvest_config' is required to be a valid config for 
+score-hv calls. 'hv_translator' needs to be a string value for a registered harvester translator in the hv_translator_registry.py. 
+
+### Harvest Innov Stats Dictionary
+Harvest innov stats only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'.
+
+```sh
+request_dict = {
+        'db_request_name': 'harvest_innov_stats',
+        'date_range': {
+            'datetime_str': '%Y-%m-%d %H:%M:%S',
+            'start': '2015-12-01 0:00:00',
+            'end': '2015-12-01 0:00:00'
+        },
+        'files': [
+            {
+                'filepath': 'path/to/file/to/harvest',
+                'filename': 'innov_stats.metric.%Y%m%d%H.nc',
+                'cycles': CYCLES,
+                'harvester': 'innov_stats_netcdf',
+                'metrics': ['temperature','spechumid','uvwind'],
+                'stats': ['bias', 'count', 'rmsd'],
+                'elevation_unit': 'plevs'
+            },
+        ],
+        'output_format': 'tuples_list'
+    }
+```
+
+### Metric Types Dictionaries
+Example format of request dictionaries for 'metric_types' calls.
+
+GET: 
+```sh
+request_dict = {
+        'name': 'metric_type',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': 'innov_stats_temperature_rmsd',
+                    'in': ['innov_stats_temperature_rmsd', 'innov_stats_uvwind_rmsd']
+                },
+                'measurement_type': {
+                    'exact': 'temperature'
+                },
+                'measurement_unit': {
+                    'like': 'celsius'
+                },
+                'stat_type': {
+                    'exact': 'rmsd'
+                },
+            },
+            'ordering': [
+                {'name': 'name', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 4
+        }
+    }
+```
+
+PUT:
+```sh
+request_types = {
+        'db_request_name' : 'metric_types',
+        'method': 'PUT',
+        'body' : {
+            'name': name,
+            'measurement_type': measurement_type,
+            'measurement_units': units,
+            'stat_type': stat_type,
+            'description': #JSON FORMAT OF DESCRIPTION
+        }
+    }
+```
+
+Values which can be null or not provided: measurement_units, stat_type, description
+
+### Regions Dictionaries
+Example format of request dictionary for 'regions' calls.
+
+GET:
+```sh
+request_dict = {
+        'name': 'region',
+        'method': 'GET',
+        'params': {'filter_type': 'by_name'},
+        'body': {
+            'regions': [
+                'global',
+                'equatorial',
+            ]
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'region',
+        'method': 'PUT',
+        'body': {
+            'regions': [
+                {'name': 'global', 'min_lat': -90.0, 'max_lat': 90.0, 'east_lon': 0.0, 'west_lon': 360.0},
+                {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0},
+            ]
+        }
+    }
+```
+
+
+### Storage Location Dictionaries 
+Example format of request dictionary for 'storage_locations' calls.
+
+GET:
+```sh
+request_dict = {
+        'name': 'storage_locations',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'name': {
+                    'exact': 's3_example_bucket'
+                },
+            }
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'storage_locations',
+        'method': 'PUT',
+        'body': {
+            'name': 's3_example_bucket',
+            'platform': 'aws_s3', 
+            'bucket_name': 'noaa-example-score-db-bucket',
+            'key': 'reanalysis',
+            'platform_region': 'n/a'
+        }
+    }
+```
+
+Values which can be null or not provided: key, platform_region
+
+### File Types Dictionaries
+Example request dictionaries for the 'file_types' calls.
+
+GET:
+```sh
+request_dict = {
+        'name': 'file_types',
+        'method': 'GET',
+        'params' : {
+            'filters': {
+                'name' :{
+                    'exact' : 'example_type'
+                }
+            }
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'file_types',
+        'method' : 'PUT',
+        'body' :{
+            'name': 'example_type',
+            'file_template': '*.example',
+            'file_format': 'text',
+            'description': json.dumps({"name": "example"})
+        }
+    }
+```
+Values which can be null or not provided: file_format, description
+
+### Experiment File Counts Dictionaries
+Example request dictionaries for the 'expt_file_counts' calls. 
+
+GET:
+```sh
+request_dict = {
+        'name' : 'expt_file_counts',
+        'method': 'GET',
+        'params' : {
+            'filters': {
+                'experiment': {
+                    'experiment_name': {
+                        'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016'
+                    }
+                },
+                'file_types': {
+                    'file_type_name': {
+                        'exact': 'example_type',
+                    },
+                },
+                'storage_locations': {
+                    'storage_loc_name' :{
+                        'exact': 's3_example_bucket',
+                    },
+                },
+            }
+        }
+    }
+```
+
+PUT:
+```sh
+  request_dict = {
+        'name': 'expt_file_counts',
+        'method': 'PUT',
+        'body': {
+            'experiment_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'wallclock_start': '2021-07-22 09:22:05',
+            'file_type_name': 'example_type',
+            'file_extension': '.example',
+            'time_valid': '2023-02-05 06:00:00',
+            'forecast_hour' : 120,
+            'file_size_bytes' : 1234567890,
+            'bucket_name' : 'noaa-example-score-db-bucket',
+            'platform': 'aws_s3',
+            'key': 'reanalysis',
+            'count': 1230,
+            'folder_path': 'noaa-example-score-db-bucket/reanalysis/2023/02/23/2023022306',
+            'cycle': '2023-02-03 06:00:00'
+        }
+    }
+```
+Values which can be null or not provided: folder_path, cycle, time_valid, forecast_hour, file_size_bytes
+
+Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call  using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
+
+### Plot Innovation Stats Dictionary
+Example request dictionary of a call to 'plot_innov_stats'.
+
+```sh
+plot_control_dict = {
+        'db_request_name': 'plot_innov_stats',
+        'date_range': {
+            'datetime_str': '%Y-%m-%d %H:%M:%S',
+            'start': '2016-01-01 00:00:00',
+            'end': '2016-01-31 18:00:00'
+        },
+        'experiments': [
+            {
+                'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+                'wallclock_start': '2021-07-22 09:22:05',
+                'graph_label': 'C96L64 GSI Uncoupled 3DVAR Experiment',
+                'graph_color': 'blue'
+            },
+            {
+                'name': 'C96L64.UFSRNR.GSI_SOCA_3DVAR.012016',
+                'wallclock_start':  '2021-07-24 11:31:16',
+                'graph_label': 'C96L64 GSI and SOCA Coupled 3DVAR Experiment',
+                'graph_color': 'red'
+            }
+        ],
+        'stat_groups': [
+            {
+                'cycles': CYCLES,
+                'stat_group_frmt_str': 'innov_stats_{metric}_{stat}',
+                'metrics': ['temperature','spechumid','uvwind'],
+                'stats': ['bias', 'rmsd'],
+                'elevation_unit': 'plevs',
+                'regions': [
+                    'equatorial',
+                    'global',
+                    'north_hemis',
+                    'south_hemis',
+                    'tropics'
+                ]
+            }
+        ],
+        'work_dir': '/absolute/path/to/desired/figure/location',
+        'fig_base_fn': 'C96L64_GSI_3DVAR_VS_GSI_SOCA_3DVAR'
+    }
+```
+
+## Code Structure
+
+The code base is structured using separate files to handle interactions for separate tables as well as extra functionalities, i.e., harvester interactions. All of the code functionality resides with in the **src** folder. 
+
+The main file is *score_db_base.py* which is the launch point for all calls made via command line or outside script. This file contains the code which parses the input yaml or dictionary into a useful dictionary format and assigns the call to the appropriate registry item. 
+
+The *db_request_registry.py* contains the registration for all valid 'name' values for inputs. The registry is used to direct the call to the correct set of code and table interactions, i.e. experiments vs storage_locations. 
+
+The *db_utils.py*, *time_utils.py*, *file_utils.py* and *yaml_utils.py* files contains utility functions that are referenced frequently throughout the code base for their respective topics (database interactions, handling datetimes, files, and yaml format files).
+
+The *db_action_response.py* file defines the response code structure that is expected by all return calls for values called via the registry. 
+
+The *score_table_models.py* file defines all the of the tables in the database using SQLAlchemy and contains the code to build those repsective tables. 
+
+Majority of the files are used for calls to manipulate specific database tables. The relationship between those files and the tables is as follows: 
+
+- experiments: *experiments.py*
+- regions: *regions.py*
+- metric_types: *metric_types.py*
+- expt_metrics: *expt_metrics.py*
+- storage_locations: *storage_locations.py*
+- file_types: *file_types.py*
+- expt_stored_file_counts: *expt_file_counts.py*
+
+The general purpose of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handle any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
+
+The *expt_metrics.py* and *expt_file_counts.py* files have interactions with the other files for the relevant tables related to the id relationships between those tables, for example, both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
+
+The *harvest_metrics.py* and *harvest_innov_stats.py* files handle calls which require harvesting of data via score-hv and then inputs that info into the expt_metrics table via calls to the *expt_metrics.py* code. *harvest_metrics.py* is a more generic version of *harvest_innov_stats.py* and can process any type of harvested data if an appropriate translator is provided in *harvest_translator.py*. Only innov_stats files can be used with *harvest_innov_stats.py*. 
+
+The *harvest_translator.py* file contains the code for translation between score-hv output values and the expected values necessary for inserting into the metrics table. 
+
+The *hv_translator_registry.py* contains the registered translator, found in *harvest_translator.py*, that can be called and is used to process calls appropriately by the specific translator in calls to harvest_metrics. 
+
+The *plot_innov_stats.py* file is used for creating plots about innov stats data. The *innov_stats_plot_attrs.py* file is used for defining attributes used in this plotting.
+
+The **tests** folder contains all the pytests files used for testing. Inside there is a **configs** folder and **experiment-data** folder which contain configurations and data that are necessary for testing purposes and referenced by certain test files. 
+
+Each *test_{name}.py* file is used for testing the code referenced by the name. In general for the database table files it will make a get and a put call in the tests. 
+
+The *.env_example* file is used to show the required inputs for database connections. A *.env* file with the appropriate information, including database password, is required for running. 
+
+The *score_db_utils.sh* bash script is used as a utility for setting up the connection between score-db and score-hv code repositories. It should be run prior to making calls to *score_db_base.py*. The script assumes score-hv is downloaded at the same place as score-db is at a repo level. 
+
