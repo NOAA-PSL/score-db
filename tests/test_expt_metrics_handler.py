@@ -48,6 +48,7 @@ def test_put_exp_metrics_request_dict():
     emr = ExptMetricRequest(request_dict)
     result = emr.submit()
     print(f'Experiment metrics PUT result: {result}')
+    assert(result.success)
 
 def test_send_get_request():
 
@@ -93,4 +94,5 @@ def test_send_get_request():
     }
 
     emr = ExptMetricRequest(request_dict)
-    emr.submit()
+    result = emr.submit()
+    assert(result.success)

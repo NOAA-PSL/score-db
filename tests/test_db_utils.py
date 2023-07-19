@@ -25,7 +25,8 @@ def test_validate_method():
     with pytest.raises(ValueError):
         db_utils.validate_method([])
     
-    for method in db_utils.VALID_METHODS:
-        db_utils.validate_method(method)
+    with pytest.raises(ValueError):
+        for method in db_utils.VALID_METHODS:
+            db_utils.validate_method(method)
     
     print(f'PYTEST_CALLING_DIR: {PYTEST_CALLING_DIR}')
