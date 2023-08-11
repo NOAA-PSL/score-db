@@ -36,16 +36,91 @@ import ipdb
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
-plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2020-01-01 00:00:00',
-                                    'start': '2019-01-01 00:00:00'},
+plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '1995-01-01 00:00:00',
+                                    'start': '1994-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'Number of files',
-                                      'name': 'replay spinup stream 4',
-                                      'wallclock_start': '2023-01-01 00:00:00'}],
-                     'fig_base_fn': 'file_count',
+                                      'name': 'replay_stream1',
+                                      'wallclock_start': '2023-07-08 16:25:57'}],
+                     'fig_base_fn': 'files',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2000-01-01 00:00:00',
+                                    'start': '1999-01-01 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay_stream2',
+                                      'wallclock_start': '2023-07-24 17:56:40'}],
+                     'fig_base_fn': 'files',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2006-01-01 00:00:00',
+                                    'start': '2005-01-01 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay_stream3',
+                                      'wallclock_start': '2023-01-22 09:22:05'}],
+                     'fig_base_fn': 'files',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2011-01-01 00:00:00',
+                                    'start': '2010-01-01 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay_stream4',
+                                      'wallclock_start': '2023-01-22 09:22:05'}],
+                     'fig_base_fn': 'files',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2016-01-01 00:00:00',
+                                    'start': '2015-01-01 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay_stream5',
+                                      'wallclock_start': '2023-07-08 06:20:22'}],
+                     'fig_base_fn': 'files',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2021-01-01 00:00:00',
+                                    'start': '2020-01-01 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay_stream6',
+                                      'wallclock_start': '2023-07-24 20:29:23'}],
+                     'fig_base_fn': 'files',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
@@ -136,7 +211,7 @@ def build_base_figure():
     
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    plt.tick_params(axis='x', which='both', bottom=False, top=False,
+    plt.tick_params(axis='x', which='both', bottom=True, top=False,
                     labelbottom=True)
     
     return(fig, ax)
@@ -158,8 +233,8 @@ def format_figure(ax, pa):
     plt.ylabel(ylabel=pa.ylabel.label,
                horizontalalignment=pa.ylabel.horizontalalignment)
     
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    #ax.spines['top'].set_visible(False)
+    #ax.spines['right'].set_visible(False)
 
     plt.legend(loc=pa.legend.loc,
                fancybox=pa.legend.fancybox,
@@ -173,7 +248,7 @@ def build_fig_dest(work_dir, fig_base_fn, metric, date_range):
     start = datetime.strftime(date_range.start, '%Y%m%dT%HZ')
     end = datetime.strftime(date_range.end, '%Y%m%dT%HZ')
     dest_fn = fig_base_fn
-    dest_fn += f'__{metric}_{start}_to_{end}.png'
+    dest_fn += f'_{metric}_{start}_to_{end}.png'
     
     dest_full_path = os.path.join(work_dir, dest_fn)
     
@@ -203,6 +278,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
     expt_names = ave_df.drop_duplicates(
                     ['created_at'], keep='last')['created_at'].values.tolist()
     '''
+    metrics_to_show = metrics_df.drop_duplicates(subset='cycle', keep='last')
     #metrics_to_show = metrics_df.loc[metrics_df['file_type_id']==2]
     (fig, ax) = build_base_figure()
 
@@ -211,42 +287,64 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
         expt_name = expt.get('name')['exact']
     ''' 
     expt_name = experiments[0]['name']['exact']
+    
     timestamps = list()
     labels = list()
     counts = list()
+    colors = list()
+    cycle_labels = list()
     #for i, timestamp in enumerate(metrics_df['cycle']):#metrics_to_show['cycle']:
-    for row in metrics_df.itertuples():
-        if row.cycle.year == 2019:
+    for row in metrics_to_show.itertuples():
+        if row.cycle >= date_range.start and row.cycle < date_range.end:
             counts.append(row.count)
             timestamps.append(row.cycle.timestamp())
-            labels.append('%02d-%02d' % (row.cycle.month,
-                                         row.cycle.day,
-                                #        timestamp.year,
+            labels.append('%02d-%02d-%04d' % (row.cycle.month,
+                                              row.cycle.day,
+                                              row.cycle.year,
                               #          timestamp.hour
                                           ))
+            cycle_labels.append('%dZ' % row.cycle.hour)
+            if row.cycle.hour == 0:
+                colors.append('lightcoral')
+            elif row.cycle.hour == 6:
+                colors.append('yellowgreen')
+            elif row.cycle.hour == 12:
+                colors.append('skyblue')
+            elif row.cycle.hour == 18:
+                colors.append('orchid')
     plt.bar(timestamps, counts,
             #tick_label=labels,
             alpha=0.2,
             width=21600.,
-            color=experiments[0]['graph_color'],
-            #label=2019,#timestamp.year,
+            color=colors,#experiments[0]['graph_color'],
+            #label=,#timestamp.year,
             #label=experiments[0]['graph_label']
             )
-    plt.plot(timestamps, counts, ls='None', marker='_', label=2019,
-             color=experiments[0]['graph_color'])
+    for i in range(4):
+        """ Plot the first four cycles to format the legend
+        """
+        plt.scatter(timestamps[i], counts[i], ls='None', marker='|',
+             color=colors[i], alpha=0.2, label=cycle_labels[i])
+    # proceed with the second day onward
+    plt.scatter(timestamps[4:], counts[4:], ls='None', marker='|',
+             color=colors[4:], alpha=0.2)#experiments[0]['graph_color'])
     plt.title(expt_name)
     format_figure(ax, pa)
-    fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)
-    
+    fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)  
     all_labels = sorted(set(labels))
-    label_spacing = len(all_labels)//10
-    remainder = len(all_labels)%10
-    #ipdb.set_trace()
-    plt.xticks(ticks=np.linspace(sorted(set(timestamps))[0],
-                                 sorted(set(timestamps))[-remainder-1],
-                                 num=10),
-               labels=sorted(set(labels))[:-remainder:label_spacing],
-               rotation=30, ha='right')
+    month_idx = 0
+    monthly_labels = list()
+    for i, date_label in enumerate(all_labels):
+        if date_label[:2] != month_idx:
+            monthly_labels.append(date_label)
+            month_idx = date_label[:2]
+
+    plt.xticks(ticks=np.arange(sorted(timestamps)[0],
+                               sorted(timestamps)[-1],
+                               60*60*24*(365.25/12.))[:len(monthly_labels)],
+               labels=monthly_labels, rotation=45,ha='right',
+               )
+    plt.subplots_adjust(bottom=0.22)
     save_figure(fig_fn)
 
 """
@@ -301,6 +399,7 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                     e_df = e_df.sort_values(['cycle', 'created_at'])
                     m_df = pd.concat([m_df, e_df], axis=0)
 
+                #ipdb.set_trace()
                 plot_file_counts(
                     self.experiments,
                     metric,
@@ -310,5 +409,11 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                     self.date_range)
 
 if __name__=='__main__':
-    plot_request = PlotFileCountRequest(plot_control_dict)
-    plot_request.submit()
+    for i, plot_control_dict in enumerate([plot_control_dict1,
+                                           plot_control_dict2,
+                                           plot_control_dict3,
+                                           plot_control_dict4,
+                                           plot_control_dict5,
+                                           plot_control_dict6]):
+        plot_request = PlotFileCountRequest(plot_control_dict)
+        plot_request.submit()
