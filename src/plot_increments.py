@@ -37,15 +37,120 @@ RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'stat',
                                          'time_valid'],)
-plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2020-01-01 00:00:00',
-                                    'start': '2019-01-01 00:00:00'},
+plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '1995-01-01 00:00:00',
+                                    'start': '1994-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'increments',
-                                      'name': 'replay_stream4',
-                                      'wallclock_start': '2023-01-01 00:00:00'}],
+                                      'name': 'replay_stream1',
+                                      'wallclock_start': '2023-07-08 16:25:57'}],
+                     'fig_base_fn': 'increment',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
+                                      'stat_group_frmt_str':
+                                      'metric_type_{stat}_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2000-01-01 00:00:00',
+                                    'start': '1999-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'increments',
+                                      'name': 'replay_stream2',
+                                      'wallclock_start': '2023-07-24 17:56:40'}],
+                     'fig_base_fn': 'increment',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
+                                      'stat_group_frmt_str':
+                                      'metric_type_{stat}_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2006-01-01 00:00:00',
+                                    'start': '2005-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'increments',
+                                      'name': 'replay_stream3',
+                                      'wallclock_start': '2023-01-22 09:22:05'}],
+                     'fig_base_fn': 'increment',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
+                                      'stat_group_frmt_str':
+                                      'metric_type_{stat}_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2011-01-01 00:00:00',
+                                    'start': '2010-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'increments',
+                                      'name': 'replay_stream3',
+                                      'wallclock_start': '2023-01-22 09:22:05'}],
+                     'fig_base_fn': 'increment',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
+                                      'stat_group_frmt_str':
+                                      'metric_type_{stat}_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2016-01-01 00:00:00',
+                                    'start': '2015-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'increments',
+                                      'name': 'replay_stream5',
+                                      'wallclock_start': '2023-07-08 06:20:22'}],
+                     'fig_base_fn': 'increment',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
+                                      'stat_group_frmt_str':
+                                      'metric_type_{stat}_{metric}'}],
+                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2021-01-01 00:00:00',
+                                    'start': '2020-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'increments',
+                                      'name': 'replay_stream6',
+                                      'wallclock_start': '2023-07-24 20:29:23'}],
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
@@ -113,7 +218,6 @@ def get_experiment_increments(request_data):
 
     emr = ExptMetricRequest(request_dict)
     result = emr.submit()
-
     return result.details['records']
 
 def build_base_figure():
@@ -121,7 +225,7 @@ def build_base_figure():
     
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    plt.tick_params(axis='x', which='both', bottom=False, top=False,
+    plt.tick_params(axis='x', which='both', bottom=True, top=False,
                     labelbottom=True)
     
     return(fig, ax)
@@ -143,9 +247,6 @@ def format_figure(ax, pa):
     plt.ylabel(ylabel=pa.ylabel.label,
                horizontalalignment=pa.ylabel.horizontalalignment)
     
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
     plt.legend(loc=pa.legend.loc,
                fancybox=pa.legend.fancybox,
                edgecolor=pa.legend.edgecolor,
@@ -188,46 +289,64 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     for expt in experiments:
         expt_name = expt.get('name')['exact']
     '''
+    metrics_to_show = metrics_df.drop_duplicates(subset='time_valid', keep='last')
     expt_name = experiments[0]['name']['exact']
     timestamps = list()
     labels = list()
     values = list()
+    colors = list()
+    cycle_labels = list()
     #for i, timestamp in enumerate(metrics_df['time_valid']):#metrics_to_show['cycle']:
-    for row in metrics_df.itertuples():
-        if row.time_valid.year == 2019:
+    for row in metrics_to_show.itertuples():
+        if row.time_valid >= date_range.start and row.time_valid < date_range.end:
             values.append(row.value)
             timestamps.append(row.time_valid.timestamp())
-            labels.append('%02d-%02d' % (row.time_valid.month,
-                                         row.time_valid.day,
+            labels.append('%02d-%02d-%04d' % (row.time_valid.month,
+                                              row.time_valid.day,
+                                              row.time_valid.year,
+                              #          timestamp.hour
                                           ))
+            cycle_labels.append('%dZ' % row.time_valid.hour)
+            if row.time_valid.hour == 0:
+                colors.append('lightcoral')
+            elif row.time_valid.hour == 6:
+                colors.append('yellowgreen')
+            elif row.time_valid.hour == 12:
+                colors.append('skyblue')
+            elif row.time_valid.hour == 18:
+                colors.append('orchid')
+    
     plt.bar(timestamps, values,
-            #tick_label=labels,
             alpha=0.2,
             width=21600.,
-            color=experiments[0]['graph_color'],
-            #label=2019,#timestamp.year,
-            #label=experiments[0]['graph_label']
-            )
-    plt.plot(timestamps, values, lw=0.5,#ls='None', marker='.',
-             color=experiments[0]['graph_color'], label=2019)
+            color=colors)
+    for i in range(4):
+        """ Plot the first four cycles to format the legend
+        """
+        plt.scatter(timestamps[i], values[i], ls='None', marker='|',
+             color=colors[i], alpha=0.2, label=cycle_labels[i])
+    # proceed with the second day onward
+    plt.scatter(timestamps[4:], values[4:], ls='None', marker='|',
+             color=colors[4:], alpha=0.2)
     plt.title(expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
-    plt.ylabel('%s %s' % (stat, metric))
-    
     all_labels = sorted(set(labels))
-    label_spacing = len(all_labels)//10
-    remainder = len(all_labels)%10
-    #ipdb.set_trace()
-    plt.xticks(ticks=np.linspace(sorted(set(timestamps))[0],
-                                 sorted(set(timestamps))[-remainder-1],
-                                 num=10),
-               labels=sorted(set(labels))[:-remainder:label_spacing],
-               rotation=30, ha='right')
+    month_idx = 0
+    monthly_labels = list()
+    for i, date_label in enumerate(all_labels):
+        if date_label[:2] != month_idx:
+            monthly_labels.append(date_label)
+            month_idx = date_label[:2]
+
+    plt.xticks(ticks=np.arange(sorted(timestamps)[0],
+                               sorted(timestamps)[-1],
+                               60*60*24*(365.25/12.))[:len(monthly_labels)],
+               labels=monthly_labels, rotation=45,ha='right',
+               )
+    plt.subplots_adjust(bottom=0.22)
     save_figure(fig_fn)
-
 """
-
 @dataclass
 class ExperimentData(object):
     name: str
@@ -275,19 +394,30 @@ class PlotIncrementRequest(PlotInnovStatsRequest):
                             metric, stat,
                             self.date_range)
                         
-                        e_df = get_experiment_increments(request_data)
-                        e_df = e_df.sort_values(['time_valid', 'created_at'])
-                        m_df = pd.concat([m_df, e_df], axis=0)
-
-                    plot_increments(
-                        self.experiments,
-                        stat,
-                        metric,
-                        m_df,
-                        self.work_dir,
-                        self.fig_base_fn,
-                        self.date_range)
+                        try:
+                            e_df = get_experiment_increments(request_data)
+                            e_df = e_df.sort_values(['time_valid', 'created_at'])
+                            m_df = pd.concat([m_df, e_df], axis=0)
+                            plot_yes = True
+                        except KeyError:
+                            print('no records found for %s %s, skipping' % (stat, metric))
+                            plot_yes = False
+                    if plot_yes:
+                        plot_increments(
+                            self.experiments,
+                            stat,
+                            metric,
+                            m_df,
+                            self.work_dir,
+                            self.fig_base_fn,
+                            self.date_range)
 
 if __name__=='__main__':
-    plot_request = PlotIncrementRequest(plot_control_dict)
-    plot_request.submit()
+    for i, plot_control_dict in enumerate([plot_control_dict1,
+                                           plot_control_dict2,
+                                           plot_control_dict3,
+                                           plot_control_dict4,
+                                           plot_control_dict5,
+                                           plot_control_dict6]):
+        plot_request = PlotIncrementRequest(plot_control_dict)
+        plot_request.submit()
