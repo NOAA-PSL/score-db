@@ -60,7 +60,7 @@ def test_send_get_request():
             'filters': {
                 'experiment': {
                     'name': {
-                        'exact': 'UFSRNR_GSI_SOCA_3DVAR_COUPLED_122015_HC44RS_lstr_tst',
+                        'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016',
                     },
                     'wallclock_start': {
                         'from': '2021-07-22 02:22:05',
