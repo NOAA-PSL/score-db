@@ -31,7 +31,7 @@ from expt_file_counts import ExptFileCountRequest
 from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
-import ipdb
+#import ipdb
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
@@ -50,7 +50,7 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2000-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
@@ -65,7 +65,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2006-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
@@ -80,7 +80,7 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2011-01-01 00:00:00',
                                     'start': '2010-01-01 00:00:00'},
@@ -95,7 +95,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2016-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
@@ -110,7 +110,7 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2021-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
@@ -125,7 +125,7 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 '''
 @dataclass
 class StatGroupData:
@@ -263,7 +263,7 @@ def save_figure(dest_full_path):
 
 def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
                      date_range):
-
+    file_count = open(os.path.join(work_dir,'File_count_unexpected.txt'),'a')
     if not isinstance(metrics_df, DataFrame):
         msg = 'Input data to plot_file_counts must be type pandas.DataFrame '\
             f'was actually type: {type(metrics_df)}'
@@ -306,12 +306,40 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
             cycle_labels.append('%dZ' % row.cycle.hour)
             if row.cycle.hour == 0:
                 colors.append('lightcoral')
+                if(row.count < 52):
+                    file_count.write('Row count %02d/52 %02d-%02d-%04d %02d\n' % (row.count,
+					      row.cycle.month,
+                                              row.cycle.day,
+                                              row.cycle.year,
+                                              row.cycle.hour
+                                          ))
             elif row.cycle.hour == 6:
                 colors.append('yellowgreen')
+                if(row.count < 74):
+                    file_count.write('Row count %02d/74 %02d-%02d-%04d %02d\n' % (row.count,
+                                              row.cycle.month,
+                                              row.cycle.day,
+                                              row.cycle.year,
+                                              row.cycle.hour
+                                          ))
             elif row.cycle.hour == 12:
                 colors.append('skyblue')
+                if(row.count < 31):
+                    file_count.write('Row count %02d/31 %02d-%02d-%04d %02d\n' % (row.count,
+                                              row.cycle.month,
+                                              row.cycle.day,
+                                              row.cycle.year,
+                                              row.cycle.hour
+                                          ))
             elif row.cycle.hour == 18:
                 colors.append('orchid')
+                if(row.count < 29):
+                    file_count.write('Row count %02d/29 %02d-%02d-%04d %02d\n' % (row.count,
+                                              row.cycle.month,
+                                              row.cycle.day,
+                                              row.cycle.year,
+                                              row.cycle.hour
+                                          ))
     plt.bar(timestamps, counts,
             #tick_label=labels,
             alpha=0.2,
