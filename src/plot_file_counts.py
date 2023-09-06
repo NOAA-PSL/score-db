@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from collections import namedtuple
 from datetime import datetime
 
+import math
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
@@ -37,7 +38,7 @@ RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
 plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '1995-01-01 00:00:00',
+                                    'end': '1998-01-01 00:00:00',
                                     'start': '1994-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -52,7 +53,7 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'file_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2000-01-01 00:00:00',
+                                    'end': '2002-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -67,7 +68,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'file_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2006-01-01 00:00:00',
+                                    'end': '2008-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -82,7 +83,7 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'file_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2011-01-01 00:00:00',
+                                    'end': '2015-01-01 00:00:00',
                                     'start': '2010-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -97,7 +98,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'file_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2016-01-01 00:00:00',
+                                    'end': '2018-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -112,7 +113,7 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'file_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2021-01-01 00:00:00',
+                                    'end': '2023-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
@@ -146,6 +147,10 @@ class StatGroupData:
         self.elevation_unit = self.stat_group_dict.get('elevation_unit')
 
 '''
+def unique(sequence):
+    seen = set()
+    return [x for x in sequence if not (x in seen or seen.add(x))]
+
 def get_experiment_file_counts(request_data):
     
     expt_metric_name = request_data.metric_format_str.replace(
@@ -212,7 +217,7 @@ def build_base_figure():
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.tick_params(axis='x', which='both', bottom=True, top=False,
-                    labelbottom=True)
+                    labelbottom=True, labelsize=3)
     
     return(fig, ax)
 
@@ -306,8 +311,8 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
             cycle_labels.append('%dZ' % row.cycle.hour)
             if row.cycle.hour == 0:
                 colors.append('lightcoral')
-                if(row.count < 52):
-                    file_count.write('Row count %02d/52 %02d-%02d-%04d %02d\n' % (row.count,
+                if(row.count < 46):
+                    file_count.write('%s count %02d/52 %02d-%02d-%04d %02d\n' % (expt_name,row.count,
 					      row.cycle.month,
                                               row.cycle.day,
                                               row.cycle.year,
@@ -316,7 +321,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
             elif row.cycle.hour == 6:
                 colors.append('yellowgreen')
                 if(row.count < 74):
-                    file_count.write('Row count %02d/74 %02d-%02d-%04d %02d\n' % (row.count,
+                    file_count.write('%s count %02d/74 %02d-%02d-%04d %02d\n' % (expt_name,row.count,
                                               row.cycle.month,
                                               row.cycle.day,
                                               row.cycle.year,
@@ -325,7 +330,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
             elif row.cycle.hour == 12:
                 colors.append('skyblue')
                 if(row.count < 31):
-                    file_count.write('Row count %02d/31 %02d-%02d-%04d %02d\n' % (row.count,
+                    file_count.write('%s count %02d/31 %02d-%02d-%04d %02d\n' % (expt_name,row.count,
                                               row.cycle.month,
                                               row.cycle.day,
                                               row.cycle.year,
@@ -334,7 +339,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
             elif row.cycle.hour == 18:
                 colors.append('orchid')
                 if(row.count < 29):
-                    file_count.write('Row count %02d/29 %02d-%02d-%04d %02d\n' % (row.count,
+                    file_count.write('%s count %02d/29 %02d-%02d-%04d %02d\n' % (expt_name,row.count,
                                               row.cycle.month,
                                               row.cycle.day,
                                               row.cycle.year,
@@ -359,16 +364,15 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
     plt.title(expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)  
-    all_labels = sorted(set(labels))
-    month_idx = 0
-    monthly_labels = list()
-    for i, date_label in enumerate(all_labels):
-        if date_label[:2] != month_idx:
-            monthly_labels.append(date_label)
-            month_idx = date_label[:2]
 
-    plt.xticks(ticks=np.arange(sorted(timestamps)[0],
-                               sorted(timestamps)[-1],
+    #create timestamps that are inorder for entire timeline (not limited to 1 year)
+    timestamps_int = [int(timestamps) for timestamps in timestamps]
+    all_monthly_labels = [datetime.fromtimestamp(timestamps_int).strftime('%m-%Y') for timestamps_int in timestamps_int]
+
+    monthly_labels = unique(all_monthly_labels) 
+
+    plt.xticks(ticks=np.arange(timestamps[0],
+                               timestamps[-1],
                                60*60*24*(365.25/12.))[:len(monthly_labels)],
                labels=monthly_labels, rotation=45,ha='right',
                )
