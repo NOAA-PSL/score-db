@@ -31,20 +31,20 @@ from expt_metrics import ExptMetricRequest
 from increments_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
-import ipdb
+#import ipdb
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'stat',
                                          'time_valid'],)
 plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '1995-01-01 00:00:00',
+                                    'end': '1998-01-01 00:00:00',
                                     'start': '1994-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'increments',
-                                      'name': 'replay_stream1',
+                                      'name': 'replay_stream1copy',
                                       'wallclock_start': '2023-07-08 16:25:57'}],
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
@@ -57,9 +57,9 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2000-01-01 00:00:00',
+                                    'end': '2002-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -78,9 +78,9 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2006-01-01 00:00:00',
+                                    'end': '2008-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -99,15 +99,15 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2011-01-01 00:00:00',
+                                    'end': '2015-01-01 00:00:00',
                                     'start': '2010-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'increments',
-                                      'name': 'replay_stream3',
+                                      'name': 'replay_stream4',
                                       'wallclock_start': '2023-01-22 09:22:05'}],
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
@@ -120,9 +120,9 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2016-01-01 00:00:00',
+                                    'end': '2018-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -141,9 +141,9 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2021-01-01 00:00:00',
+                                    'end': '2023-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -162,7 +162,7 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Adam.Schneider/replay/results'}
+                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 '''
 @dataclass
 class StatGroupData:
@@ -183,6 +183,11 @@ class StatGroupData:
         self.elevation_unit = self.stat_group_dict.get('elevation_unit')
 
 '''
+
+def unique(sequence):
+    seen = set()
+    return [x for x in sequence if not (x in seen or seen.add(x))]
+
 def get_experiment_increments(request_data):
     
     expt_metric_name = request_data.metric_format_str.replace(
@@ -226,7 +231,7 @@ def build_base_figure():
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.tick_params(axis='x', which='both', bottom=True, top=False,
-                    labelbottom=True)
+                    labelbottom=True, labelsize=3)
     
     return(fig, ax)
 
@@ -291,6 +296,7 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     '''
     metrics_to_show = metrics_df.drop_duplicates(subset='time_valid', keep='last')
     expt_name = experiments[0]['name']['exact']
+
     timestamps = list()
     labels = list()
     values = list()
@@ -328,16 +334,15 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     # proceed with the second day onward
     plt.scatter(timestamps[4:], values[4:], ls='None', marker='|',
              color=colors[4:], alpha=0.2)
-    plt.title(expt_name)
+    plt.title(stat+" "+metric+" " +expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
-    all_labels = sorted(set(labels))
-    month_idx = 0
-    monthly_labels = list()
-    for i, date_label in enumerate(all_labels):
-        if date_label[:2] != month_idx:
-            monthly_labels.append(date_label)
-            month_idx = date_label[:2]
+
+    #create timestamps that are inorder for entire timeline (not limited to 1 year)
+    timestamps_int = [int(timestamps) for timestamps in timestamps]
+    all_monthly_labels = [datetime.fromtimestamp(timestamps_int).strftime('%m-%Y') for timestamps_int in timestamps_int]
+
+    monthly_labels = unique(all_monthly_labels) 
 
     plt.xticks(ticks=np.arange(sorted(timestamps)[0],
                                sorted(timestamps)[-1],
@@ -413,11 +418,11 @@ class PlotIncrementRequest(PlotInnovStatsRequest):
                             self.date_range)
 
 if __name__=='__main__':
-    for i, plot_control_dict in enumerate([plot_control_dict1,
-                                           plot_control_dict2,
-                                           plot_control_dict3,
-                                           plot_control_dict4,
-                                           plot_control_dict5,
-                                           plot_control_dict6]):
+    for i, plot_control_dict in enumerate([plot_control_dict1]):
+#                                           plot_control_dict2,
+#                                           plot_control_dict3,
+#                                           plot_control_dict4,
+#                                           plot_control_dict5,
+#                                           plot_control_dict6]):
         plot_request = PlotIncrementRequest(plot_control_dict)
         plot_request.submit()
