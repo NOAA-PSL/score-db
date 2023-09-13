@@ -321,19 +321,16 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
                 colors.append('skyblue')
             elif row.time_valid.hour == 18:
                 colors.append('orchid')
-    
+
+    myLabel=unique(cycle_labels) 
+
     plt.bar(timestamps, values,
             alpha=0.2,
             width=21600.,
             color=colors)
-    for i in range(4):
-        """ Plot the first four cycles to format the legend
-        """
-        plt.scatter(timestamps[i], values[i], ls='None', marker='|',
-             color=colors[i], alpha=0.2, label=cycle_labels[i])
-    # proceed with the second day onward
-    plt.scatter(timestamps[4:], values[4:], ls='None', marker='|',
-             color=colors[4:], alpha=0.2)
+
+    plt.scatter(timestamps, values, ls='None', marker='|',
+             color=colors, alpha=0.2, label=myLabel)
     plt.title(stat+" "+metric+" " +expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
@@ -418,11 +415,11 @@ class PlotIncrementRequest(PlotInnovStatsRequest):
                             self.date_range)
 
 if __name__=='__main__':
-    for i, plot_control_dict in enumerate([plot_control_dict1]):
-#                                           plot_control_dict2,
-#                                           plot_control_dict3,
-#                                           plot_control_dict4,
-#                                           plot_control_dict5,
-#                                           plot_control_dict6]):
+    for i, plot_control_dict in enumerate([plot_control_dict1,
+                                           plot_control_dict2,
+                                           plot_control_dict3,
+                                           plot_control_dict4,
+                                           plot_control_dict5,
+                                           plot_control_dict6]):
         plot_request = PlotIncrementRequest(plot_control_dict)
         plot_request.submit()
