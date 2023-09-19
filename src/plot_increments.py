@@ -59,7 +59,7 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metric_type_{stat}_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2003-01-01 00:00:00',
+                                    'end': '2004-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -325,19 +325,20 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     myLabel = unique(cycle_labels) 
 
     plt.bar(timestamps, values,
-            alpha=0.2,
+            alpha=0.333,
             width=21600.,
             color=colors)
 
     length = len(myLabel)
+
     for i in range(length):
         """ Plot the first four cycles to format the legend
         """
         plt.scatter(timestamps[i], values[i], ls='None', marker='|',
-             color=colors[i], alpha=0.2, label=cycle_labels[i])
+             color=colors[i], alpha=0.333, label=cycle_labels[i])
     # proceed with onward
     plt.scatter(timestamps[:length], values[:length], ls='None', marker='|',
-             color=colors[:length], alpha=0.2)
+             color=colors[:length], alpha=0.333)
     plt.title(stat+" "+metric+" " +expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)

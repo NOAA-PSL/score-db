@@ -347,7 +347,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
                                           ))
     plt.bar(timestamps, counts,
             #tick_label=labels,
-            alpha=0.2,
+            alpha=0.333,
             width=21600.,
             color=colors,#experiments[0]['graph_color'],
             #label=,#timestamp.year,
@@ -357,10 +357,10 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
         """ Plot the first four cycles to format the legend
         """
         plt.scatter(timestamps[i], counts[i], ls='None', marker='|',
-             color=colors[i], alpha=0.2, label=cycle_labels[i])
+             color=colors[i], alpha=0.333, label=cycle_labels[i])
     # proceed with the second day onward
     plt.scatter(timestamps[4:], counts[4:], ls='None', marker='|',
-             color=colors[4:], alpha=0.2)#experiments[0]['graph_color'])
+             color=colors[4:], alpha=0.333)#experiments[0]['graph_color'])
     plt.title(expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)  
