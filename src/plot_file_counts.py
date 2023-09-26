@@ -31,7 +31,6 @@ from expt_file_counts import ExptFileCountRequest
 from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
-import ipdb
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
@@ -417,3 +416,20 @@ if __name__=='__main__':
                                            plot_control_dict6]):
         plot_request = PlotFileCountRequest(plot_control_dict)
         plot_request.submit()
+
+
+plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2000-01-01 00:00:00',
+                                    'start': '1999-01-01 00:00:00'},
+                     'db_request_name': 'expt_file_counts',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'Number of files',
+                                      'name': 'replay_stream2',
+                                      'wallclock_start': '2023-07-24 17:56:40'}],
+                     'fig_base_fn': 'files',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'metrics': ['count'],
+                                      'stat_group_frmt_str':
+                                      'file_{metric}'}],
+                     'work_dir': '/Users/jknezha/Development/results'}

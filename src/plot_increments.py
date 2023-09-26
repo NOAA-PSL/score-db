@@ -31,7 +31,6 @@ from expt_metrics import ExptMetricRequest
 from increments_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
-import ipdb
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
@@ -421,3 +420,25 @@ if __name__=='__main__':
                                            plot_control_dict6]):
         plot_request = PlotIncrementRequest(plot_control_dict)
         plot_request.submit()
+
+plot_control_dict = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2000-01-01 00:00:00',
+                                    'start': '1999-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{'graph_color': 'black',
+                                      'graph_label': 'increments',
+                                      'name': 'replay_stream2',
+                                      'wallclock_start': '2023-07-24 17:56:40'}],
+                     'fig_base_fn': 'increment',
+                     'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
+                                      'stats': ['mean', 'RMS'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
+                                      'stat_group_frmt_str':
+                                      'metric_type_{stat}_{metric}'}],
+                     'work_dir': '/Users/jknezha/Development/results'}
