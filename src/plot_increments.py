@@ -44,17 +44,12 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'increments',
-                                      'name': 'replay_stream1copy',
+                                      'name': 'replay_stream1',
                                       'wallclock_start': '2023-07-08 16:25:57'}],
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
-                                                  'Speed of Currents', 'o3mr_inc',
-                                                  'sphum_inc', 'T_inc', 'delp_inc',
-                                                  'delz_inc'],
+                                      'metrics': ['u_inc_ocn'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
@@ -81,7 +76,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2009-01-01 00:00:00',
-                                    'start': '2005-01-01 00:00:00'},
+                                    'start': '2005-03-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
@@ -296,6 +291,7 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     '''
     metrics_to_show = metrics_df.drop_duplicates(subset='time_valid', keep='last')
     expt_name = experiments[0]['name']['exact']
+    expt_graph_label = experiments[0]['graph_label']
 
     timestamps = list()
     labels = list()
@@ -304,6 +300,7 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     cycle_labels = list()
     #for i, timestamp in enumerate(metrics_df['time_valid']):#metrics_to_show['cycle']:
     for row in metrics_to_show.itertuples():
+        #print(row.metric_longname,row.metric_unit)
         if row.time_valid >= date_range.start and row.time_valid < date_range.end:
             values.append(row.value)
             timestamps.append(row.time_valid.timestamp())
@@ -332,15 +329,18 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     length = len(myLabel)
 
     for i in range(length):
-        """ Plot the first four cycles to format the legend
+        """ Plot the first unique cycles to format the legend
         """
         plt.scatter(timestamps[i], values[i], ls='None', marker='|',
              color=colors[i], alpha=0.333, label=cycle_labels[i])
     # proceed with onward
-    plt.scatter(timestamps[:length], values[:length], ls='None', marker='|',
-             color=colors[:length], alpha=0.333)
-    plt.title(stat+" "+metric+" " +expt_name)
+    plt.scatter(timestamps, values, ls='None', marker='|',
+             color=colors, alpha=0.333)
     format_figure(ax, pa)
+
+    plt.title(stat+" "+metric+" " +expt_name)
+    plt.ylabel(expt_graph_label+" ("+row.metric_unit+")")
+
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
 
     #create timestamps that are inorder for entire timeline (not limited to 1 year)
@@ -423,11 +423,11 @@ class PlotIncrementRequest(PlotInnovStatsRequest):
                             self.date_range)
 
 if __name__=='__main__':
-    for i, plot_control_dict in enumerate([plot_control_dict1,
-                                           plot_control_dict2,
-                                           plot_control_dict3,
-                                           plot_control_dict4,
-                                           plot_control_dict5,
-                                           plot_control_dict6]):
+    for i, plot_control_dict in enumerate([plot_control_dict1]):
+#                                           plot_control_dict2,
+#                                           plot_control_dict3,
+#                                           plot_control_dict4,
+#                                           plot_control_dict5,
+#                                           plot_control_dict6]):
         plot_request = PlotIncrementRequest(plot_control_dict)
         plot_request.submit()
