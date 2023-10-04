@@ -188,7 +188,8 @@ def test_parse_request_dict():
         }
 
         mtr = MetricTypeRequest(request_dict)
-        mtr.submit()
+        result = mtr.submit()
+        assert(result.success)
 
 def test_send_get_request():
 
@@ -221,4 +222,5 @@ def test_send_get_request():
     }
 
     er = MetricTypeRequest(request_dict)
-    er.submit()
+    result = er.submit()
+    assert(result.success)

@@ -29,6 +29,7 @@ def test_file_type_input_dict():
     ftr = FileTypeRequest(request_dict)
     result = ftr.submit()
     print(f'File type PUT results: {result}')
+    assert(result.success)
 
 def test_file_type_get_request():
     request_dict = {
@@ -46,3 +47,4 @@ def test_file_type_get_request():
     ftr = FileTypeRequest(request_dict)
     result = ftr.submit()
     print(f'File type GET results: {result}')
+    assert(result.success)
