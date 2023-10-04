@@ -76,4 +76,5 @@ def test_run_innov_stats_harvester_for_date_range():
         print(f'conf_dict: {conf_yaml_fn}, documents: {documents}')
 
     hc = HarvestInnovStatsRequest(harvester_control_dict)
-    hc.submit()
+    result = hc.submit()
+    assert(result.success)

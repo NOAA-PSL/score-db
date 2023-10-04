@@ -40,3 +40,4 @@ def test_run_atm_inc_log_harvester():
     hmr = HarvestMetricsRequest(db_harvester_dict)
     result = hmr.submit()
     print(f'Harvest atm inc log test results: {result}')
+    assert(result.success)

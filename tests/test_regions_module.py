@@ -145,7 +145,8 @@ def test_request_put_regions():
     }
 
     rr = RegionRequest(request_dict)
-    rr.submit()
+    result = rr.submit()
+    assert(result.success)
 
 def test_request_get_specific_regions_by_name():
     request_dict = {
@@ -163,7 +164,8 @@ def test_request_get_specific_regions_by_name():
     }
 
     rr = RegionRequest(request_dict)
-    rr.submit()
+    result = rr.submit()
+    assert(result.success)
 
 def test_request_get_specific_regions_by_region_data():
     request_dict = {
@@ -173,8 +175,8 @@ def test_request_get_specific_regions_by_region_data():
     }
 
     rr = RegionRequest(request_dict)
-    rr.submit()
-
+    result = rr.submit()
+    assert(result.success)
 
 def test_request_all_regions():
     request_dict = {
@@ -192,8 +194,8 @@ def test_request_all_regions():
     }
 
     rr = RegionRequest(request_dict)
-    rr.submit()
-
+    result = rr.submit()
+    assert(result.success)
 
     
 

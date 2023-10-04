@@ -37,6 +37,7 @@ def test_put_expt_file_counts_request_dict():
     efcr = ExptFileCountRequest(request_dict)
     result = efcr.submit()
     print(f'Expt File Counts PUT results: {result}')
+    assert(result.success)
 
 def test_get_expt_file_counts_dict():
     request_dict = {
@@ -66,4 +67,5 @@ def test_get_expt_file_counts_dict():
     efcr = ExptFileCountRequest(request_dict)
     result = efcr.submit()
     print(f'Expt File Counts GET results: {result}')
+    assert(result.success)
 
