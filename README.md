@@ -413,6 +413,7 @@ metric_types
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), nullable=False)
+    long_name = Column(String(128))
     measurement_type = Column(String(64), nullable=False)
     measurement_units = Column(String(64))
     stat_type = Column(String(64))
@@ -704,6 +705,9 @@ request_dict = {
                 'stat_type': {
                     'exact': 'rmsd'
                 },
+                'long_name': {
+                    'exact': 'rmsd of innov stats temperature'
+                }
             },
             'ordering': [
                 {'name': 'name', 'order_by': 'desc'},
@@ -721,6 +725,7 @@ request_types = {
         'method': 'PUT',
         'body' : {
             'name': name,
+            'long_name': long_name,
             'measurement_type': measurement_type,
             'measurement_units': units,
             'stat_type': stat_type,
