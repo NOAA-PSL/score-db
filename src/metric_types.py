@@ -30,7 +30,7 @@ MetricTypeData = namedtuple(
     'MetricTypeData',
     [
         'name',
-        'long_name'
+        'long_name',
         'measurement_type',
         'measurement_units',
         'stat_type',

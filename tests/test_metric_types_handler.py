@@ -212,6 +212,9 @@ def test_send_get_request():
                 'stat_type': {
                     'exact': 'rmsd'
                 },
+                'long_name': {
+                    'exact': 'rmsd of innov stats temperature'
+                }
             },
             'ordering': [
                 {'name': 'name', 'order_by': 'desc'},
