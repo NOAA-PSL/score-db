@@ -23,6 +23,7 @@ MetricType = namedtuple(
     'MetricType',
     [
         'name',
+        'long_name',
         'type',
         'units',
         'stat_type',
@@ -75,6 +76,7 @@ def test_parse_request_dict():
     metric_types = [
         MetricType(
             'innov_stats_temperature_count',
+            'count of innov stats temperature',
             'temperature',
             'kelvin',
             'count',
@@ -82,6 +84,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_temperature_bias',
+            'bias of innov stats temperature',
             'temperature',
             'kelvin',
             'bias',
@@ -89,6 +92,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_temperature_rmsd',
+            'rmsd of innov stats temperature',
             'temperature',
             'kelvin',
             'rmsd',
@@ -96,6 +100,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_uvwind_rmsd',
+            'rmsd of innov stats uvwind',
             'uvwind',
             'kph',
             'rmsd',
@@ -103,6 +108,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_uvwind_count',
+            'count of innov stats uvwind',
             'uvwind',
             'kph',
             'count',
@@ -110,6 +116,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_uvwind_bias',
+            'bias of innov stats uvwind',
             'uvwind',
             'kph',
             'bias',
@@ -117,6 +124,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_spechumid_rmsd',
+            'rmsd of innov stats spechumid',
             'spechumid',
             'grams of water vapor per cubic meter volume of air',
             'rmsd',
@@ -124,6 +132,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_spechumid_count',
+            'count of innov stats spechumid',
             'spechumid',
             'grams of water vapor per cubic meter volume of air',
             'count',
@@ -131,6 +140,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_spechumid_bias',
+            'bias of innov stats spechumid',
             'spechumid',
             'grams of water vapor per cubic meter volume of air',
             'bias',
@@ -138,6 +148,7 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_salinity_bias',
+            'bias of innov stats salinity',
             'salinity',
             'practical salinity',
             'bias',
@@ -145,13 +156,15 @@ def test_parse_request_dict():
         ),
         MetricType(
             'innov_stats_salinity_rmsd',
+            'rmsd of innov stats salinity',
             'salinity',
             'practical salinity',
             'rmsd',
             description_temperature_rmsd
         ),
         MetricType(
-            'mean_o3mr_inc',
+            'mean_o3mr_inc_test',
+            'test for mean_o3mr_inc',
             'test',
             'test',
             'mean',
@@ -165,6 +178,7 @@ def test_parse_request_dict():
             'method': 'PUT',
             'body': {
                 'name': m_type.name,
+                'long_name': m_type.long_name,
                 'measurement_type': m_type.type,
                 # 'measurement_units': 'grams of water vapor per cubic meter volume of air',
                 'measurement_units': m_type.units,
@@ -198,6 +212,9 @@ def test_send_get_request():
                 'stat_type': {
                     'exact': 'rmsd'
                 },
+                'long_name': {
+                    'exact': 'rmsd of innov stats temperature'
+                }
             },
             'ordering': [
                 {'name': 'name', 'order_by': 'desc'},
