@@ -49,12 +49,17 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['u_inc_ocn'],
+                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
+                                                  'v_inc', 'SSH', 'Salinity',
+                                                  'Temperature',
+                                                  'Speed of Currents', 'o3mr_inc',
+                                                  'sphum_inc', 'T_inc', 'delp_inc',
+                                                  'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2004-01-01 00:00:00',
+                                    'end': '2005-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -75,8 +80,8 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metric_type_{stat}_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2009-01-01 00:00:00',
-                                    'start': '2005-03-01 00:00:00'},
+                                    'end': '2010-01-01 00:00:00',
+                                    'start': '2005-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
@@ -117,7 +122,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metric_type_{stat}_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2019-01-01 00:00:00',
+                                    'end': '2020-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -298,16 +303,14 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     values = list()
     colors = list()
     cycle_labels = list()
-    #for i, timestamp in enumerate(metrics_df['time_valid']):#metrics_to_show['cycle']:
+
     for row in metrics_to_show.itertuples():
-        #print(row.metric_longname,row.metric_unit)
         if row.time_valid >= date_range.start and row.time_valid < date_range.end:
             values.append(row.value)
             timestamps.append(row.time_valid.timestamp())
             labels.append('%02d-%02d-%04d' % (row.time_valid.month,
                                               row.time_valid.day,
                                               row.time_valid.year,
-                              #          timestamp.hour
                                           ))
             cycle_labels.append('%dZ' % row.time_valid.hour)
             if row.time_valid.hour == 0:
@@ -423,11 +426,11 @@ class PlotIncrementRequest(PlotInnovStatsRequest):
                             self.date_range)
 
 if __name__=='__main__':
-    for i, plot_control_dict in enumerate([plot_control_dict1]):
-#                                           plot_control_dict2,
-#                                           plot_control_dict3,
-#                                           plot_control_dict4,
-#                                           plot_control_dict5,
-#                                           plot_control_dict6]):
+    for i, plot_control_dict in enumerate([plot_control_dict1,
+                                           plot_control_dict2,
+                                           plot_control_dict3,
+                                           plot_control_dict4,
+                                           plot_control_dict5,
+                                           plot_control_dict6]):
         plot_request = PlotIncrementRequest(plot_control_dict)
         plot_request.submit()

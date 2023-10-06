@@ -58,7 +58,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'file_{metric}'}],
                      'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2009-01-01 00:00:00',
+                                    'end': '2010-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
