@@ -30,6 +30,7 @@ MetricTypeData = namedtuple(
     'MetricTypeData',
     [
         'name',
+        'long_name',
         'measurement_type',
         'measurement_units',
         'stat_type',
@@ -41,6 +42,7 @@ MetricTypeData = namedtuple(
 class MetricType:
     ''' metric type object storing data related to the measurement type '''
     name: str
+    long_name: str
     measurement_type: str
     measurement_units: str
     stat_type: str
@@ -52,6 +54,7 @@ class MetricType:
         print(f'description: {self.description}')
         self.metric_type_data = MetricTypeData(
             self.name,
+            self.long_name,
             self.measurement_type,
             self.measurement_units,
             self.stat_type,
@@ -81,6 +84,7 @@ def get_metric_type_from_body(body):
 
     metric_type = MetricType(
         body.get('name'),
+        body.get('long_name'),
         body.get('measurement_type'),
         body.get('measurement_units'),
         body.get('stat_type'),
@@ -120,6 +124,9 @@ def construct_filters(filters):
 
     constructed_filter = get_string_filter(
         filters, mt, 'name', constructed_filter)
+    
+    constructed_filter = get_string_filter(
+        filters, mt, 'long_name', constructed_filter)
 
     constructed_filter = get_string_filter(
         filters, mt, 'measurement_type', constructed_filter)
@@ -217,6 +224,7 @@ class MetricTypeRequest:
 
         insert_stmt = insert(mt).values(
             name=self.metric_type_data.name,
+            long_name = self.metric_type_data.long_name,
             measurement_type=self.metric_type_data.measurement_type,
             measurement_units=self.metric_type_data.measurement_units,
             stat_type=self.metric_type_data.stat_type,
@@ -232,6 +240,7 @@ class MetricTypeRequest:
             constraint='unique_metric_type',
             set_=dict(
                 # group_id=self.experiment_data.group_id,
+                long_name=self.metric_type_data.long_name, 
                 measurement_units=self.metric_type_data.measurement_units,
                 stat_type=self.metric_type_data.stat_type,
                 description=self.metric_type_data.description,
@@ -287,6 +296,7 @@ class MetricTypeRequest:
         q = session.query(
             mt.id,
             mt.name,
+            mt.long_name,
             mt.measurement_type,
             mt.measurement_units,
             mt.stat_type,

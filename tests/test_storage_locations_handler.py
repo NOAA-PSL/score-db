@@ -25,6 +25,7 @@ def test_storage_location_input_dict():
     slr = StorageLocationRequest(request_dict)
     result = slr.submit()
     print(f'Storage locations PUT result: {result}')
+    assert(result.success)
 
 def test_storage_location_get_request():
     request_dict = {
@@ -43,3 +44,4 @@ def test_storage_location_get_request():
     slr = StorageLocationRequest(request_dict)
     result = slr.submit()
     print(f'Storage location GET result: {result}')
+    assert(result.success)

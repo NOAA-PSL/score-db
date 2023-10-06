@@ -77,6 +77,7 @@ ExptMetricsData = namedtuple(
         'expt_name',
         'wallclock_start',
         'metric_id',
+        'metric_long_name',
         'metric_type',
         'metric_unit',
         'metric_stat_type',
@@ -244,6 +245,14 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         'name',
         constructed_filter,
         'metric_type_name'
+    )
+
+    constructed_filter = get_string_filter(
+        filter_dict,
+        mts,
+        'long_name',
+        constructed_filter,
+        'metric_type_long_name'
     )
     
     constructed_filter = get_string_filter(
@@ -629,6 +638,7 @@ class ExptMetricRequest:
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
                 metric_id=metric.metric_type.id,
+                metric_long_name=metric.metric_type.long_name,
                 metric_type=metric.metric_type.measurement_type,
                 metric_unit=metric.metric_type.measurement_units,
                 metric_stat_type=metric.metric_type.stat_type,
