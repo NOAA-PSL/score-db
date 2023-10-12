@@ -155,6 +155,7 @@ class MetricType(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128), nullable=False)
+    long_name = Column(String(128))
     measurement_type = Column(String(64), nullable=False)
     measurement_units = Column(String(64))
     stat_type = Column(String(64))

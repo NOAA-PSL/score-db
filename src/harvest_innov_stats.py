@@ -19,6 +19,7 @@ import time_utils
 from time_utils import DateRange
 from score_hv.harvester_base import harvest
 from expt_metrics import ExptMetricInputData, ExptMetricRequest
+from db_action_response import DbActionResponse
 
 # import aws_s3_interface as s3
 # from aws_s3_interface import AwsS3CommandRawResponse
@@ -157,6 +158,10 @@ class HarvestInnovStatsRequest(object):
 
         finished = False
         loop_count = 0
+        details = {}
+        error_msg = ""
+        success = True
+        messages = ""
         while not finished:
             print(
                 f'loop {loop_count} of while loop, finished: {finished}')
@@ -222,11 +227,25 @@ class HarvestInnovStatsRequest(object):
                 emr = ExptMetricRequest(request_dict)
                 # exit()
                 result = emr.submit()
+                details[loop_count] = result.details
+                messages += result.message
+                success = (success and result.success)
+                error_msg += result.errors
 
             self.date_range.increment(days=n_days, hours=n_hours)
 
             if self.date_range.at_end():
                 finished = True
                 
-        # for file_data in self.files:
-        #     print(f'file_data: {file_data}')
+        #add db action response 
+        response = DbActionResponse(
+            self.config_dict,
+            success,
+            messages,
+            details,
+            error_msg
+        ) 
+
+        print(f'response: {response}')
+        return response 
+        
