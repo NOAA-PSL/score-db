@@ -38,7 +38,21 @@ inc_logs_harvested_data = namedtuple(
         'units'
     ]
 )
+
+Expected output from precip harvester
+precip_harvested_data = namedtuple(
+     'HarvestedData', 
+     [
+      'filenames',
+      'date',
+      'statistic',
+      'variable',
+      'value',
+      'units'
+      ]
+)
 """
+
 def inc_logs_translator(harvested_data):
     result = MetricTableData(
         harvested_data.statistic + "_" + harvested_data.variable,
@@ -50,5 +64,18 @@ def inc_logs_translator(harvested_data):
         None, 
         None
     )
+    return result
 
+
+def precip_translator(harvested_data):
+    result = MetricTableData(
+            harvested_data.statistic + "_" + harvested_data.variable,
+            'global',
+            None,
+            'N/A'
+            harvested_data.value,
+            harvested_data.date,
+            None,
+            None
+    )        
     return result
