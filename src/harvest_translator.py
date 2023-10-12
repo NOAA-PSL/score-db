@@ -44,11 +44,12 @@ precip_harvested_data = namedtuple(
      'HarvestedData', 
      [
       'filenames',
-      'date',
       'statistic',
       'variable',
       'value',
-      'units'
+      'units',
+      'mediantime',
+      'longname'
       ]
 )
 """
@@ -74,7 +75,7 @@ def precip_translator(harvested_data):
             None,
             'N/A'
             harvested_data.value,
-            harvested_data.date,
+            harvested_data.mediantime,
             None,
             None
     )        
