@@ -37,9 +37,9 @@ def inc_logs_translator(harvested_data):
                        'global',
                        None,
                        'N/A',
-                       harvested_data.value, 
+                       harvested_data.value,
                        harvested_data.cycletime,
-                       None, 
+                       None,
                        None)
     return result
 
@@ -60,7 +60,7 @@ def precip_translator(harvested_data):
                        harvested_data.statistic + "_" + harvested_data.variable,
                        'global',
                        None,
-                       'N/A'
+                       'N/A',
                        harvested_data.value,
                        harvested_data.mediantime,
                        None,
