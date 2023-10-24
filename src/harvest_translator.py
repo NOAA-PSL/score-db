@@ -25,36 +25,20 @@ MetricTableData = namedtuple(
     ],
 )
 
-"""
-Expected output from inc_logs harvester 
-inc_logs_harvested_data = namedtuple(
-    'HarvestedData',
-    [
-        'logfile',
-        'cycletime',
-        'statistic',
-        'variable',
-        'value',
-        'units'
-    ]
-)
-
-Expected output from precip harvester
-precip_harvested_data = namedtuple(
-     'HarvestedData', 
-     [
-      'filenames',
-      'statistic',
-      'variable',
-      'value',
-      'units',
-      'mediantime',
-      'longname'
-      ]
-)
-"""
-
 def inc_logs_translator(harvested_data):
+    """ Expected output from inc_logs harvester 
+    inc_logs_harvested_data = namedtuple(
+        'HarvestedData',
+        [
+            'logfile',
+            'cycletime',
+            'statistic',
+            'variable',
+            'value',
+            'units'
+        ]
+    )
+    """
     result = MetricTableData(
         harvested_data.statistic + "_" + harvested_data.variable,
         'global',
@@ -67,13 +51,26 @@ def inc_logs_translator(harvested_data):
     )
     return result
 
-
 def precip_translator(harvested_data):
+    """ Expected output from precip harvester
+    precip_harvested_data = namedtuple(
+        'HarvestedData', 
+        [
+            'filenames',
+            'statistic',
+            'variable',
+            'value',
+            'units',
+            'mediantime',
+            'longname'
+        ]
+    )
+    """
     result = MetricTableData(
             harvested_data.statistic + "_" + harvested_data.variable,
             'global',
             None,
-            'N/A'
+            'N/A',
             harvested_data.value,
             harvested_data.mediantime,
             None,
