@@ -228,8 +228,8 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
             cycle_labels.append('%dZ' % row.cycle.hour)
             if row.cycle.hour == 0:
                 colors.append('lightcoral')
-                if(row.count < 46):
-                    file_count.write('%s count %02d/52 %02d-%02d-%04d %02d\n' % (expt_name,row.count,
+                if(row.count < 31):
+                    file_count.write('%s count %02d/31 %02d-%02d-%04d %02d\n' % (expt_name,row.count,
 					      row.cycle.month,
                                               row.cycle.day,
                                               row.cycle.year,

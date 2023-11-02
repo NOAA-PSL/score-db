@@ -20,6 +20,7 @@ import pathlib
 from dataclasses import dataclass, field
 from collections import namedtuple
 from datetime import datetime
+from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -49,9 +50,10 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
+                                      'metrics': ['pt_inc', 's_inc',
+                                                  'u_inc_ocn','v_inc_ocn',
+                                                  'u_inc_atm','v_inc_atm',
+                                                  'SSH', 'Salinity', 'Temperature',
                                                   'Speed of Currents', 'o3mr_inc',
                                                   'sphum_inc', 'T_inc', 'delp_inc',
                                                   'delz_inc'],
@@ -70,9 +72,10 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
+                                      'metrics': ['pt_inc', 's_inc', 
+                                                  'u_inc_ocn','v_inc_ocn',
+                                                  'u_inc_atm','v_inc_atm',
+                                                  'SSH', 'Salinity', 'Temperature',
                                                   'Speed of Currents', 'o3mr_inc',
                                                   'sphum_inc', 'T_inc', 'delp_inc',
                                                   'delz_inc'],
@@ -91,9 +94,9 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
+                                      'metrics': ['pt_inc', 's_inc','u_inc_ocn',
+                                                  'v_inc_ocn', 'u_inc_atm','v_inc_atm', 
+                                                  'SSH', 'Salinity', 'Temperature',
                                                   'Speed of Currents', 'o3mr_inc',
                                                   'sphum_inc', 'T_inc', 'delp_inc',
                                                   'delz_inc'],
@@ -112,9 +115,9 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
+                                      'metrics': ['pt_inc', 's_inc','u_inc_ocn',
+                                                  'v_inc_ocn', 'u_inc_atm','v_inc_atm', 
+                                                  'SSH', 'Salinity', 'Temperature',
                                                   'Speed of Currents', 'o3mr_inc',
                                                   'sphum_inc', 'T_inc', 'delp_inc',
                                                   'delz_inc'],
@@ -133,9 +136,9 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
+                                      'metrics': ['pt_inc', 's_inc','u_inc_ocn',
+                                                  'v_inc_ocn', 'u_inc_atm','v_inc_atm',
+                                                  'SSH', 'Salinity', 'Temperature',
                                                   'Speed of Currents', 'o3mr_inc',
                                                   'sphum_inc', 'T_inc', 'delp_inc',
                                                   'delz_inc'],
@@ -154,9 +157,9 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                      'fig_base_fn': 'increment',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'stats': ['mean', 'RMS'],
-                                      'metrics': ['pt_inc', 's_inc', 'u_inc',
-                                                  'v_inc', 'SSH', 'Salinity',
-                                                  'Temperature',
+                                      'metrics': ['pt_inc', 's_inc','u_inc_ocn',
+                                                  'v_inc_ocn', 'u_inc_atm','v_inc_atm',
+                                                  'SSH', 'Salinity', 'Temperature',
                                                   'Speed of Currents', 'o3mr_inc',
                                                   'sphum_inc', 'T_inc', 'delp_inc',
                                                   'delz_inc'],
@@ -193,7 +196,14 @@ def get_experiment_increments(request_data):
     expt_metric_name = request_data.metric_format_str.replace(
                                                         '{metric}', 
                                                         request_data.metric)
-   
+
+    if (request_data.metric[-4:] == "_ocn" or request_data.metric[-4:] == "_atm"):
+        metric_measurement_type= request_data.metric[:-4]
+        metric_measurement_name= request_data.stat+"_"+request_data.metric
+    else:
+        metric_measurement_type= request_data.metric
+        metric_measurement_name= request_data.stat+"_"+request_data.metric
+
     expt_metric_name = expt_metric_name.replace(
         '{stat}', request_data.stat
     )
@@ -212,7 +222,8 @@ def get_experiment_increments(request_data):
                                     'wallclock_start':
                                       {'from': request_data.experiment['wallclock_start']['from'],
                                        'to': request_data.experiment['wallclock_start']['to']}},
-                                  'metric_types': {'measurement_type': {'exact': [request_data.metric]},
+                                  'metric_types': {'name': {'exact': [metric_measurement_name]},
+                                                   'measurement_type': {'exact': [metric_measurement_type]},
                                                    'stat_type': {'exact': [request_data.stat]}},
                                   'regions': {'rgs_name': {'exact': ['global']}},
                                   'time_valid': {'from': time_valid_from,
@@ -298,6 +309,9 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     expt_name = experiments[0]['name']['exact']
     expt_graph_label = experiments[0]['graph_label']
 
+    if "_inc" not in metric:
+       expt_graph_label = stat
+
     timestamps = list()
     labels = list()
     values = list()
@@ -341,7 +355,10 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
              color=colors, alpha=0.333)
     format_figure(ax, pa)
 
-    plt.title(stat+" "+metric+" " +expt_name)
+    plt.title(stat+" "+metric+" " +expt_name, loc = "left")
+    today = date.today()
+    plt.title(today, loc = "right")
+  
     plt.ylabel(expt_graph_label+" ("+row.metric_unit+")")
 
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
@@ -351,7 +368,6 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
     all_monthly_labels = [datetime.fromtimestamp(timestamps_int).strftime('%m-%Y') for timestamps_int in timestamps_int]
 
     monthly_labels = unique(all_monthly_labels) 
-
     plt.xticks(ticks=np.arange(sorted(timestamps)[0],
                                sorted(timestamps)[-1],
                                60*60*24*(365.25/12.))[:len(monthly_labels)],
