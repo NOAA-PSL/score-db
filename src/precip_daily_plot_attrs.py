@@ -115,7 +115,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
 
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                      'end': '2020-01-01 00:00:00',
-                                     'start': '2015-01-01 00:00:00'},
+                                     'start': '2019-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
                      'experiments': [{#'graph_color': 'black',
@@ -127,12 +127,12 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                  # 21600, 43200, 64800
                                                  ],
                                       'stats': ['daily_mean'],
-                                      'metrics': ['mean_prateb_ave'],
+                                      'metrics': ['mean_prateb_ave', 'mean_soilm', 'mean_tmp2m'],
                                       'stat_group_frmt_str':
                                           '{metric}'}],
                      'work_dir': WORK_DIR}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '2024-01-01 00:00:00',
+                                    'end': '2021-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
                      'db_request_name': 'expt_metrics',
                      'method': 'GET',
@@ -145,7 +145,7 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                  # 21600, 43200, 64800
                                                  ],
                                       'stats': ['daily_mean'],
-                                      'metrics': ['mean_prateb_ave'],
+                                      'metrics': ['mean_prateb_ave', 'mean_soilm', 'mean_tmp2m'],
                                       'stat_group_frmt_str':
                                           '{metric}'}],
                      'work_dir': WORK_DIR}
@@ -164,7 +164,7 @@ plot_control_dict6_spinup = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                  # 21600, 43200, 64800
                                                  ],
                                       'stats': ['daily_mean'],
-                                      'metrics': ['mean_prateb_ave'],
+                                      'metrics': ['mean_prateb_ave', 'mean_soilm', 'mean_tmp2m'],
                                       'stat_group_frmt_str':
                                           '{metric}'}],
                      'work_dir': WORK_DIR}
@@ -183,7 +183,7 @@ plot_control_dict5_overlap = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S'
                                                  # 21600, 43200, 64800
                                                  ],
                                       'stats': ['daily_mean'],
-                                      'metrics': ['mean_prateb_ave'],
+                                      'metrics': ['mean_prateb_ave','mean_soilm', 'mean_tmp2m'],
                                       'stat_group_frmt_str':
                                           '{metric}'}],
                      'work_dir': WORK_DIR}

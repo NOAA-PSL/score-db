@@ -31,15 +31,18 @@ def unique(sequence):
     return [x for x in sequence if not (x in seen or seen.add(x))]
 
 def get_experiment_precip(request_data):
-    
-    expt_metric_name = request_data.metric_format_str.replace('{metric}', 
-                                                        request_data.metric)
-    metric_measurement_type= 'prateb_ave'#request_data.metric
+    #expt_metric_name = request_data.metric_format_str.replace('{metric}', 
+    #                                                    request_data.metric)
+    metric_measurement_type = request_data.metric.replace('mean_', '')
+    metric_measurement_type = metric_measurement_type.replace('std_', '')
     metric_measurement_name= request_data.metric
 
-    expt_metric_name = expt_metric_name.replace(
-        '{stat}', ''
-    )
+    stat_type = request_data.stat.replace('mean',
+                                          '%s' % metric_measurement_name.split('_')[0])
+
+    #expt_metric_name = expt_metric_name.replace(
+    #    '{stat}', ''
+    #)
    
     time_valid_from = datetime.strftime(request_data.time_valid.start, 
                                         request_data.datetime_str)
@@ -57,7 +60,7 @@ def get_experiment_precip(request_data):
                                        'to': request_data.experiment['wallclock_start']['to']}},
                                   'metric_types': {'name': {'exact': [metric_measurement_name]},
                                                    'measurement_type': {'exact': [metric_measurement_type]},
-                                                   'stat_type': {'exact': [request_data.stat]}},
+                                                   'stat_type': {'exact': [stat_type]}},
                                   'regions': {'rgs_name': {'exact': ['global']}},
                                   'time_valid': {'from': time_valid_from,
                                                  'to': time_valid_to}},
@@ -72,9 +75,9 @@ def get_experiment_precip(request_data):
 def build_base_figure():
     fig, ax = plt.subplots()
     
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    plt.tick_params(axis='x', which='both', bottom=True, top=False,
+    #ax.spines['top'].set_visible(False)
+    #ax.spines['right'].set_visible(False)
+    plt.tick_params(axis='both', which='both', bottom=True, top=True, left=True, right=True,
                     labelbottom=True, labelsize=3)
     
     return(fig, ax)
@@ -89,20 +92,22 @@ def format_figure(ax, pa):
     '''
     ax.set_xlim([pd.Timestamp(plot_control_dict['date_range']['start']).timestamp(),
                  pd.Timestamp(plot_control_dict['date_range']['end']).timestamp()])
-    ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
+    ax.set_ylim([0,#pa.axes_attrs.ymin,
+                 pa.axes_attrs.ymax])
     plt.xlabel(xlabel=pa.xlabel.label,
                horizontalalignment=pa.xlabel.horizontalalignment)
     
     plt.ylabel(ylabel=pa.ylabel.label,
                horizontalalignment=pa.ylabel.horizontalalignment)
     
+    '''
     plt.legend(loc=pa.legend.loc,
                fancybox=pa.legend.fancybox,
                edgecolor=pa.legend.edgecolor,
                framealpha=pa.legend.framealpha,
                shadow=pa.legend.shadow,
                facecolor=pa.legend.facecolor)
-
+    '''
 def build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range):
     
     start = datetime.strftime(date_range.start, '%Y%m%dT%HZ')
@@ -121,7 +126,7 @@ def save_figure(dest_full_path):
     print(f'saving figure to {dest_full_path}')
     plt.savefig(dest_full_path, dpi=600)
 
-def plot_precip(experiments, stat, metric, metrics_df, work_dir, fig_base_fn,
+def plot_precip(experiments, stat, metric, metrics_df, metrics_df_std, work_dir, fig_base_fn,
                 date_range):
 
     if not isinstance(metrics_df, DataFrame):
@@ -139,6 +144,7 @@ def plot_precip(experiments, stat, metric, metrics_df, work_dir, fig_base_fn,
         expt_name = expt.get('name')['exact']
     '''
     metrics_to_show = metrics_df.drop_duplicates(subset='time_valid', keep='last')
+    std_to_show = metrics_df_std.drop_duplicates(subset='time_valid', keep='last')
     expt_name = experiments[0]['name']['exact']
     expt_graph_label = experiments[0]['graph_label']
 
@@ -157,6 +163,7 @@ def plot_precip(experiments, stat, metric, metrics_df, work_dir, fig_base_fn,
                                               row.time_valid.year,
                                           ))
             cycle_labels.append('%dZ' % row.time_valid.hour)
+            '''
             if row.time_valid.hour == 0:
                 colors.append('lightcoral')
             elif row.time_valid.hour == 6:
@@ -165,31 +172,46 @@ def plot_precip(experiments, stat, metric, metrics_df, work_dir, fig_base_fn,
                 colors.append('skyblue')
             elif row.time_valid.hour == 18:
                 colors.append('orchid')
-
+            '''
+    values_std = np.zeros(len(timestamps))
+    #for time_idx, timestamp in enumerate(timestamps):
+    for row in std_to_show.itertuples():
+        #std_timestamp = row.time_valid.timestamp()
+        try:
+            timestamp_index = timestamps.index(row.time_valid.timestamp())
+            values_std[timestamp_index] = row.value
+        except ValueError:
+            print('Mean value missing for %s at %02d-%02d-%04d'
+                  % (metric, row.time_valid.month, row.time_valid.day,
+                     row.time_valid.year))
+    
     myLabel = unique(cycle_labels) 
-
+    '''
     plt.bar(timestamps, values,
             alpha=0.333,
             width=21600.*4, # 24 hours
-            color=colors)
-
+            color='black')
+    '''
     length = len(myLabel)
-
+    '''
     for i in range(length):
         """ Plot the first unique cycles to format the legend
         """
-        plt.scatter(timestamps[i], values[i], ls='None', marker='|',
-             color=colors[i], alpha=0.333, label=cycle_labels[i])
+        plt.errorbar(timestamps[i], values[i], yerr=values_std[i],
+                     xerr=21600.*2, fmt='None', ls='None', 
+                     color='black', alpha=0.333, label=cycle_labels[i])
+    '''
     # proceed with onward
-    plt.scatter(timestamps, values, ls='None', marker='|',
-             color=colors, alpha=0.333)
+    plt.errorbar(timestamps, values, yerr=values_std, xerr=21600.*2,
+                 ls='None', color='black', alpha=0.333)
+   
     format_figure(ax, pa)
 
     plt.title(stat+" "+metric+" " +expt_name, loc = "left")
-    today = date.today()
-    plt.title(today, loc = "right")
+    #today = date.today()
+    #plt.title(today, loc = "right")
   
-    plt.ylabel("{expt_graph_label} ({row.metric_unit})")
+    plt.ylabel("%s" % row.metric_unit)
 
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
 
@@ -221,6 +243,7 @@ class PlotPrecipRequest(PlotInnovStatsRequest):
             for metric in stat_group.metrics:
                 for stat in stat_group.stats:
                     m_df = DataFrame()
+                    m_df_std = DataFrame()
                     for experiment in self.experiments:
                         request_data = RequestData(
                             self.datetime_str,
@@ -228,11 +251,21 @@ class PlotPrecipRequest(PlotInnovStatsRequest):
                             stat_group.stat_group_frmt_str,
                             metric, stat,
                             self.date_range)
+                        request_data_std = RequestData(
+                            self.datetime_str,
+                            experiment,
+                            stat_group.stat_group_frmt_str,
+                            metric.replace('mean', 'std'),
+                            stat.replace('mean', 'std'),
+                            self.date_range)
                         
                         try:
                             e_df = get_experiment_precip(request_data)
+                            e_df_std = get_experiment_precip(request_data_std)
                             e_df = e_df.sort_values(['time_valid', 'created_at'])
+                            e_df_std = e_df_std.sort_values(['time_valid', 'created_at'])
                             m_df = pd.concat([m_df, e_df], axis=0)
+                            m_df_std = pd.concat([m_df_std, e_df_std], axis=0)
                             plot_yes = True
                         except KeyError:
                             print('no records found for %s %s, skipping' % (stat, metric))
@@ -243,6 +276,7 @@ class PlotPrecipRequest(PlotInnovStatsRequest):
                             stat,
                             metric,
                             m_df,
+                            m_df_std,
                             self.work_dir,
                             self.fig_base_fn,
                             self.date_range)
