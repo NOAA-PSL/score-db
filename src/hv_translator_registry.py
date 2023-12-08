@@ -24,9 +24,9 @@ translator_registry = {
         'translate harvest values from inc_logs harvester',
         harvest_translator.inc_logs_translator
     ),
-    'precip': TranslatorHandler(
-        'translate harvest values from precip harvester',
-        harvest_translator.precip_translator
+    'daily_bfg': TranslatorHandler(
+        'translate harvest values from daily bfg harvester',
+        harvest_translator.daily_bfg_translator
     ),
 }
 

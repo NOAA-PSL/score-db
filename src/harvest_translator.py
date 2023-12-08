@@ -49,9 +49,9 @@ def inc_logs_translator(harvested_data):
         None)
     return result
 
-def precip_translator(harvested_data):
-    """ Expected output from precip harvester
-    precip_harvested_data = namedtuple(
+def daily_bfg_translator(harvested_data):
+    """ Expected output from daily bfg harvester
+    daily_bfg_harvested_data = namedtuple(
         'HarvestedData', 
         [
             'filenames',
