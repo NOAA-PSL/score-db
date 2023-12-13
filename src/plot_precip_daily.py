@@ -83,7 +83,7 @@ def build_base_figure():
     return(fig, ax)
 
 
-def format_figure(ax, pa):
+def format_figure(ax, pa, metric):
     '''
     ax.set_xlim([pa.axes_attrs.xmin, pa.axes_attrs.xmax])
     ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
@@ -92,8 +92,19 @@ def format_figure(ax, pa):
     '''
     ax.set_xlim([pd.Timestamp(plot_control_dict['date_range']['start']).timestamp(),
                  pd.Timestamp(plot_control_dict['date_range']['end']).timestamp()])
-    ax.set_ylim([0,#pa.axes_attrs.ymin,
-                 pa.axes_attrs.ymax])
+    
+    if metric == 'mean_tmp2m':
+        ax.set_ylim([260,#pa.axes_attrs.ymin,
+                     310 #pa.axes_attrs.ymax
+                     ])
+    elif metric == 'mean_soilm':
+        ax.set_ylim([0,#pa.axes_attrs.ymin,
+                     1000 #pa.axes_attrs.ymax
+                     ])
+    elif metric == 'mean_prateb_ave':
+        ax.set_ylim([0,#pa.axes_attrs.ymin,
+                     10#pa.axes_attrs.ymax
+                     ])
     plt.xlabel(xlabel=pa.xlabel.label,
                horizontalalignment=pa.xlabel.horizontalalignment)
     
@@ -185,6 +196,12 @@ def plot_precip(experiments, stat, metric, metrics_df, metrics_df_std, work_dir,
                   % (metric, row.time_valid.month, row.time_valid.day,
                      row.time_valid.year))
     
+    if metric == 'mean_prateb_ave':
+        values = 24 * 3600 * np.array(values) # convert to mm/s
+        values_std = 24 * 3600 * np.array(values_std)
+        units = 'mm/s'
+    else:
+        units = row.metric_unit
     myLabel = unique(cycle_labels) 
     '''
     plt.bar(timestamps, values,
@@ -205,13 +222,13 @@ def plot_precip(experiments, stat, metric, metrics_df, metrics_df_std, work_dir,
     plt.errorbar(timestamps, values, yerr=values_std, xerr=21600.*2,
                  ls='None', color='black', alpha=0.333)
    
-    format_figure(ax, pa)
+    format_figure(ax, pa, metric)
 
     plt.title(stat+" "+metric+" " +expt_name, loc = "left")
     #today = date.today()
     #plt.title(today, loc = "right")
   
-    plt.ylabel("%s" % row.metric_unit)
+    plt.ylabel("%s" % units)
 
     fig_fn = build_fig_dest(work_dir, fig_base_fn, stat, metric, date_range)
 
@@ -286,9 +303,10 @@ if __name__=='__main__':
                                            #plot_control_dict2,
                                            #plot_control_dict3,
                                            #plot_control_dict4,
-                             precip_daily_plot_attrs.plot_control_dict5,
-                             precip_daily_plot_attrs.plot_control_dict5_overlap,
+                             #precip_daily_plot_attrs.plot_control_dict5,
+                             #precip_daily_plot_attrs.plot_control_dict5_overlap,
                              precip_daily_plot_attrs.plot_control_dict6_spinup,
-                             precip_daily_plot_attrs.plot_control_dict6]):
+                             precip_daily_plot_attrs.plot_control_dict6
+                           ]):
         plot_request = PlotPrecipRequest(plot_control_dict)
         plot_request.submit()
