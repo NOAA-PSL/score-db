@@ -41,7 +41,7 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2005-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
@@ -56,7 +56,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2010-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
@@ -71,7 +71,7 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2015-01-01 00:00:00',
                                     'start': '2010-01-01 00:00:00'},
@@ -86,7 +86,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2020-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
@@ -101,7 +101,7 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2024-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
@@ -116,12 +116,11 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 
 def unique(sequence):
     seen = set()
     return [x for x in sequence if not (x in seen or seen.add(x))]
-
 
 def get_experiment_file_counts(request_data):
     
@@ -320,7 +319,6 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
                     e_df = e_df.sort_values(['cycle', 'created_at'])
                     m_df = pd.concat([m_df, e_df], axis=0)
 
-                #ipdb.set_trace()
                 plot_file_counts(
                     self.experiments,
                     metric,

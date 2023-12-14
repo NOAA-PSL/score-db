@@ -1,19 +1,7 @@
-"""
-Copyright 2023 NOAA
+"""Copyright 2023 NOAA
 All rights reserved.
 
 Collection of methods to facilitate handling of score db requests
-
-import copy
-
-import json
-
-import pprint
-import traceback
-
-import time_utils
-from time_utils import DateRange
-from score_hv.harvester_base import harvest
 """
 import os
 import pathlib
@@ -27,12 +15,9 @@ import pandas as pd
 from pandas import DataFrame
 from matplotlib import pyplot as plt
 
-
 from expt_metrics import ExptMetricRequest
 from increments_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
-
-#import ipdb
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
@@ -59,7 +44,7 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2005-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
@@ -81,7 +66,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2010-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
@@ -102,7 +87,7 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2015-01-01 00:00:00',
                                     'start': '2010-01-01 00:00:00'},
@@ -123,7 +108,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2020-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
@@ -144,7 +129,7 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
+                     'work_dir': '/contrib/shared/replay/results'}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2024-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
@@ -165,27 +150,7 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                                   'delz_inc'],
                                       'stat_group_frmt_str':
                                       'metric_type_{stat}_{metric}'}],
-                     'work_dir': '/contrib/Chesley.Mccoll/replay/results'}
-'''
-@dataclass
-class StatGroupData:
-    stat_group_dict: dict
-    cycles: list = field(default_factory=list, init=False)
-    stat_group_frmt_str: str = field(default_factory=str, init=False)
-    metrics: list[str] = field(init=False)
-    stats: list[str] = field(init=False)
-    regions: list[str] = field(init=False)
-    elevation_unit: str = field(init=False)
-
-    def __post_init__(self):
-        self.cycles = self.stat_group_dict.get('cycles')
-        self.stat_group_frmt_str = self.stat_group_dict.get('stat_group_frmt_str')
-        self.metrics = self.stat_group_dict.get('metrics')
-        self.stats = self.stat_group_dict.get('stats')
-        self.regions = self.stat_group_dict.get('regions')
-        self.elevation_unit = self.stat_group_dict.get('elevation_unit')
-
-'''
+                     'work_dir': '/contrib/shared/replay/results'}
 
 def unique(sequence):
     seen = set()
@@ -246,14 +211,7 @@ def build_base_figure():
     
     return(fig, ax)
 
-
 def format_figure(ax, pa):
-    '''
-    ax.set_xlim([pa.axes_attrs.xmin, pa.axes_attrs.xmax])
-    ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
-    plt.xticks(np.arange(pa.axes_attrs.xmin, (pa.axes_attrs.xmax + 1.e-6),
-                         pa.axes_attrs.xint))
-    '''
     ax.set_xlim([pd.Timestamp(plot_control_dict['date_range']['start']).timestamp(),
                  pd.Timestamp(plot_control_dict['date_range']['end']).timestamp()])
     ax.set_ylim([pa.axes_attrs.ymin, pa.axes_attrs.ymax])
@@ -295,16 +253,11 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
         msg = 'Input data to plot_increments must be type pandas.DataFrame '\
             f'was actually type: {type(metrics_df)}'
         raise TypeError(msg)
-    
-    #plt_attr_key = f'{metric}'
+
     plt_attr_key = 'increment'
     pa = plot_attrs[plt_attr_key]
     (fig, ax) = build_base_figure()
 
-    '''
-    for expt in experiments:
-        expt_name = expt.get('name')['exact']
-    '''
     metrics_to_show = metrics_df.drop_duplicates(subset='time_valid', keep='last')
     expt_name = experiments[0]['name']['exact']
     expt_graph_label = experiments[0]['graph_label']
@@ -375,30 +328,6 @@ def plot_increments(experiments, stat, metric, metrics_df, work_dir, fig_base_fn
                )
     plt.subplots_adjust(bottom=0.22)
     save_figure(fig_fn)
-"""
-@dataclass
-class ExperimentData(object):
-    name: str
-    wallclock_start: str
-    graph_color: str
-    graph_label: str
-    
-    def get_dict(self):
-        return {
-            'name': {
-                'exact': self.name
-            },
-            'wallclock_start': {
-                'from': self.wallclock_start,
-                'to': self.wallclock_start
-            },
-            'expt_name': self.name,
-            'expt_start': self.wallclock_start,
-            'graph_label': self.graph_label,
-            'graph_color': self.graph_color
-        }
-
-"""
 
 @dataclass
 class PlotIncrementRequest(PlotInnovStatsRequest):
