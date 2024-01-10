@@ -24,6 +24,9 @@ from expt_file_counts import ExptFileCountRequest
 from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
+# figure output directory
+WORK_DIR = os.path.join('/', 'contrib', 'shared', 'replay', 'results')
+
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
@@ -41,7 +44,7 @@ plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/shared/replay/results'}
+                     'work_dir': WORK_DIR}
 plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2005-01-01 00:00:00',
                                     'start': '1999-01-01 00:00:00'},
@@ -56,7 +59,7 @@ plot_control_dict2 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/shared/replay/results'}
+                     'work_dir': WORK_DIR}
 plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2010-01-01 00:00:00',
                                     'start': '2005-01-01 00:00:00'},
@@ -71,7 +74,7 @@ plot_control_dict3 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/shared/replay/results'}
+                     'work_dir': WORK_DIR}
 plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2015-01-01 00:00:00',
                                     'start': '2010-01-01 00:00:00'},
@@ -86,7 +89,7 @@ plot_control_dict4 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/shared/replay/results'}
+                     'work_dir': WORK_DIR}
 plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2020-01-01 00:00:00',
                                     'start': '2015-01-01 00:00:00'},
@@ -101,7 +104,7 @@ plot_control_dict5 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/shared/replay/results'}
+                     'work_dir': WORK_DIR}
 plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                     'end': '2024-01-01 00:00:00',
                                     'start': '2020-01-01 00:00:00'},
@@ -116,7 +119,7 @@ plot_control_dict6 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
                                       'metrics': ['count'],
                                       'stat_group_frmt_str':
                                       'file_{metric}'}],
-                     'work_dir': '/contrib/shared/replay/results'}
+                     'work_dir': WORK_DIR}
 
 def unique(sequence):
     seen = set()
