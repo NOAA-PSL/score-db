@@ -2,14 +2,14 @@
 db_request_name: experiment
 method: PUT
 body:
-  name: EXAMPLE_EXPERIMENT_C96L64.UFSRNR.GSI_3DVAR.012016
+  name: scout_runs.gsi3dvar.1979stream
   datestr_format: "%Y-%m-%d %H:%M:%S"
-  cycle_start: '2016-01-01 00:00:00'
-  cycle_stop: '2016-01-31 18:00:00'
-  owner_id: first.last@noaa.gov
+  cycle_start: '1979-01-01 00:00:00'
+  cycle_stop: '1980-01-01 00:00:00'
+  owner_id: adam.schneider@noaa.gov
   group_id: gsienkf
-  experiment_type: C96L64.UFSRNR.GSI_3DVAR.012016
+  experiment_type: gsi3dvar
   platform: pw_awv1
-  wallclock_start: '2021-07-22 09:22:05'
-  wallclock_end: '2021-07-24 05:31:14'
+  wallclock_start: '2023-12-15 17:30:10'
+  wallclock_end: '2024-01-11 05:35:15'
   description: '{"unstructured_json": "data"}'
