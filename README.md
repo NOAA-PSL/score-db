@@ -1,12 +1,15 @@
 # score-db
-Python package to manage the database backend to support the UFS-RNR workflow
-experiment meta data and analyses data tracking and reporting.  The score-db
-database uses the PostgreSQL database system which is hosted by AWS on an RDS
+Python package to manage the database backend to support UFS reanalysis
+and reforecast (UFS-RNR) workflow experiment meta data and analyses data
+tracking and reporting.
+The score-db database uses the PostgreSQL database system which is hosted
+by AWS on an RDS
 instance (currently administered by PSL).
 
 Tools and utilities to catalogue and evaluate observation files.
 
 # Installation and Environment Setup
+
 1. Clone the score-db and score-hv repos.  Both of these repos are required.
 score-db is responsible for managing the backend database which stores 
 diagnostics data related to UFS-RNR experiments.  score-db has several APIs
@@ -18,33 +21,15 @@ $ git clone https://github.com/noaa-psd/score-db.git
 $ git clone https://github.com/noaa-psd/score-hv.git
 ```
 
-2. Install or setup the UFS-RNR anaconda3 python environment and update it. 
-If the UFS-RNR anaconda python environment is not already available, install
-it now using the instructions found in the [UFS-RNR-stack](https://github.com/HenryWinterbottom-NOAA/UFS-RNR-stack.git) repo.  An example of the actual
-installation script can be found at [scripts/build.UFS-RNR-stack.RDHPCS-Hera.anaconda3.sh](https://github.com/HenryWinterbottom-NOAA/UFS-RNR-stack/blob/0b0fd767928ebc56be0c1992b141015d9e3ff7a4/scripts/build.UFS-RNR-stack.RDHPCS-Hera.anaconda3.sh).
-If you are installing this anaconda module at a different location than what
-is configured in the above script, you will need to make modifications such
-that the install location matches your desired location.  You will also need to
-specify aws credentials for PSL's private s3 bucket.
-3. Update the anaconda environment (follow anaconda update directions found [here](https://docs.anaconda.com/anaconda/install/update-version/) or use
-the example shown below).  Note: if you do not specify the anaconda environment to
-update, the `conda update --all` command will update the current environment. The
-`--all` indicates that you want to update all packages.  In order to specify a
-particular environment, use the command `conda update -n myenv --all`.
+2. Create and activate the conda monitoring environment
 
 ```sh
-$ conda update conda
-$ conda update --all
+$ conda env create -n monitor_py311 --file environment.yml
+$ conda activate monitor_py311
 ```
 
-4. Load the anaconda3 environment
-```sh
-$ module purge
-$ module use -a /contrib/home/builder/UFS-RNR-stack/modules
-$ module load anaconda3
-```
-5. Make the python interpreter aware of where the score-db and score-hv
-source code can be found.
+3. Make the python interpreter aware of where the score-db and score-hv
+source code can be found
 
 ```sh
 $ export SCORE_DB_HOME_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -52,7 +37,13 @@ $ export PYTHONPATH=$SCORE_DB_HOME_DIR/src
 $ export PYTHONPATH=$PYTHONPATH:[absolute or relative path to score-hv]/src
 ```
 
-6. Configure the PostgreSQL credentials and settings for the score-db by
+this can also be acheived by running
+
+```sh
+$ source score_db_utils.sh
+```
+
+4. Configure the PostgreSQL credentials and settings for the score-db by
 creating a `.env` file and by inserting the text shown below (note: this
 text is taken straight from the file `.env_example`).  You will need to 
 acquire the database password from the administrator (Sergey Frolov).
