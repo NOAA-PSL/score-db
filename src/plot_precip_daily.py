@@ -34,7 +34,7 @@ def get_experiment_precip(request_data):
     #expt_metric_name = request_data.metric_format_str.replace('{metric}', 
     #                                                    request_data.metric)
     metric_measurement_type = request_data.metric.replace('mean_', '')
-    metric_measurement_type = metric_measurement_type.replace('std_', '')
+    metric_measurement_type = metric_measurement_type.replace('maximum_', '')
     metric_measurement_name= request_data.metric
 
     stat_type = request_data.stat.replace('mean',
@@ -70,6 +70,7 @@ def get_experiment_precip(request_data):
 
     emr = ExptMetricRequest(request_dict)
     result = emr.submit()
+    
     return result.details['records']
 
 def build_base_figure():
@@ -103,7 +104,7 @@ def format_figure(ax, pa, metric):
                      ])
     elif metric == 'mean_prateb_ave':
         ax.set_ylim([0,#pa.axes_attrs.ymin,
-                     10#pa.axes_attrs.ymax
+                     1000#pa.axes_attrs.ymax
                      ])
     plt.xlabel(xlabel=pa.xlabel.label,
                horizontalalignment=pa.xlabel.horizontalalignment)
@@ -197,18 +198,20 @@ def plot_precip(experiments, stat, metric, metrics_df, metrics_df_std, work_dir,
                      row.time_valid.year))
     
     if metric == 'mean_prateb_ave':
-        values = 24 * 3600 * np.array(values) # convert to mm/s
+        values = 24 * 3600 * np.array(values) # convert to mm/day
         values_std = 24 * 3600 * np.array(values_std)
-        units = 'mm/s'
+        values_std = values_std
+        units = 'Precipitation rate (mm/day)'
     else:
         units = row.metric_unit
     myLabel = unique(cycle_labels) 
-    '''
-    plt.bar(timestamps, values,
+    import ipdb
+    plt.bar(timestamps, values_std,
             alpha=0.333,
             width=21600.*4, # 24 hours
-            color='black')
-    '''
+            color='black',
+            label='global maximum')
+   
     length = len(myLabel)
     '''
     for i in range(length):
@@ -219,10 +222,12 @@ def plot_precip(experiments, stat, metric, metrics_df, metrics_df_std, work_dir,
                      color='black', alpha=0.333, label=cycle_labels[i])
     '''
     # proceed with onward
-    plt.errorbar(timestamps, values, yerr=values_std, xerr=21600.*2,
-                 ls='None', color='black', alpha=0.333)
-   
+    #plt.errorbar(timestamps, values, yerr=values_std, xerr=21600.*2,
+    #             ls='None', color='black', alpha=0.333)
+    plt.semilogy(timestamps, values, color='black', label='global mean', lw=0.5)
     format_figure(ax, pa, metric)
+    plt.yticks(fontsize=8)
+    plt.legend(loc=6)
 
     plt.title(stat+" "+metric+" " +expt_name, loc = "left")
     #today = date.today()
@@ -272,10 +277,9 @@ class PlotPrecipRequest(PlotInnovStatsRequest):
                             self.datetime_str,
                             experiment,
                             stat_group.stat_group_frmt_str,
-                            metric.replace('mean', 'std'),
-                            stat.replace('mean', 'std'),
+                            metric.replace('mean', 'maximum'),
+                            stat.replace('mean', 'maximum'),
                             self.date_range)
-                        
                         try:
                             e_df = get_experiment_precip(request_data)
                             e_df_std = get_experiment_precip(request_data_std)
@@ -305,8 +309,8 @@ if __name__=='__main__':
                                            #plot_control_dict4,
                              #precip_daily_plot_attrs.plot_control_dict5,
                              #precip_daily_plot_attrs.plot_control_dict5_overlap,
-                             precip_daily_plot_attrs.plot_control_dict6_spinup,
-                             precip_daily_plot_attrs.plot_control_dict6
+                             #precip_daily_plot_attrs.plot_control_dict6_spinup,
+                             precip_daily_plot_attrs.plot_control_replay
                            ]):
         plot_request = PlotPrecipRequest(plot_control_dict)
         plot_request.submit()

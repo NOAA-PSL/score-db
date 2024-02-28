@@ -187,3 +187,22 @@ plot_control_dict5_overlap = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S'
                                       'stat_group_frmt_str':
                                           '{metric}'}],
                      'work_dir': WORK_DIR}
+
+plot_control_replay = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
+                                    'end': '2000-01-01 00:00:00',
+                                    'start': '1994-01-01 00:00:00'},
+                     'db_request_name': 'expt_metrics',
+                     'method': 'GET',
+                     'experiments': [{#'graph_color': 'black',
+                                      #'graph_label': 'increments',
+                                      'name': 'gefsv13replay_0.25d_v0.1',
+                                      'wallclock_start':'2023-07-24 18:13:14'}],
+                     'fig_base_fn': FIG_BASE_FN,
+                     'stat_groups': [{'cycles': [0,
+                                                 # 21600, 43200, 64800
+                                                 ],
+                                      'stats': ['daily_mean'],
+                                      'metrics': ['mean_prateb_ave', 'mean_ulwrf_avetoa'],
+                                      'stat_group_frmt_str':
+                                          '{metric}'}],
+                     'work_dir': WORK_DIR}
