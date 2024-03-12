@@ -28,6 +28,7 @@ from sqlalchemy.sql import func
 SatMetaData = namedtuple(
     'SatMetaData',
     [
+        'name',
         'sat_id',
         'sat_name',
         'sensor',
@@ -39,6 +40,7 @@ SatMetaData = namedtuple(
 @dataclass
 class SatMeta:
     '''sat meta data object'''
+    name: str
     sat_id: int
     sat_name: str
     sensor: str
@@ -49,6 +51,7 @@ class SatMeta:
 
     def __post_init__(self):
         self.sat_meta_data = SatMetaData(
+            self.name,
             self.sat_id,
             self.sat_name,
             self.sensor,
@@ -69,6 +72,7 @@ def get_sat_meta_from_body(body):
         raise TypeError(msg)
     
     sat_meta = SatMeta(
+        body.get('name'),
         body.get('sat_id'),
         body.get('sat_name'),
         body.get('sensor'),
@@ -121,6 +125,8 @@ def get_int_filter(filters, cls, key, constructed_filter):
 
 def construct_filters(filters):
     constructed_filter = {}
+
+    constructed_filter = get_string_filter(filters, sm, 'name', constructed_filter)
 
     constructed_filter = get_int_filter(filters, sm, 'sat_id', constructed_filter)
 
@@ -183,6 +189,7 @@ class SatMetaRequest:
         session = stm.get_session()
 
         insert_stmt = insert(sm).values(
+            name = self.sat_meta.name,
             sat_id = self.sat_meta.sat_id,
             sat_name = self.sat_meta.sat_name,
             sensor = self.sat_meta.sensor,
@@ -195,11 +202,10 @@ class SatMetaRequest:
 
         time_now = datetime.utcnow()
 
-        #note, at this time all fields are part of constraint, no updates allowed
-        #this will just change the time but is here in the case of future fields being added
         do_update_stmt = insert_stmt.on_conflict_do_update(
             constraint='unique_sat_meta',
             set_=dict(
+                name = self.sat_meta.name,
                 updated_at = time_now
             )
         )
@@ -247,6 +253,7 @@ class SatMetaRequest:
 
         q = session.query(
             sm.id,
+            sm.name,
             sm.sat_id,
             sm.sat_name, 
             sm.sensor, 

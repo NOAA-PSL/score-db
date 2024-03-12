@@ -299,6 +299,7 @@ class SatMeta(Base):
     )
  
     id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(256))
     sat_id = Column(Integer)
     sat_name = Column(String(128))
     sensor = Column(String(64))
