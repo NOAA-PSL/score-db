@@ -16,6 +16,7 @@ from sqlalchemy import Integer, String, Boolean, DateTime, Float, BigInteger
 
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy import inspect, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
@@ -31,6 +32,9 @@ METRIC_TYPES_TABLE = 'metric_types'
 STORAGE_LOCATION_TABLE = 'storage_locations'
 FILE_TYPES_TABLE = 'file_types'
 EXPT_STORED_FILE_COUNTS_TABLE = 'expt_stored_file_counts'
+EXPT_ARRAY_METRICS_TABLE = 'expt_array_metrics'
+ARRAY_METRIC_TYPES_TABLE = 'array_metric_types'
+SAT_META_TABLE = 'sat_meta'
 
 
 # temporary use dotenv to load the db environment
@@ -100,6 +104,7 @@ class Experiment(Base):
 
     metrics = relationship('ExperimentMetric', back_populates='experiment')
     file_counts = relationship('ExptStoredFileCount', back_populates='experiment')
+    array_metrics = relationship('ExptArrayMetric', back_populates='experiment')
 
 
 class ExperimentMetric(Base):
@@ -139,6 +144,7 @@ class Region(Base):
     updated_at = Column(DateTime)
 
     metrics = relationship('ExperimentMetric', back_populates='region')
+    array_metrics = relationship('ExptArrayMetric', back_populates='region')
 
 
 class MetricType(Base):
@@ -226,7 +232,83 @@ class FileType(Base):
     updated_at = Column(DateTime)
     
     file_counts = relationship('ExptStoredFileCount', back_populates='file_type')
+
+class ExptArrayMetric(Base):
+    __tablename__ = EXPT_ARRAY_METRICS_TABLE
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    experiment_id = Column(Integer, ForeignKey('experiments.id'))
+    array_type_id = Column(Integer, ForeignKey('array_metric_types.id'))
+    region_id = Column(Integer, ForeignKey('regions.id'))
+    value = Column(ARRAY(Float))
+    bias_correction = Column(ARRAY(Float))
+    assimiated = Column(Boolean)
+    time_valid = Column(DateTime)
+    forecast_hour = Column(Float)
+    ensemble_member = Column(Integer)
+    created_at = Column(DateTime, default=datetime.utcnow())
+
+    experiment = relationship('Experiment', back_populates='array_metrics')
+    array_metric_type = relationship('ArrayMetricType', back_populates='array_metrics')
+    region = relationship('Region', back_populates='array_metrics')
     
+class ArrayMetricType(Base):
+    __tablename__ = ARRAY_METRIC_TYPES_TABLE
+    __table_args__ = (
+        UniqueConstraint(
+            'name',
+            'measurement_type',
+            'measurement_units',
+            'stat_type',
+            'obs_platform',
+            'sat_meta_id',
+            name='unique_array_metric_type'
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'))
+    obs_platform = Column(String(128))
+    name = Column(String(128), nullable=False)
+    long_name = Column(String(128))
+    measurement_type = Column(String(64), nullable=False)
+    measurement_units = Column(String(64))
+    stat_type = Column(String(64))
+    array_coord_labels = Column(ARRAY(String))
+    array_coord_units = Column(ARRAY(String))
+    array_index_values = Column(ARRAY(String))
+    array_dimensions = Column(ARRAY(String))
+    description = Column(JSONB(astext_type=sa.Text()), nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime)
+
+    array_metrics = relationship('ExptArrayMetrics', back_populates='array_metric_type')
+    sat_meta = relationship('SatMetas', back_populates='array_metric_type')
+
+class SatMeta(Base):
+    __tablename__ = SAT_META_TABLE
+    __table_args__ = (
+        UniqueConstraint(
+            'sat_name',
+            'sat_id',
+            'sensor',
+            'channel',
+            'scan_angle',
+            name='unique_sat_meta'
+        ),
+    )
+ 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sat_id = Column(Integer)
+    sat_name = Column(String(128))
+    sensor = Column(String(64))
+    channel = Column(String(64))
+    scan_angle = Column(String(64))
+
+    array_metric_type = relationship('ArrayMetricType', back_populates='sat_meta')
+
+
+
 
 Base.metadata.create_all(engine)
 
