@@ -304,6 +304,8 @@ class SatMeta(Base):
     sensor = Column(String(64))
     channel = Column(String(64))
     scan_angle = Column(String(64))
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime) 
 
     array_metric_type = relationship('ArrayMetricType', back_populates='sat_meta')
 
