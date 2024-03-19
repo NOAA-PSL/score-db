@@ -33,7 +33,6 @@ ArrayMetricTypeData = namedtuple(
     [
         'name',
         'long_name',
-        'sat_meta_name',
         'obs_platform',
         'measurement_type',
         'measurement_units',
@@ -57,7 +56,6 @@ class ArrayMetricType:
     '''array metric type object for storing type data'''
     name: str
     long_name: str
-    sat_meta_name: str
     obs_platform: str
     measurement_type: str
     measurement_units: str
@@ -73,7 +71,6 @@ class ArrayMetricType:
         self.array_metric_type_data = ArrayMetricTypeData(
             self.name,
             self.long_name,
-            self.sat_meta_name,
             self.obs_platform,
             self.measurement_type,
             self.measurement_units,
@@ -130,7 +127,6 @@ def get_array_metric_type_from_body(body):
     array_metric_type = ArrayMetricType(
         body.get('name'),
         body.get('long_name'),
-        body.get('sat_meta_name'),
         body.get('obs_platform'),
         body.get('measurement_type'),
         body.get('measurement_units'),
@@ -218,7 +214,7 @@ def get_all_array_metric_types():
     amtr = ArrayMetricTypeRequest(request_dict)
     return amtr.submit()
 
-def get_sat_record(body):
+def get_sat_meta_id(body):
     # get sat name
     sat_meta_id = -1
     try:    
@@ -292,10 +288,6 @@ def get_sat_record(body):
         raise ArrayMetricsError(error_msg) 
     return sat_meta_id
 
-##TODO FIGURE OUT HOW TO GET THE SAT META ID
-##probably like getting expt id in expt metrics?
-## remember it isn't required! onyl fail if it's provided and doesn't match
-
 @dataclass
 class ArrayMetricTypeRequest:
     request_dict: dict
@@ -307,6 +299,7 @@ class ArrayMetricTypeRequest:
     body: dict = field(default_factory=dict, init=False)
     array_metric_type: ArrayMetricType = field(init=False)
     array_metric_type_data: namedtuple = field(init=False)
+    sat_meta_id: int = field(default_factory=int, init=False)
     response: dict = field(default_factory=dict, init=False)
 
     def __post_init__(self):
@@ -317,11 +310,7 @@ class ArrayMetricTypeRequest:
         if self.method == db_utils.HTTP_PUT:
             self.array_metric_type = get_array_metric_type_from_body(self.body)
             self.array_metric_type_data = self.array_metric_type.get_array_metric_type_data()
-            # for k, v in zip(
-            #     self.array_metric_type_data._fields, self.array_metric_type_data
-            # ):
-            #     val = pprint.pformat(v, indent=4)
-            #     print(f'exp_data: k: {k}, v: {val}')
+            self.sat_meta_id = get_sat_meta_id(self.body)
         else:
             if isinstance(self.params, dict):
                 self.filters = construct_filters(self.params.get('filters'))
@@ -360,8 +349,75 @@ class ArrayMetricTypeRequest:
     def put_array_metric_type(self):
         session = stm.get_session()
 
+        sat_meta_id = self.sat_meta_id if self.sat_meta_id > 0 else None
+
         insert_stmt = insert(amt).values(
             name=self.array_metric_type_data.name,
             long_name=self.array_metric_type_data.long_name, 
+            obs_platform=self.array_metric_type_data.obs_platform,
+            sat_meta_id=sat_meta_id, 
+            measurement_type=self.array_metric_type_data.measurement_type,
+            measurement_units=self.array_metric_type_data.measurement_units,
+            stat_type=self.array_metric_type_data.stat_type,
+            array_coord_labels=self.array_metric_type_data.array_coord_labels,
+            array_coord_units=self.array_metric_type_data.array_coord_units,
+            array_index_values=self.array_metric_type_data.array_index_values,
+            array_dimensions=self.array_metric_type_data.array_dimensions,
+            description=self.array_metric_type_data.description,
+            created_at=datetime.utcnow(),
+            updated_at=None
+        ).returning(amt)
+        print(f'insert_stmt: {insert_stmt}')
 
+        time_now = datetime.utcnow()
+
+        do_update_stmt = insert_stmt.on_conflict_do_update(
+            constraint='unique_array_metric_type',
+            set_=dict(
+                long_name=self.array_metric_type_data.long_name, 
+                array_coord_labels=self.array_metric_type_data.array_coord_labels,
+                array_coord_units=self.array_metric_type_data.array_coord_units,
+                array_index_values=self.array_metric_type_data.array_index_values,
+                array_dimensions=self.array_metric_type_data.array_dimensions,
+                description=self.array_metric_type_data.description,
+                updated_at=time_now
+            )
         )
+
+        print(f'do_update_stmt: {do_update_stmt}')
+
+        try:
+            result = session.execute(do_update_stmt)
+            session.flush()
+            result_row = result.fetchone()
+            action = db_utils.INSERT
+            if result_row.updated_at is not None:
+                action = db_utils.UPDATE
+
+            session.commit()
+            session.close()
+        except Exception as err:
+            message = f'Attempt to INSERT/UPDATE array metric type record FAILED'
+            error_msg = f'Failed to insert/update record - err: {err}'
+            print(f'error_msg: {error_msg}')
+            session.close()
+        else:
+            message = f'Attempt to {action} array metric type record SUCCEEDED'
+            error_msg = None
+        
+        results = {}
+        if result_row is not None:
+            results['action'] = action
+            results['data'] = [result_row._mapping]
+            results['id'] = result_row.id
+
+        response = DbActionResponse(
+            self.request_dict,
+            (error_msg is None),
+            message,
+            results,
+            error_msg
+        )
+
+        print(f'response: {response}')
+        return response

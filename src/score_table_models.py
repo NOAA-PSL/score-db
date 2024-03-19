@@ -267,7 +267,7 @@ class ArrayMetricType(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'))
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
     obs_platform = Column(String(128))
     name = Column(String(128), nullable=False)
     long_name = Column(String(128))
