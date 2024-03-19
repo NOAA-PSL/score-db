@@ -15,6 +15,7 @@ from db_action_response import DbActionResponse
 import score_table_models as stm
 from score_table_models import ArrayMetricType as amt
 from score_table_models import SatMeta as sm
+from sat_meta import SatMetaRequest
 import time_utils
 import db_utils
 import numpy as np
@@ -44,6 +45,12 @@ ArrayMetricTypeData = namedtuple(
         'description',
     ],
 )
+
+class ArrayMetricsError(Exception):
+    def __init__(self, m):
+        self.message = m
+    def __str__(self):
+        return self.message
 
 @dataclass
 class ArrayMetricType:
@@ -211,6 +218,83 @@ def get_all_array_metric_types():
     amtr = ArrayMetricTypeRequest(request_dict)
     return amtr.submit()
 
+def get_sat_record(body):
+    # get sat name
+    sat_meta_id = -1
+    try:    
+        sat_meta_name = body.get('sat_meta_name')
+        sat_id = body.get('sat_id')
+        sat_name = body.get('sat_name')
+        sat_sensor = body.get('sat_sensor')
+        sat_channel = body.get('sat_channel')
+    except KeyError as err:
+        print(f'Required sat meta input value not found: {err}')
+        return sat_meta_id
+
+    sat_meta_request = {
+        'name': 'sat_meta',
+        'method': db_utils.HTTP_GET,
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': sat_meta_name
+                },
+                'sat_name': {
+                    'exact': sat_name
+                },
+                'sensor': {
+                    'exact': sat_sensor
+                },
+                'sat_id': {
+                    'exact': sat_id
+                },
+                'sat_channel':{
+                    'exact': sat_channel
+                }
+            },
+            'record_limit': 1
+        }
+    }
+
+    print(f'sat_meta_request: {sat_meta_request}')
+
+    smr = SatMetaRequest(sat_meta_request)
+
+    results = smr.submit()
+    print(f'results: {results}')
+
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            if records is None:
+                msg = 'Request for sat meta record did not return a record'
+                raise ArrayMetricsError(msg)
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting sat meta data.'
+            # create error return db_action_response
+            raise ArrayMetricsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for sat meta record did not return a record'
+            raise ArrayMetricsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting sat meta data. err - {err}'
+        raise ArrayMetricsError(msg)
+        
+    try:
+        sat_meta_id = records[sm.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding sat meta id from record: {records} ' \
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ArrayMetricsError(error_msg) 
+    return sat_meta_id
+
+##TODO FIGURE OUT HOW TO GET THE SAT META ID
+##probably like getting expt id in expt metrics?
+## remember it isn't required! onyl fail if it's provided and doesn't match
 
 @dataclass
 class ArrayMetricTypeRequest:
