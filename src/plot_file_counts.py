@@ -25,20 +25,20 @@ from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
 # figure output directory
-WORK_DIR = os.path.join('/', 'contrib', 'shared', 'replay', 'results')
+WORK_DIR = os.path.join('/', 'home', 'Adam.Schneider', 'gsienkf', 'results')
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
 plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '1999-01-01 00:00:00',
-                                    'start': '1994-01-01 00:00:00'},
+                                    'end': '1979-02-01 00:00:00',
+                                    'start': '1979-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'Number of files',
-                                      'name': 'replay_stream1',
-                                      'wallclock_start': '2023-07-08 16:25:57'}],
+                                      'name': 'scout_runs_gsi3dvar',
+                                      'wallclock_start': '2023-12-15 17:30:10'}],
                      'fig_base_fn': 'files',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
                                       'metrics': ['count'],
@@ -265,7 +265,7 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
                                               row.cycle.hour
                                           ))
     plt.bar(timestamps, counts,
-            alpha=0.333,
+            alpha=1,
             width=21600.,
             color=colors)
     
@@ -273,10 +273,10 @@ def plot_file_counts(experiments, metric, metrics_df, work_dir, fig_base_fn,
         """ Plot the first four cycles to format the legend
         """
         plt.scatter(timestamps[i], counts[i], ls='None', marker='|',
-             color=colors[i], alpha=0.333, label=cycle_labels[i])
+             color=colors[i], alpha=1, label=cycle_labels[i])
 
-    plt.scatter(timestamps[4:], counts[4:], ls='None', marker='|',
-             color=colors[4:], alpha=0.333)#experiments[0]['graph_color'])
+    #plt.scatter(timestamps[4:], counts[4:], ls='None', marker='|',
+    #         color=colors[4:], alpha=0.333)#experiments[0]['graph_color'])
     plt.title(expt_name)
     format_figure(ax, pa)
     fig_fn = build_fig_dest(work_dir, fig_base_fn, metric, date_range)  
@@ -332,10 +332,11 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
 
 if __name__=='__main__':
     for i, plot_control_dict in enumerate([plot_control_dict1,
-                                           plot_control_dict2,
-                                           plot_control_dict3,
-                                           plot_control_dict4,
-                                           plot_control_dict5,
-                                           plot_control_dict6]):
+                                           #plot_control_dict2,
+                                           #plot_control_dict3,
+                                           #plot_control_dict4,
+                                           #plot_control_dict5,
+                                           #plot_control_dict6
+                                         ]):
         plot_request = PlotFileCountRequest(plot_control_dict)
         plot_request.submit()
