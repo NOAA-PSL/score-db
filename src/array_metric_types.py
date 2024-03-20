@@ -45,7 +45,7 @@ ArrayMetricTypeData = namedtuple(
     ],
 )
 
-class ArrayMetricsError(Exception):
+class ArrayMetricTypeError(Exception):
     def __init__(self, m):
         self.message = m
     def __str__(self):
@@ -265,19 +265,19 @@ def get_sat_meta_id(body):
             records = results.details.get('records')
             if records is None:
                 msg = 'Request for sat meta record did not return a record'
-                raise ArrayMetricsError(msg)
+                raise ArrayMetricTypeError(msg)
             record_cnt = records.shape[0]
         else:
             msg = f'Problems encountered requesting sat meta data.'
             # create error return db_action_response
-            raise ArrayMetricsError(msg)
+            raise ArrayMetricTypeError(msg)
         if record_cnt <= 0:
             msg = 'Request for sat meta record did not return a record'
-            raise ArrayMetricsError(msg)
+            raise ArrayMetricTypeError(msg)
         
     except Exception as err:
         msg = f'Problems encountered requesting sat meta data. err - {err}'
-        raise ArrayMetricsError(msg)
+        raise ArrayMetricTypeError(msg)
         
     try:
         sat_meta_id = records[sm.id.name].iat[0]
@@ -285,7 +285,7 @@ def get_sat_meta_id(body):
         error_msg = f'Problem finding sat meta id from record: {records} ' \
             f'- err: {err}'
         print(f'error_msg: {error_msg}')
-        raise ArrayMetricsError(error_msg) 
+        raise ArrayMetricTypeError(error_msg) 
     return sat_meta_id
 
 @dataclass

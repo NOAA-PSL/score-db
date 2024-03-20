@@ -242,7 +242,7 @@ class ExptArrayMetric(Base):
     region_id = Column(Integer, ForeignKey('regions.id'))
     value = Column(ARRAY(Float))
     bias_correction = Column(ARRAY(Float))
-    assimiated = Column(Boolean)
+    assimilated = Column(Boolean)
     time_valid = Column(DateTime)
     forecast_hour = Column(Float)
     ensemble_member = Column(Integer)
