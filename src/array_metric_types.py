@@ -421,3 +421,79 @@ class ArrayMetricTypeRequest:
 
         print(f'response: {response}')
         return response
+
+    def get_array_metric_types(self):
+        session = stm.get_session()
+
+        q = session.query(
+            amt.id,
+            amt.sat_meta_id,
+            amt.obs_platform,
+            amt.name,
+            amt.long_name,
+            amt.measurement_type,
+            amt.measurement_units,
+            amt.stat_type,
+            amt.array_coord_labels,
+            amt.array_coord_units,
+            amt.array_index_values,
+            amt.array_dimensions,
+            amt.description,
+            amt.created_at,
+            amt.updated_at
+        ).select_from(
+            amt
+        )
+
+        print('Before adding filters to array metric types request########################')
+        if self.filters is not None and len(self.filters) > 0:
+            for key, value in self.filters.items():
+                q = q.filter(value)
+        
+        print('After adding filters to array metric types request########################')
+        
+        # add column ordering
+        column_ordering = db_utils.build_column_ordering(amt, self.ordering)
+        if column_ordering is not None and len(column_ordering) > 0:
+            for ordering_item in column_ordering:
+                q = q.order_by(ordering_item)
+
+        # limit number of returned records
+        if self.record_limit is not None and self.record_limit > 0:
+            q = q.limit(self.record_limit)
+
+        array_metric_types = q.all()
+
+        results = DataFrame()
+        error_msg = None
+        record_count = 0
+        try:
+            if len(array_metric_types) > 0:
+                results = DataFrame(array_metric_types, columns = array_metric_types[0]._fields)
+            
+        except Exception as err:
+            message = 'Request for array metric type records FAILED'
+            error_msg = f'Failed to get array metric type records - err: {err}'
+        else:
+            message = 'Request for array metric type records SUCCEEDED'
+            for idx, row in results.iterrows():
+                print(f'idx: {idx}, row: {row}')
+            record_count = len(results.index)
+        
+        details = {}
+        details['record_count'] = record_count
+
+        if record_count > 0:
+            details['records'] = results
+
+        response = DbActionResponse(
+            self.request_dict,
+            (error_msg is None),
+            message,
+            details,
+            error_msg
+        )
+        print(f'response: {response}')
+
+        session.close()
+        return response
