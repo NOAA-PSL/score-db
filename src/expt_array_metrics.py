@@ -337,4 +337,208 @@ def get_expt_record_id(body):
         
     return experiment_id
 
-##TODO: request class 
+@dataclass 
+class ExptArrayMetricRequest:
+    request_dict: dict
+    method: str = field(default_factory=str, init=False)
+    params: dict = field(default_factory=dict, init=False)
+    filters: dict = field(default_factory=dict, init=False)
+    ordering: list = field(default_factory=list, init=False)
+    record_limit: int = field(default_factory=int, init=False)
+    body: dict = field(default_factory=dict, init=False)
+    array_metric_type_id: int = field(default_factory=int, init=False)
+    expt_id: int = field(default_factory=int, init=False)
+    response: dict = field(default_factory=dict, init=False)
+
+    def __post_init__(self):
+        self.method=self.request_dict.get('method')
+        self.params = self.request_dict.get('params')
+        self.body = self.request_dict.get('body')
+        self.filters = None
+        self.ordering = None
+        self.record_limit = None
+        if self.params is not None:
+            self.filters = self.params.get('filters')
+            self.ordering = self.params.get('ordering')
+            self.record_limit = self.params.get('record_limit')
+
+    def submit(self):
+        if self.method == db_utils.HTTP_GET:
+            try:
+                return self.get_expt_array_metrics()
+            except Exception as err:
+                trcbk = traceback.format_exc()
+                error_msg = 'Failed to get experiment array metric records -' \
+                    f' trcbk: {trcbk}'
+                print(f'Submit GET error: {error_msg}')
+                print(f'Error: {err}')
+                return self.failed_request(error_msg)
+        elif self.method == db_utils.HTTP_PUT:
+            try:
+                return self.put_expt_array_metrics()
+            except Exception as err:
+                trcbk = traceback.format_exc()
+                error_msg = 'Failed to insert experiment array metric records -' \
+                    f' trcbk: {trcbk}'
+                print(f'Submit PUT error: {error_msg}')
+                print(f'Error: {err}')
+                return self.failed_request(error_msg)
+    
+    def failed_request(self, error_msg):
+        return DbActionResponse(
+            request=self.request_dict,
+            success=False,
+            message='Failed experiment array metrics request.',
+            details=None,
+            errors=error_msg
+        )
+
+    def construct_filters(self, query):
+        if not isinstance(self.filters, dict):
+            msg = f'Filters must be of the form dict, filters: {type(self.filters)}'
+            raise ExptArrayMetricsError(msg)
+
+        constructed_filter = {}
+
+        # filter experiment metrics table for all matching experiments
+        constructed_filter = get_experiments_filter(
+            self.filters.get('experiment'), constructed_filter)
+
+        # get only those records related to certain experiment
+        constructed_filter = get_array_metric_types_filter(
+            self.filters.get('array_metric_types'), constructed_filter)
+        
+        constructed_filter = get_regions_filter(
+            self.filters.get('regions'), constructed_filter)
+
+        constructed_filter = get_time_filter(
+            self.filters, arr_ex_mt, 'time_valid', constructed_filter)
+        
+        ##TODO: write a boolean filter for assimilated 
+
+        constructed_filter = get_float_filter(self.filters, arr_ex_mt, 'forecast_hour', constructed_filter)
+
+        constructed_filter = get_float_filter(self.filters, arr_ex_mt, 'ensemble_member', constructed_filter)
+
+        if len(constructed_filter) > 0:
+            try:
+                for key, value in constructed_filter.items():
+                    print(f'adding filter: {value}')
+                    query = query.filter(value)
+            except Exception as err:
+                msg = f'Problems adding filter to query - query: {query}, ' \
+                    f'filter: {value}, err: {err}'
+                raise ExptArrayMetricsError(msg) from err
+
+        return query
+
+    def parse_metrics_data(self, metrics):
+        if not isinstance(metrics, list):
+            msg = f'\'array_metrics\' must be a list - was a \'{type(metrics)}\''
+            raise ExptArrayMetricsError(msg)
+        
+        unique_regions = set()
+        unique_array_metric_types = set()
+
+        for metric in metrics:
+            if not isinstance(metric, ExptArrayMetricInputData):
+                msg = 'Each array metric must be a type ' \
+                    f'\'{type(ExptArrayMetricInputData)}\' was \'{metric}\''
+                print(f'metric: {metric}, msg: {msg}')
+                raise ExptArrayMetricsError(msg)
+            
+            unique_regions.add(metric.region_name)
+            unique_array_metric_types.add(metric.name)
+
+        regions = rg.get_regions_from_name_list(list(unique_regions))
+        array_metric_types = amt.get_all_array_metric_types()
+
+        rg_df = regions.details.get('records')
+        if rg_df.shape[0] != len(unique_regions):
+            msg = 'Did not find all unique_regions in regions table ' \
+                f'unique_regions: {len(unique_regions)}, found regions: ' \
+                f'{rg_df.shape[0]}.'
+            print(f'region counts do not match: {msg}')
+            raise ExptArrayMetricsError(msg)
+
+        rg_df_dict = dict(zip(rg_df.name, rg_df.id))
+
+        amt_df = array_metric_types.details.get('records')
+        amt_df_nm_id = amt_df[['id', 'name']].copy()
+        amt_df_dict = dict(zip(amt_df_nm_id.name, amt_df_nm_id.id))
+
+        records = []
+        for row in metrics:
+            
+            value = row.value
+
+            if math.isnan(value):
+                value = None
+            
+            item = arr_ex_mt(
+                experiment_id=self.expt_id,
+                array_metric_type_id=amt_df_dict[row.name],
+                region_id=rg_df_dict[row.region_name],
+                value=value,
+                bias_correction=row.bias_correction,
+                assimilated=row.assimilated,
+                time_valid=row.time_valid,
+                forecast_hour=row.forecast_hour,
+                ensemble_member=row.ensemble_member
+            )
+
+            records.append(item)
+
+        return records
+    
+    def get_expt_array_metrics_from_body(self, body):
+        if not isinstance(body, dict):
+            error_msg = 'The \'body\' key must be a type dict, was ' \
+                f'{type(body)}'
+            print(f'Array Metrics key not found: {error_msg}')
+            raise ExptArrayMetricsError(error_msg)
+        
+        array_metrics = body.get('array_metrics')
+        parsed_array_metrics = self.parse_metrics_data(array_metrics)
+
+        return parsed_array_metrics
+    
+    def put_expt_array_metrics(self):
+
+        # we need to determine the primary key id from the experiment
+        # all calls to this function must return a DbActionResponse object
+        expt_record = get_expt_record(self.body)
+        expt_id = self.get_first_expt_id_from_df(expt_record)
+        records = self.get_expt_metrics_from_body(self.body)
+        session = stm.get_session()
+
+        #TODO: update this to be accurate for this class 
+        try:
+            if len(records) > 0:
+                for record in records:
+                    msg = f'record.experiment_id: {record.experiment_id}, '
+                    msg += f'record.metric_type_id: {record.metric_type_id}, '
+                    msg += f'record.region_id: {record.region_id}, '
+                    msg += f'record.elevation: {record.elevation}, '
+                    msg += f'record.elevation_unit: {record.elevation_unit}, '
+                    msg += f'record.value: {record.value}, '
+                    msg += f'record.time_valid: {record.time_valid}, '
+                    msg += f'record.forecast_hour: {record.forecast_hour},'
+                    msg += f'record.ensemble_member: {record.ensemble_member},'
+                    msg += f'record.created_at: {record.created_at}'
+                    print(f'record: {msg}')
+
+                session.bulk_save_objects(records)
+                session.commit()
+                session.close()
+
+        except Exception as err:
+            print(f'Failed to insert records: {err}')
+
+        return DbActionResponse(
+            request=self.request_dict,
+            success=True,
+            message="Attempt to insert expt array metrics SUCCEEDED",
+            details=records,
+            errors=None
+        )    
