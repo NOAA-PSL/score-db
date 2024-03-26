@@ -238,7 +238,7 @@ class ExptArrayMetric(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
-    array_type_id = Column(Integer, ForeignKey('array_metric_types.id'))
+    array_metric_type_id = Column(Integer, ForeignKey('array_metric_types.id'))
     region_id = Column(Integer, ForeignKey('regions.id'))
     value = Column(ARRAY(Float))
     bias_correction = Column(ARRAY(Float))

@@ -7,27 +7,15 @@ Will also interact with the experiments, regions, array metric types, and sat me
 """
 
 from collections import namedtuple
-import copy
 from dataclasses import dataclass, field
 from datetime import datetime
-import json
 import math
-import pprint
 import traceback
 
 import numpy as np
-from psycopg2.extensions import register_adapter, AsIs
-from sqlalchemy import Integer, String, Boolean, DateTime, Float
 import psycopg2
-import pandas as pd
 from pandas import DataFrame
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.inspection import inspect
 from sqlalchemy import and_, or_, not_
-from sqlalchemy import asc, desc
-from sqlalchemy.sql import func
-from sqlalchemy.orm import joinedload
-
 
 from db_action_response import DbActionResponse
 import score_table_models as stm
@@ -36,7 +24,6 @@ from score_table_models import ArrayExperimentMetric as arr_ex_mt
 from score_table_models import ArrayMetricType as amt
 from score_table_models import SatMeta as sm
 from score_table_models import Region as rgs
-from experiments import Experiment, ExperimentData
 from experiments import ExperimentRequest
 import regions as rg
 import array_metric_types as amt
@@ -58,16 +45,13 @@ ExptArrayMetricInputData = namedtuple(
     ],
 ) 
 
-#edit as necessary for this section
 ExptArrayMetricsData = namedtuple(
     'ExptArrayMetricsData',
     [
         'id',
-        'name',
-        'elevation',
-        'elevation_unit',
         'value',
         'bias_correction',
+        'assimilated',
         'time_valid',
         'forecast_hour',
         'ensemble_member',
@@ -79,6 +63,11 @@ ExptArrayMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
+        'metric_sat_meta_id',
+        'metric_obs_platform',
+        'array_coord_labels',
+        'array_coord_units',
+        'array_index_values',
         'region_id',
         'region',
         'created_at'
@@ -192,6 +181,23 @@ def get_float_filter(filter_dict, cls, key, constructed_filter):
         return constructed_filter
 
     constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    
+    return constructed_filter
+
+def get_boolean_filter(filter_dict, cls, key, constructed_filter):
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    bool_flt = filter_dict.get(key)
+
+    if bool_flt is None:
+        print(f'No \'{key}\' filter detected')
+        return constructed_filter
+
+    constructed_filter[key] = ( getattr(cls, key) == bool_flt )
     
     return constructed_filter
 
@@ -413,12 +419,12 @@ class ExptArrayMetricRequest:
 
         constructed_filter = get_time_filter(
             self.filters, arr_ex_mt, 'time_valid', constructed_filter)
-        
-        ##TODO: write a boolean filter for assimilated 
 
         constructed_filter = get_float_filter(self.filters, arr_ex_mt, 'forecast_hour', constructed_filter)
 
         constructed_filter = get_float_filter(self.filters, arr_ex_mt, 'ensemble_member', constructed_filter)
+
+        constructed_filter = get_boolean_filter(self.filters, arr_ex_mt, 'assimilated', constructed_filter)
 
         if len(constructed_filter) > 0:
             try:
@@ -504,36 +510,32 @@ class ExptArrayMetricRequest:
         return parsed_array_metrics
     
     def put_expt_array_metrics(self):
-
-        # we need to determine the primary key id from the experiment
-        # all calls to this function must return a DbActionResponse object
-        expt_record = get_expt_record(self.body)
-        expt_id = self.get_first_expt_id_from_df(expt_record)
         records = self.get_expt_metrics_from_body(self.body)
         session = stm.get_session()
 
-        #TODO: update this to be accurate for this class 
         try:
             if len(records) > 0:
-                for record in records:
-                    msg = f'record.experiment_id: {record.experiment_id}, '
-                    msg += f'record.metric_type_id: {record.metric_type_id}, '
-                    msg += f'record.region_id: {record.region_id}, '
-                    msg += f'record.elevation: {record.elevation}, '
-                    msg += f'record.elevation_unit: {record.elevation_unit}, '
-                    msg += f'record.value: {record.value}, '
-                    msg += f'record.time_valid: {record.time_valid}, '
-                    msg += f'record.forecast_hour: {record.forecast_hour},'
-                    msg += f'record.ensemble_member: {record.ensemble_member},'
-                    msg += f'record.created_at: {record.created_at}'
-                    print(f'record: {msg}')
+                #This section of print statements can be uncommented for debugging
+                #Otherwise this is going to cause way too much output 
+                # for record in records:
+                #     msg = f'record.experiment_id: {record.expt_id}, '
+                #     msg += f'record.array_metric_type_id: {record.array_metric_type_id}, '
+                #     msg += f'record.region_id: {record.region_id}, '
+                #     msg += f'record.value: {record.value}, '
+                #     msg += f'record.bias_correction: {record.bias_correction}, '
+                #     msg += f'record.assimilated: {record.assimilated}, '
+                #     msg += f'record.time_valid: {record.time_valid}, '
+                #     msg += f'record.forecast_hour: {record.forecast_hour}, '
+                #     msg += f'record.ensemble_member: {record.ensemble_member}, '
+                #     msg += f'record.created_at: {record.created_at}'
+                #     print(f'record: {msg}')
 
                 session.bulk_save_objects(records)
                 session.commit()
                 session.close()
 
         except Exception as err:
-            print(f'Failed to insert records: {err}')
+            print(f'Failed to insert array metric records: {err}')
 
         return DbActionResponse(
             request=self.request_dict,
@@ -541,4 +543,133 @@ class ExptArrayMetricRequest:
             message="Attempt to insert expt array metrics SUCCEEDED",
             details=records,
             errors=None
-        )    
+        )
+
+    def get_expt_array_metrics(self):
+        session = stm.get_session()
+
+        q = session.query(
+            arr_ex_mt
+        ).join(
+            exp, arr_ex_mt.experiment
+        ).join(
+            amt, arr_ex_mt.array_metric_type
+        ).join(
+            rgs, arr_ex_mt.region
+        )
+
+        q = self.construct_filters(q)
+
+        column_ordering = db_utils.build_column_ordering(arr_ex_mt, self.ordering)
+        if column_ordering is not None and len(column_ordering) > 0:
+            for ordering_item in column_ordering:
+                q = q.order_by(ordering_item)
+
+        array_metrics = q.all()
+
+        parsed_metrics = []
+        for metric in array_metrics:
+            record = ExptArrayMetricsData(
+                id=metric.id,
+                value=metric.value,
+                bias_correction=metric.bias_correction,
+                assimilated=metric.assimilated,
+                time_valid=metric.time_valid,
+                forecast_hour=metric.forecast_hour,
+                ensemble_member=metric.ensemble_member,
+                expt_id=metric.experiment.id,
+                expt_name=metric.experiment.name,
+                wallclock_start=metric.experiment.wallclock_start,
+                metric_id=metric.array_metric_type.id,
+                metric_long_name=metric.array_metric_type.long_name,
+                metric_type=metric.array_metric_type.measurement_type,
+                metric_unit=metric.array_metric_type.measurement_units,
+                metric_stat_type=metric.array_metric_type.stat_type,
+                metric_sat_meta_id=metric.array_metric_type.sat_meta_id,
+                metric_obs_platform=metric.array_metric_type.obs_platform,
+                array_coord_labels=metric.array_metric_type.array_coord_labels,
+                array_coord_units=metric.array_metric_type.array_coord_units,
+                array_index_values=metric.array_metric_type.array_index_values,
+                region_id=metric.region.id,
+                region=metric.region.name,
+                created_at=metric.created_at
+            )
+            parsed_metrics.append(record)
+        
+        try:
+            arr_metrics_df = DataFrame(
+                parsed_metrics,
+                columns=ExptArrayMetricsData._fields
+            )
+        except Exception as err:
+            trcbk = traceback.format_exc()
+            msg = f'Problem casting array exeriment metrics query output into pandas ' \
+                f'DataFrame - err: {trcbk}'
+            raise TypeError(msg) from err
+        
+        unique_metrics = self.remove_metric_duplicates(arr_metrics_df)
+
+        results = DataFrame()   
+        error_msg = None
+        record_count = 0
+        try:
+            if len(parsed_metrics) > 0:
+                results = unique_metrics
+            
+        except Exception as err:
+            message = 'Request for experiment array metric records FAILED'
+            trcbk = traceback.format_exc()
+            error_msg = f'Failed to get any experiment array metrics - err: {trcbk}'
+            print(f'error_msg: {error_msg}')
+        else:
+            message = 'Request for experiment array metrics SUCCEEDED'
+            record_count = len(results.index)
+        
+        details = {}
+        details['record_count'] = record_count
+
+        if record_count > 0:
+            details['records'] = results
+
+        response = DbActionResponse(
+            self.request_dict,
+            (error_msg is None),
+            message,
+            details,
+            error_msg
+        )
+
+        print(f'response: {response}')
+
+        return response
+
+    def remove_metric_duplicates(self, m_df):
+        
+        start_records = m_df.shape[0]
+        print(f'starting records: {start_records}')
+
+        try:
+
+            uf = m_df.sort_values(
+                'created_at'
+            ).drop_duplicates(
+                [
+                    'time_valid',
+                    'forecast_hour',
+                    'ensemble_member',
+                    'expt_id',
+                    'metric_id',
+                    'region_id',
+                ],
+                keep='last'
+            )
+
+        except Exception as err:
+            trcbk = traceback.format_exc()
+            msg = f'Failed to drop duplicates - err: {trcbk}'
+            print(err)
+            raise ValueError(msg)
+        
+        end_records = uf.shape[0]
+        print(f'ending records: {end_records}')
+        return uf                   
