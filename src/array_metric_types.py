@@ -244,7 +244,7 @@ def get_sat_meta_id(body):
                 'sat_id': {
                     'exact': sat_id
                 },
-                'sat_channel':{
+                'channel':{
                     'exact': sat_channel
                 }
             },

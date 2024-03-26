@@ -5,11 +5,6 @@ All rights reserved.
 Unit tests for sat_meta.py
 
 """
-import os
-import pathlib
-import pytest
-import json
-from collections import namedtuple
 
 from sat_meta import SatMetaRequest
 
