@@ -38,6 +38,28 @@ def test_put_array_metric_type_with_sat():
     print(f'Array Metric Type PUT result: {result}')
     assert(result.success)
 
+def test_get_array_metric_type_with_sat():
+    request_dict = {
+        'name':'expt_array_metrics',
+        'method':'GET',
+        'params':{
+            'filters':{
+                'name':{
+                    'exact':'vertical_example_metric'
+                },
+                'sat_id':123456789,
+                'stat_type':{
+                    'exact':'example_stat'
+                }
+            },
+            'limit':1
+        }
+    }
 
-#TODO: write the get test for sat 
+    amtr = ArrayMetricTypeRequest(request_dict)
+    result = amtr.submit()
+    print(f'Array Metric Type GET result: {result}')
+    assert(result.success)
+    assert(result.details.get('record_count') > 0)
+
 #TODO: write put and get test for non sat obs platform

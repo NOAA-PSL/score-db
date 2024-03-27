@@ -45,3 +45,4 @@ def test_sat_meta_get_request():
     result = smr.submit()
     print(f'Sat Meta GET results: {result}')
     assert(result.success)
+    assert(result.details.get('record_count') > 0)

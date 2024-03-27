@@ -398,6 +398,7 @@ class ArrayMetricTypeRequest:
     def get_array_metric_types(self):
         session = stm.get_session()
 
+        #TODO: need to do a join on sat meta info!!! going to return all of that as well and for filtering 
         q = session.query(
             amt.id,
             amt.sat_meta_id,
