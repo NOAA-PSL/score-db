@@ -45,3 +45,4 @@ def test_storage_location_get_request():
     result = slr.submit()
     print(f'Storage location GET result: {result}')
     assert(result.success)
+    assert(result.details.get('record_count') > 0)

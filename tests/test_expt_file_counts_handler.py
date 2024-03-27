@@ -68,4 +68,5 @@ def test_get_expt_file_counts_dict():
     result = efcr.submit()
     print(f'Expt File Counts GET results: {result}')
     assert(result.success)
+    assert(result.details.get('record_count') > 0)
 

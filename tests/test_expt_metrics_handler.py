@@ -96,3 +96,4 @@ def test_send_get_request():
     emr = ExptMetricRequest(request_dict)
     result = emr.submit()
     assert(result.success)
+    assert(result.details.get('record_count') > 0)
