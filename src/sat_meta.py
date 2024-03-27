@@ -72,12 +72,12 @@ def get_sat_meta_from_body(body):
         raise TypeError(msg)
     
     sat_meta = SatMeta(
-        body.get('name'),
-        body.get('sat_id'),
-        body.get('sat_name'),
-        body.get('sensor'),
-        body.get('channel'),
-        body.get('scan_angle')
+        name=body.get('name'),
+        sat_id=body.get('sat_id'),
+        sat_name=body.get('sat_name'),
+        sensor=body.get('sensor'),
+        channel=body.get('channel'),
+        scan_angle=body.get('scan_angle')
     )
     return sat_meta
 
@@ -159,10 +159,22 @@ class SatMetaRequest:
         self.filters = None
         self.ordering = None
         self.record_limit = None
-        if self.params is not None:
-            self.filters = self.params.get('filters')
-            self.ordering = self.params.get('ordering')
-            self.record_limit = self.params.get('record_limit')
+
+        if self.method == db_utils.HTTP_PUT:
+            self.sat_meta = get_sat_meta_from_body(self.body)
+        else:
+            if isinstance(self.params, dict):
+                self.filters = construct_filters(self.params.get('filters'))
+                self.ordering = self.params.get('ordering')
+                self.record_limit = self.params.get('record_limit')
+
+                if not type(self.record_limit) == int or self.record_limit <= 0:
+                    self.record_limit = None
+            else:
+                self.filters = None
+                self.ordering = None
+                self.record_limit = None
+            
 
     def failed_request(self, error_msg):
         return DbActionResponse(
@@ -175,7 +187,7 @@ class SatMetaRequest:
 
     def submit(self):
         if self.method == db_utils.HTTP_GET:
-            self.get_sat_metas()
+            return self.get_sat_metas()
         elif self.method == db_utils.HTTP_PUT:
             try:
                 return self.put_sat_meta()
