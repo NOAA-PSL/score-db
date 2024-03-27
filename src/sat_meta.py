@@ -17,6 +17,10 @@ from score_table_models import SatMeta as sm
 import time_utils
 import db_utils
 
+import numpy as np
+from psycopg2.extensions import register_adapter, AsIs
+from sqlalchemy import Integer, String, Boolean, DateTime, Float
+import psycopg2
 from pandas import DataFrame
 import sqlalchemy as db
 from sqlalchemy.dialects.postgresql import insert
@@ -24,6 +28,9 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy import and_, or_, not_
 from sqlalchemy import asc, desc
 from sqlalchemy.sql import func
+
+psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
+psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
 
 SatMetaData = namedtuple(
     'SatMetaData',

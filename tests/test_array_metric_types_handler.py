@@ -5,7 +5,8 @@ All rights reserved.
 Unit tests for array_metric_types.py
 
 """
-import json 
+import json
+import numpy as np 
 from array_metric_types import ArrayMetricTypeRequest
 
 def test_put_array_metric_type_with_sat():
@@ -21,11 +22,11 @@ def test_put_array_metric_type_with_sat():
             'stat_type': 'example_stat',
             'array_coord_labels': ['temperature', 'elevation'],
             'array_coord_units': ['K', 'feet'],
-            'array_index_values': [[10, 20, 30][1000, 5000, 10000]],
+            'array_index_values': [[10, 20, 30],[1000, 5000, 10000]],
             'array_dimensions': [3, 3],
-            'description': json.dump({"example array metric type for testing purposes"}),
+            'description': json.dumps("example array metric type for testing purposes"),
             'sat_meta_name': 'example_sat_meta',
-            'sat_id': '123456789',
+            'sat_id': 123456789,
             'sat_name': 'Example Sat Name',
             'sat_sensor':'examplesensor',
             'sat_channel':'1'

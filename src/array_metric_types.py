@@ -18,7 +18,6 @@ from score_table_models import SatMeta as sm
 from sat_meta import SatMetaRequest
 import time_utils
 import db_utils
-import numpy as np
 
 from pandas import DataFrame 
 import sqlalchemy as db
@@ -37,7 +36,7 @@ ArrayMetricTypeData = namedtuple(
         'measurement_type',
         'measurement_units',
         'stat_type',
-        'array_coords_labels',
+        'array_coord_labels',
         'array_coord_units',
         'array_index_values',
         'array_dimensions',
@@ -60,10 +59,10 @@ class ArrayMetricType:
     measurement_type: str
     measurement_units: str
     stat_type: str
-    array_coord_labels: np.ndarray = field(init=False)
-    array_coord_units: np.ndarray = field(init=False)
-    array_index_values: np.ndarray = field(init=False)
-    array_dimensions: np.ndarray = field(init=False)
+    array_coord_labels: list
+    array_coord_units: list
+    array_index_values: list
+    array_dimensions: list
     description: dict
     array_metric_type_data: ArrayMetricTypeData = field(init=False)
 
@@ -100,42 +99,18 @@ def get_array_metric_type_from_body(body):
         msg = 'Error loading \'description\', must be valid JSON - err: {err}'
         raise ValueError(msg) from err
     
-    try:
-        array_coord_labels = np.array(body.get('array_coord_labels'))
-    except Exception as err:
-        msg = 'Error loading \'array_coord_labels\', must be valid array - err: {err}'
-        raise ValueError(msg) from err
-    
-    try:
-        array_coord_units = np.array(body.get('array_coord_units'))
-    except Exception as err:
-        msg = 'Error loading \'array_coord_units\', must be valid array - err: {err}'
-        raise ValueError(msg) from err
-    
-    try:
-        array_index_values = np.array(body.get('array_index_values'))
-    except Exception as err:
-        msg = 'Error loading \'array_index_values\', must be valid array - err: {err}'
-        raise ValueError(msg) from err
-
-    try:
-        array_dimensions = np.array(body.get('array_dimensions'))
-    except Exception as err:
-        msg = 'Error loading \'array_dimensions\', must be valid array - err: {err}'
-        raise ValueError(msg) from err
-
     array_metric_type = ArrayMetricType(
-        body.get('name'),
-        body.get('long_name'),
-        body.get('obs_platform'),
-        body.get('measurement_type'),
-        body.get('measurement_units'),
-        body.get('stat_type'),
-        array_coord_labels,
-        array_coord_units,
-        array_index_values,
-        array_dimensions,
-        description
+        name=body.get('name'),
+        long_name=body.get('long_name'),
+        obs_platform=body.get('obs_platform'),
+        measurement_type=body.get('measurement_type'),
+        measurement_units=body.get('measurement_units'),
+        stat_type=body.get('stat_type'),
+        array_coord_labels=body.get('array_coord_labels'),
+        array_coord_units=body.get('array_coord_units'),
+        array_index_values=body.get('array_index_values'),
+        array_dimensions=body.get('array_dimensions'),
+        description=description
     )
 
     return array_metric_type
@@ -241,9 +216,7 @@ def get_sat_meta_id(body):
                 'sensor': {
                     'exact': sat_sensor
                 },
-                'sat_id': {
-                    'exact': sat_id
-                },
+                'sat_id': sat_id,
                 'channel':{
                     'exact': sat_channel
                 }
@@ -339,7 +312,7 @@ class ArrayMetricTypeRequest:
             return self.get_array_metric_types()
         elif self.method == db_utils.HTTP_PUT:
             try:
-                return self.put_array_metric_types()
+                return self.put_array_metric_type()
             except Exception as err:
                 error_msg = 'Failed to insert array metric type record -' \
                     f' err: {err}'
