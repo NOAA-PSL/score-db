@@ -20,7 +20,7 @@ from sqlalchemy import and_, or_, not_
 from db_action_response import DbActionResponse
 import score_table_models as stm
 from score_table_models import Experiment as exp
-from score_table_models import ArrayExperimentMetric as arr_ex_mt
+from score_table_models import ExptArrayMetric as ex_arr_mt
 from score_table_models import ArrayMetricType as amt
 from score_table_models import SatMeta as sm
 from score_table_models import Region as rgs
@@ -418,13 +418,13 @@ class ExptArrayMetricRequest:
             self.filters.get('regions'), constructed_filter)
 
         constructed_filter = get_time_filter(
-            self.filters, arr_ex_mt, 'time_valid', constructed_filter)
+            self.filters, ex_arr_mt, 'time_valid', constructed_filter)
 
-        constructed_filter = get_float_filter(self.filters, arr_ex_mt, 'forecast_hour', constructed_filter)
+        constructed_filter = get_float_filter(self.filters, ex_arr_mt, 'forecast_hour', constructed_filter)
 
-        constructed_filter = get_float_filter(self.filters, arr_ex_mt, 'ensemble_member', constructed_filter)
+        constructed_filter = get_float_filter(self.filters, ex_arr_mt, 'ensemble_member', constructed_filter)
 
-        constructed_filter = get_boolean_filter(self.filters, arr_ex_mt, 'assimilated', constructed_filter)
+        constructed_filter = get_boolean_filter(self.filters, ex_arr_mt, 'assimilated', constructed_filter)
 
         if len(constructed_filter) > 0:
             try:
@@ -481,7 +481,7 @@ class ExptArrayMetricRequest:
             if math.isnan(value):
                 value = None
             
-            item = arr_ex_mt(
+            item = ex_arr_mt(
                 experiment_id=self.expt_id,
                 array_metric_type_id=amt_df_dict[row.name],
                 region_id=rg_df_dict[row.region_name],
@@ -549,18 +549,18 @@ class ExptArrayMetricRequest:
         session = stm.get_session()
 
         q = session.query(
-            arr_ex_mt
+            ex_arr_mt
         ).join(
-            exp, arr_ex_mt.experiment
+            exp, ex_arr_mt.experiment
         ).join(
-            amt, arr_ex_mt.array_metric_type
+            amt, ex_arr_mt.array_metric_type
         ).join(
-            rgs, arr_ex_mt.region
+            rgs, ex_arr_mt.region
         )
 
         q = self.construct_filters(q)
 
-        column_ordering = db_utils.build_column_ordering(arr_ex_mt, self.ordering)
+        column_ordering = db_utils.build_column_ordering(ex_arr_mt, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)

@@ -282,8 +282,8 @@ class ArrayMetricType(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
 
-    array_metrics = relationship('ExptArrayMetrics', back_populates='array_metric_type')
-    sat_meta = relationship('SatMetas', back_populates='array_metric_type')
+    array_metrics = relationship('ExptArrayMetric', back_populates='array_metric_type')
+    sat_meta = relationship('SatMeta', back_populates='array_metric_type')
 
 class SatMeta(Base):
     __tablename__ = SAT_META_TABLE
