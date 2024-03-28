@@ -47,7 +47,7 @@ def test_get_array_metric_type_with_sat():
                 'name':{
                     'exact':'vertical_example_metric'
                 },
-                'sat_id':123456789,
+                # 'sat_id':123456789,
                 'stat_type':{
                     'exact':'example_stat'
                 }

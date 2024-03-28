@@ -18,6 +18,7 @@ from score_table_models import SatMeta as sm
 from sat_meta import SatMetaRequest
 import time_utils
 import db_utils
+import traceback
 
 from pandas import DataFrame 
 import sqlalchemy as db
@@ -27,8 +28,8 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy import asc, desc
 from sqlalchemy.sql import func
 
-ArrayMetricTypeData = namedtuple(
-    'ArrayMetricTypeData',
+ArrayMetricTypeInputData = namedtuple(
+    'ArrayMetricTypeInputData',
     [
         'name',
         'long_name',
@@ -42,6 +43,31 @@ ArrayMetricTypeData = namedtuple(
         'array_dimensions',
         'description',
     ],
+)
+
+ArrayMetricTypeData = namedtuple(
+    'ArrayMetricTypeData',
+    [
+        'id',
+        'name',
+        'long_name',
+        'obs_platform',
+        'measurement_type',
+        'measurement_units',
+        'stat_type',
+        'array_coord_labels',
+        'array_coord_units',
+        'array_index_values',
+        'array_dimensions',
+        'description',
+        'sat_meta_id',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sensor',
+        'channel',
+        'scan_angle'
+    ]
 )
 
 class ArrayMetricTypeError(Exception):
@@ -64,10 +90,10 @@ class ArrayMetricType:
     array_index_values: list
     array_dimensions: list
     description: dict
-    array_metric_type_data: ArrayMetricTypeData = field(init=False)
+    array_metric_type_data: ArrayMetricTypeInputData = field(init=False)
 
     def __post_init__(self):
-        self.array_metric_type_data = ArrayMetricTypeData(
+        self.array_metric_type_data = ArrayMetricTypeInputData(
             self.name,
             self.long_name,
             self.obs_platform,
@@ -398,25 +424,10 @@ class ArrayMetricTypeRequest:
     def get_array_metric_types(self):
         session = stm.get_session()
 
-        #TODO: need to do a join on sat meta info!!! going to return all of that as well and for filtering 
         q = session.query(
-            amt.id,
-            amt.sat_meta_id,
-            amt.obs_platform,
-            amt.name,
-            amt.long_name,
-            amt.measurement_type,
-            amt.measurement_units,
-            amt.stat_type,
-            amt.array_coord_labels,
-            amt.array_coord_units,
-            amt.array_index_values,
-            amt.array_dimensions,
-            amt.description,
-            amt.created_at,
-            amt.updated_at
-        ).select_from(
             amt
+        ).join(
+            sm, amt.sat_meta
         )
 
         print('Before adding filters to array metric types request########################')
@@ -438,12 +449,48 @@ class ArrayMetricTypeRequest:
 
         array_metric_types = q.all()
 
+        parsed_types = []
+        for metric_type in array_metric_types:
+            record = ArrayMetricTypeData(
+                id=metric_type.id,
+                name=metric_type.name,
+                long_name=metric_type.long_name,
+                obs_platform=metric_type.obs_platform,
+                measurement_type=metric_type.measurement_type,
+                measurement_units=metric_type.measurement_units,
+                stat_type=metric_type.stat_type,
+                array_coord_labels=metric_type.array_coord_labels,
+                array_coord_units=metric_type.array_coord_units,
+                array_index_values=metric_type.array_index_values,
+                array_dimensions=metric_type.array_dimensions,
+                description=metric_type.description,
+                sat_meta_id=metric_type.sat_meta.id,
+                sat_meta_name=metric_type.sat_meta.name,
+                sat_id=metric_type.sat_meta.sat_id,
+                sat_name=metric_type.sat_meta.sat_name,
+                sensor=metric_type.sat_meta.sensor,
+                channel=metric_type.sat_meta.channel,
+                scan_angle=metric_type.sat_meta.scan_angle
+            )
+            parsed_types.append(record)
+
+        try:
+            arr_metric_types_df = DataFrame(
+                parsed_types,
+                columns=ArrayMetricTypeData._fields
+            )
+        except Exception as err:
+            trcbk = traceback.format_exc()
+            msg = f'Problem casting array metric type query output into pandas ' \
+                f'DataFrame - err: {trcbk}'
+            raise TypeError(msg) from err
+
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
-            if len(array_metric_types) > 0:
-                results = DataFrame(array_metric_types, columns = array_metric_types[0]._fields)
+            if len(parsed_types) > 0:
+                results = arr_metric_types_df
             
         except Exception as err:
             message = 'Request for array metric type records FAILED'

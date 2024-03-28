@@ -641,6 +641,7 @@ class ExptArrayMetricRequest:
 
         print(f'response: {response}')
 
+        session.close()
         return response
 
     def remove_metric_duplicates(self, m_df):
