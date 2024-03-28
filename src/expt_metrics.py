@@ -565,27 +565,27 @@ class ExptMetricRequest:
         records = self.get_expt_metrics_from_body(self.body)
         session = stm.get_session()
 
-        try:
-            if len(records) > 0:
-                for record in records:
-                    msg = f'record.experiment_id: {record.experiment_id}, '
-                    msg += f'record.metric_type_id: {record.metric_type_id}, '
-                    msg += f'record.region_id: {record.region_id}, '
-                    msg += f'record.elevation: {record.elevation}, '
-                    msg += f'record.elevation_unit: {record.elevation_unit}, '
-                    msg += f'record.value: {record.value}, '
-                    msg += f'record.time_valid: {record.time_valid}, '
-                    msg += f'record.forecast_hour: {record.forecast_hour},'
-                    msg += f'record.ensemble_member: {record.ensemble_member},'
-                    msg += f'record.created_at: {record.created_at}'
-                    print(f'record: {msg}')
 
-                session.bulk_save_objects(records)
-                session.commit()
-                session.close()
+        if len(records) > 0:
+            for record in records:
+                msg = f'record.experiment_id: {record.experiment_id}, '
+                msg += f'record.metric_type_id: {record.metric_type_id}, '
+                msg += f'record.region_id: {record.region_id}, '
+                msg += f'record.elevation: {record.elevation}, '
+                msg += f'record.elevation_unit: {record.elevation_unit}, '
+                msg += f'record.value: {record.value}, '
+                msg += f'record.time_valid: {record.time_valid}, '
+                msg += f'record.forecast_hour: {record.forecast_hour},'
+                msg += f'record.ensemble_member: {record.ensemble_member},'
+                msg += f'record.created_at: {record.created_at}'
+                print(f'record: {msg}')
 
-        except Exception as err:
-            print(f'Failed to insert records: {err}')
+            session.bulk_save_objects(records)
+            session.commit()
+            session.close()
+        else:
+            session.close()
+            return self.failed_request('No expt metric records were discovered to be inserted')
 
         return DbActionResponse(
             request=self.request_dict,

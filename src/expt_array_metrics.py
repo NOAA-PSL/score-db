@@ -26,7 +26,7 @@ from score_table_models import SatMeta as sm
 from score_table_models import Region as rgs
 from experiments import ExperimentRequest
 import regions as rg
-import array_metric_types as amt
+import array_metric_types as amts
 import time_utils
 import db_utils
 
@@ -36,6 +36,8 @@ psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
 ExptArrayMetricInputData = namedtuple(
     'ExptArrayMetricInputData',
     [
+        'name',
+        'region_name',
         'value',
         'bias_correction',
         'assimilated',
@@ -94,7 +96,7 @@ def get_time_filter(filter_dict, cls, key, constructed_filter):
     exact_datetime = time_utils.get_time(value.get(db_utils.EXACT_DATETIME))
 
     if exact_datetime is not None:
-        constructed_filter[key] = (
+        constructed_filter[f'{cls.__name__}.{key}'] = (
             getattr(cls, key) == exact_datetime
         )
         return constructed_filter
@@ -106,16 +108,16 @@ def get_time_filter(filter_dict, cls, key, constructed_filter):
         if to_datetime < from_datetime:
             raise ValueError('\'from\' must be older than \'to\'')
         
-        constructed_filter[key] = and_(
+        constructed_filter[f'{cls.__name__}.{key}'] = and_(
             getattr(cls, key) >= from_datetime,
             getattr(cls, key) <= to_datetime
         )
     elif from_datetime is not None:
-        constructed_filter[key] = (
+        constructed_filter[f'{cls.__name__}.{key}'] = (
             getattr(cls, key) >= from_datetime
         )
     elif to_datetime is not None:
-        constructed_filter[key] = (
+        constructed_filter[f'{cls.__name__}.{key}'] = (
             getattr(cls, key) <= to_datetime
         )
 
@@ -148,7 +150,7 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
         raise TypeError(msg)
 
     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-    string_flt = filter_dict.get(key)
+    string_flt = filter_dict.get(key_name)
     print(f'string_flt: {string_flt}')
 
     if string_flt is None:
@@ -158,12 +160,12 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     like_filter = string_flt.get('like')
     # prefer like search over exact match if both exist
     if like_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).like(like_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).like(like_filter))
         return constructed_filter
 
     exact_match_filter = validate_list_of_strings(string_flt.get('exact'))
     if exact_match_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).in_(exact_match_filter))
 
     return constructed_filter
 
@@ -180,7 +182,7 @@ def get_float_filter(filter_dict, cls, key, constructed_filter):
         print(f'No \'{key}\' filter detected')
         return constructed_filter
 
-    constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == float_flt )
     
     return constructed_filter
 
@@ -197,7 +199,7 @@ def get_boolean_filter(filter_dict, cls, key, constructed_filter):
         print(f'No \'{key}\' filter detected')
         return constructed_filter
 
-    constructed_filter[key] = ( getattr(cls, key) == bool_flt )
+    constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == bool_flt )
     
     return constructed_filter
 
@@ -368,6 +370,9 @@ class ExptArrayMetricRequest:
             self.ordering = self.params.get('ordering')
             self.record_limit = self.params.get('record_limit')
 
+        if self.method == db_utils.HTTP_PUT:
+            self.expt_id = get_expt_record_id(self.body)
+
     def submit(self):
         if self.method == db_utils.HTTP_GET:
             try:
@@ -457,7 +462,7 @@ class ExptArrayMetricRequest:
             unique_array_metric_types.add(metric.name)
 
         regions = rg.get_regions_from_name_list(list(unique_regions))
-        array_metric_types = amt.get_all_array_metric_types()
+        array_metric_types = amts.get_all_array_metric_types()
 
         rg_df = regions.details.get('records')
         if rg_df.shape[0] != len(unique_regions):
@@ -477,9 +482,6 @@ class ExptArrayMetricRequest:
         for row in metrics:
             
             value = row.value
-
-            if math.isnan(value):
-                value = None
             
             item = ex_arr_mt(
                 experiment_id=self.expt_id,
@@ -510,32 +512,32 @@ class ExptArrayMetricRequest:
         return parsed_array_metrics
     
     def put_expt_array_metrics(self):
-        records = self.get_expt_metrics_from_body(self.body)
+        records = self.get_expt_array_metrics_from_body(self.body)
         session = stm.get_session()
 
-        try:
-            if len(records) > 0:
-                #This section of print statements can be uncommented for debugging
-                #Otherwise this is going to cause way too much output 
-                # for record in records:
-                #     msg = f'record.experiment_id: {record.expt_id}, '
-                #     msg += f'record.array_metric_type_id: {record.array_metric_type_id}, '
-                #     msg += f'record.region_id: {record.region_id}, '
-                #     msg += f'record.value: {record.value}, '
-                #     msg += f'record.bias_correction: {record.bias_correction}, '
-                #     msg += f'record.assimilated: {record.assimilated}, '
-                #     msg += f'record.time_valid: {record.time_valid}, '
-                #     msg += f'record.forecast_hour: {record.forecast_hour}, '
-                #     msg += f'record.ensemble_member: {record.ensemble_member}, '
-                #     msg += f'record.created_at: {record.created_at}'
-                #     print(f'record: {msg}')
 
-                session.bulk_save_objects(records)
-                session.commit()
-                session.close()
+        if len(records) > 0:
+            #This section of print statements can be uncommented for debugging
+            #Otherwise this is going to cause way too much output 
+            # for record in records:
+            #     msg = f'record.experiment_id: {record.expt_id}, '
+            #     msg += f'record.array_metric_type_id: {record.array_metric_type_id}, '
+            #     msg += f'record.region_id: {record.region_id}, '
+            #     msg += f'record.value: {record.value}, '
+            #     msg += f'record.bias_correction: {record.bias_correction}, '
+            #     msg += f'record.assimilated: {record.assimilated}, '
+            #     msg += f'record.time_valid: {record.time_valid}, '
+            #     msg += f'record.forecast_hour: {record.forecast_hour}, '
+            #     msg += f'record.ensemble_member: {record.ensemble_member}, '
+            #     msg += f'record.created_at: {record.created_at}'
+            #     print(f'record: {msg}')
 
-        except Exception as err:
-            print(f'Failed to insert array metric records: {err}')
+            session.bulk_save_objects(records)
+            session.commit()
+            session.close()
+
+        else:
+            return self.failed_request('No expt array metric records were discovered to be inserted')
 
         return DbActionResponse(
             request=self.request_dict,
@@ -614,8 +616,7 @@ class ExptArrayMetricRequest:
         record_count = 0
         try:
             if len(parsed_metrics) > 0:
-                results = unique_metrics
-            
+                results = unique_metrics    
         except Exception as err:
             message = 'Request for experiment array metric records FAILED'
             trcbk = traceback.format_exc()

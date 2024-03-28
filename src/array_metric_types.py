@@ -167,7 +167,7 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
         raise TypeError(msg)
 
     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-    string_flt = filter_dict.get(key)
+    string_flt = filter_dict.get(key_name)
     print(f'string_flt: {string_flt}')
 
     if string_flt is None:
@@ -177,12 +177,12 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     like_filter = string_flt.get('like')
     # prefer like search over exact match if both exist
     if like_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).like(like_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).like(like_filter))
         return constructed_filter
 
     exact_match_filter = validate_list_of_strings(string_flt.get('exact'))
     if exact_match_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).in_(exact_match_filter))
 
     return constructed_filter
 
