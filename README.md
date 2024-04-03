@@ -492,6 +492,65 @@ expt_stored_file_counts
     storage_location = relationship('StorageLocation', back_populates='file_counts')
 ```
 
+```sh
+expt_array_metrics
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    experiment_id = Column(Integer, ForeignKey('experiments.id'))
+    array_metric_type_id = Column(Integer, ForeignKey('array_metric_types.id'))
+    region_id = Column(Integer, ForeignKey('regions.id'))
+    value = Column(ARRAY(Float))
+    bias_correction = Column(ARRAY(Float))
+    assimilated = Column(Boolean)
+    time_valid = Column(DateTime)
+    forecast_hour = Column(Float)
+    ensemble_member = Column(Integer)
+    created_at = Column(DateTime, default=datetime.utcnow())
+
+    experiment = relationship('Experiment', back_populates='array_metrics')
+    array_metric_type = relationship('ArrayMetricType', back_populates='array_metrics')
+    region = relationship('Region', back_populates='array_metrics')
+```
+
+```sh
+array_metric_types
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
+    obs_platform = Column(String(128))
+    name = Column(String(128), nullable=False)
+    long_name = Column(String(128))
+    measurement_type = Column(String(64), nullable=False)
+    measurement_units = Column(String(64))
+    stat_type = Column(String(64))
+    array_coord_labels = Column(ARRAY(String))
+    array_coord_units = Column(ARRAY(String))
+    array_index_values = Column(ARRAY(String))
+    array_dimensions = Column(ARRAY(String))
+    description = Column(JSONB(astext_type=sa.Text()), nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime)
+
+    array_metrics = relationship('ExptArrayMetric', back_populates='array_metric_type')
+    sat_meta = relationship('SatMeta', back_populates='array_metric_type')  
+```
+
+```sh
+sat_meta
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(256))
+    sat_id = Column(Integer)
+    sat_name = Column(String(128))
+    sensor = Column(String(64))
+    channel = Column(String(64))
+    scan_angle = Column(String(64))
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime) 
+
+    array_metric_type = relationship('ArrayMetricType', back_populates='sat_meta')
+```
+
 ## Request Dictionaries / YAML Formats
 
 All requests require either a dictionary or a YAML file to configure the call to the database. GET calls, e.g., are requests to download subsets of data using filters that are specified with a nested dictionary or within a YAML file configuration hierarchy. PUT calls must similarly (via defining a key:value structured hierarchy) specify which data to upload to the database. Other calls must also be configured with a dictionary or YAML file. The following example configuration dictionaries (which could be similarly defined in a YAML file with the same hierarchy) are provided as templates for basic use cases.
@@ -894,6 +953,157 @@ Values which can be null or not provided: folder_path, cycle, time_valid, foreca
 
 Note: the associated experiment, file type, and storage locations referenced in the body values must already be registered for a successful file count PUT call  using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
+### Sat Meta Dictionaries
+Example dictionaries for 'sat_meta' calls. 
+
+GET:
+```sh
+request_dict = {
+        'name': 'sat_meta',
+        'method': 'GET',
+        'params' : {
+            'filters': {
+                'name' :{
+                    'exact' : 'example_sat_meta'
+                }
+            }
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'sat_meta',
+        'method' : 'PUT',
+        'body' :{
+            'name': 'example_sat_meta',
+            'sat_id': 123456789,
+            'sat_name': 'Example Sat Name',
+            'sensor': 'examplesensor',
+            'channel': '1',
+            'scan_angle':'90 degreees sectors fore- and aft-'
+        }
+    }
+```
+Each value can be null as necessary. A unique sat meta is considered the combination of sat_name, sat_id, sensor, channel, and scan_angle. 
+
+### Array Metric Type Dictionaries
+Example dictionaries for 'array_metric_types' calls.
+
+GET:
+```sh
+    request_dict = {
+        'name': 'array_metric_types',
+        'method':'GET',
+        'params':{
+            'filters':{
+                'name':{
+                    'exact':'vertical_example_metric'
+                },
+                'sat_meta_name':{
+                    'exact': 'example_sat_meta'
+                },
+                'stat_type':{
+                    'exact':'example_stat'
+                }
+            },
+            'limit':1
+        }
+    }
+```
+To search based on sat_meta values, add the sat_meta in front of the value to filter on. 
+
+PUT:
+```sh
+request_dict = {
+        'name': 'array_metric_types',
+        'method': 'PUT',
+        'body': {
+            'name': 'vertical_example_metric',
+            'longname': 'vertical long name example',
+            'obs_platform': 'satellite',
+            'measurement_type': 'example_measurement_type',
+            'measurement_units': 'example_measurement_units',
+            'stat_type': 'example_stat',
+            'array_coord_labels': ['temperature', 'elevation'],
+            'array_coord_units': ['K', 'feet'],
+            'array_index_values': [[10, 20, 30],[1000, 5000, 10000]],
+            'array_dimensions': [3, 3],
+            'description': json.dumps("example array metric type for testing purposes"),
+            'sat_meta_name': 'example_sat_meta',
+            'sat_id': 123456789,
+            'sat_name': 'Example Sat Name',
+            'sat_sensor':'examplesensor',
+            'sat_channel':'1'
+        }
+    }
+```
+The 'sat' values are only required when obs_platform is satellite to associate the appropriate sat_meta value to the type. The sat_meta value must be pre-registered before registering the array metric type. 
+
+### Experiment Array Metric Type Dictionaries
+Example dictionaries for 'expt_array_metrics' calls.
+
+GET:
+```sh
+request_dict = {
+        'name': 'expt_array_metrics',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'experiment': {
+                    'name': {
+                        'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+                    },
+                    'wallclock_start': {
+                        'from': '2021-07-22 02:22:05',
+                        'to': '2021-07-22 10:22:05'
+                    }
+                },
+                'metric_types': {
+                    'name': {
+                        'exact': ['vertical_example_metric']
+                    },
+                },
+                'regions': {
+                    'name': {
+                        'exact': ['global']
+                    },
+                },
+
+                'time_valid': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2016-01-03 00:00:00',
+                },
+            },
+            'ordering': [
+                {'name': 'time_valid', 'order_by': 'asc'}
+            ]
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'expt_array_metrics',
+        'method': 'PUT',
+        'body': {
+            'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'expt_wallclock_start': '2021-07-22 09:22:05',
+            'array_metrics': [
+                ExptArrayMetricInputData('vertical_example_metric','global',[[1, 2, 3],[4, 5, 6],[7, 8, 9]], [[0, 1, 0],[1, 0, 1],[0, 0, 1]], True, '2015-12-02 06:00:00', None, None),
+                ExptArrayMetricInputData('vertical_example_metric2','global',[[111, 222, 333],[444, 555, 666],[777, 888, 999]], [[1, 1, 0],[1, 0, 1],[1, 0, 0]], True, '2015-12-02 18:00:00', 24, 12)
+            ],
+            'datestr_format': '%Y-%m-%d %H:%M:%S'
+        }
+    }
+```
+Multiple array metrics can be provided as a list at one time as seen in this example.
+
+Note: the associated array metric type, provided via the name, must be pre-registered for a successful put call.
+
 ### Plot Innovation Stats Dictionary
 Example request dictionary of a call to 'plot_innov_stats'.
 
@@ -963,10 +1173,13 @@ Majority of the files are used for calls to manipulate specific database tables.
 - storage_locations: *storage_locations.py*
 - file_types: *file_types.py*
 - expt_stored_file_counts: *expt_file_counts.py*
+- sat_meta: *sat_meta.py*
+- array_metric_types: *array_metric_types.py*
+- expt_array_mterics: *expt_array_metrics.py*
 
 The general purpose of all of these files is to define a code structure based on the columns of the database, handle the processing of input data into the appropriate values, handle any input filters or order_by statements for GET calls, and finally to handle the GET and PUT calls using SQLAlchemy to input or retrieve data from the database. 
 
-The *expt_metrics.py* and *expt_file_counts.py* files have interactions with the other files for the relevant tables related to the id relationships between those tables, for example, both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
+The *expt_metrics.py*, *expt_file_counts.py*, and *expt_array_metrics.py* files have interactions with the other files for the relevant tables related to the id relationships between those tables, for example, both call the *experiments.py* code to get an experiment id. See the Table Schemas for the full set of table interactions. 
 
 The *harvest_metrics.py* and *harvest_innov_stats.py* files handle calls which require harvesting of data via score-hv and then inputs that info into the expt_metrics table via calls to the *expt_metrics.py* code. *harvest_metrics.py* is a more generic version of *harvest_innov_stats.py* and can process any type of harvested data if an appropriate translator is provided in *harvest_translator.py*. Only innov_stats files can be used with *harvest_innov_stats.py*. 
 

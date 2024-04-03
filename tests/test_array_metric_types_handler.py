@@ -11,7 +11,7 @@ from array_metric_types import ArrayMetricTypeRequest
 
 def test_put_array_metric_type_with_sat():
     request_dict = {
-        'name': 'expt_array_metrics',
+        'name': 'array_metric_types',
         'method': 'PUT',
         'body': {
             'name': 'vertical_example_metric',
@@ -40,7 +40,7 @@ def test_put_array_metric_type_with_sat():
 
 def test_get_array_metric_type_with_sat():
     request_dict = {
-        'name':'expt_array_metrics',
+        'name':'array_metric_types',
         'method':'GET',
         'params':{
             'filters':{
@@ -66,7 +66,7 @@ def test_get_array_metric_type_with_sat():
 
 def test_put_array_metric_type_no_sat():
     request_dict = {
-        'name': 'expt_array_metrics',
+        'name': 'array_metric_types',
         'method': 'PUT',
         'body': {
             'name': 'vertical_example_metric2',
@@ -90,7 +90,7 @@ def test_put_array_metric_type_no_sat():
 
 def test_get_array_metric_type_no_sat():
     request_dict = {
-        'name':'expt_array_metrics',
+        'name':'array_metric_types',
         'method':'GET',
         'params':{
             'filters':{

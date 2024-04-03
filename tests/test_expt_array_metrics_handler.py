@@ -8,7 +8,7 @@ Unit tests for expt_array_metrics.py
 from expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
 
 def test_put_exp_array_metrics_request():
-    request_dict= {
+    request_dict = {
         'name': 'expt_array_metrics',
         'method': 'PUT',
         'body': {
@@ -30,7 +30,7 @@ def test_put_exp_array_metrics_request():
 def test_get_expt_array_metrics_request():
 
     request_dict = {
-        'name': 'expt__array_metrics',
+        'name': 'expt_array_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
