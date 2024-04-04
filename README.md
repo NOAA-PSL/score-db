@@ -401,7 +401,10 @@ regions
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(79), nullable=False)
-    bounds = Column(String(255), nullable=False)
+    min_lat = Column(Float, nullable=False)
+    max_lat = Column(Float, nullable=False)
+    east_lon = Column(Float, nullable=False)
+    west_lon = Column(Float, nullable=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
 
