@@ -371,7 +371,15 @@ class ExptArrayMetricRequest:
             self.record_limit = self.params.get('record_limit')
 
         if self.method == db_utils.HTTP_PUT:
-            self.expt_id = get_expt_record_id(self.body)
+            try:
+                self.expt_id = get_expt_record_id(self.body)
+            except Exception as err:
+                trcbk = traceback.format_exc()
+                error_msg = 'Failed to locate experiment record id necessary to insert experiment array metric record -' \
+                    f' trcbk: {trcbk}'
+                print(f'Submit PUT error: {error_msg}')
+                print(f'Error: {err}')
+                return self.failed_request(error_msg)
 
     def submit(self):
         if self.method == db_utils.HTTP_GET:

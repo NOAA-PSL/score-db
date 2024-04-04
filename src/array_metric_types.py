@@ -216,7 +216,6 @@ def get_all_array_metric_types():
     return amtr.submit()
 
 def get_sat_meta_id(body):
-    # get sat name
     sat_meta_id = -1
     try:    
         sat_meta_name = body.get('sat_meta_name')
@@ -307,9 +306,15 @@ class ArrayMetricTypeRequest:
 
         self.body = self.request_dict.get('body')
         if self.method == db_utils.HTTP_PUT:
-            self.array_metric_type = get_array_metric_type_from_body(self.body)
-            self.array_metric_type_data = self.array_metric_type.get_array_metric_type_data()
-            self.sat_meta_id = get_sat_meta_id(self.body)
+            try:
+                self.array_metric_type = get_array_metric_type_from_body(self.body)
+                self.array_metric_type_data = self.array_metric_type.get_array_metric_type_data()
+                self.sat_meta_id = get_sat_meta_id(self.body)
+            except Exception as err:
+                error_msg = 'Failed to get array metric type information to insert -' \
+                    f' err: {err}'
+                print(f'Submit PUT error: {error_msg}')
+                return self.failed_request(error_msg)
         else:
             if isinstance(self.params, dict):
                 self.filters = construct_filters(self.params.get('filters'))
