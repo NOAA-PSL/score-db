@@ -401,10 +401,10 @@ regions
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(79), nullable=False)
-    min_lat = Column(Float, nullable=False)
-    max_lat = Column(Float, nullable=False)
-    east_lon = Column(Float, nullable=False)
-    west_lon = Column(Float, nullable=False)
+    min_lat = Column(Float, nullable=False) # degrees north of equator [-90, 90)
+    max_lat = Column(Float, nullable=False) # degrees north of equator (-90, 90]
+    east_lon = Column(Float, nullable=False) # degrees east of prime meridian [0, 360)
+    west_lon = Column(Float, nullable=False) # degrees east of prime meridian (0, 360]
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
 
