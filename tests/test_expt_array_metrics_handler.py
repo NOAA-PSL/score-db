@@ -1,38 +1,36 @@
 """
 Copyright 2022 NOAA
-All rights reserved.
+All rights reserved. 
 
-Unit tests for expt_metrics.py
-
+Unit tests for expt_array_metrics.py
 """
 
-from expt_metrics import ExptMetricInputData, ExptMetricRequest
+from expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
 
-def test_put_exp_metrics_request_dict():
-
+def test_put_exp_array_metrics_request():
     request_dict = {
-        'name': 'expt_metrics',
+        'name': 'expt_array_metrics',
         'method': 'PUT',
         'body': {
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
-            'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256)
+            'array_metrics': [
+                ExptArrayMetricInputData('vertical_example_metric','global',[[1, 2, 3],[4, 5, 6],[7, 8, 9]], [[0, 1, 0],[1, 0, 1],[0, 0, 1]], True, '2015-12-02 06:00:00', None, None),
+                ExptArrayMetricInputData('vertical_example_metric2','global',[[111, 222, 333],[444, 555, 666],[777, 888, 999]], [[1, 1, 0],[1, 0, 1],[1, 0, 0]], True, '2015-12-02 18:00:00', 24, 12)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
     }
 
-    emr = ExptMetricRequest(request_dict)
-    result = emr.submit()
-    print(f'Experiment metrics PUT result: {result}')
+    eamr = ExptArrayMetricRequest(request_dict)
+    result = eamr.submit()
+    print(f'Experiment Array Metrics PUT result: {result}')
     assert(result.success)
 
-def test_send_get_request():
+def test_get_expt_array_metrics_request():
 
     request_dict = {
-        'name': 'expt_metrics',
+        'name': 'expt_array_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
@@ -48,11 +46,8 @@ def test_send_get_request():
                 },
                 'metric_types': {
                     'name': {
-                        'exact': ['innov_stats_temperature_rmsd']
+                        'exact': ['vertical_example_metric']
                     },
-                    'stat_type': {
-                        'exact': ['rmsd']
-                    }
                 },
                 'regions': {
                     'name': {
@@ -66,13 +61,12 @@ def test_send_get_request():
                 },
             },
             'ordering': [
-                # {'name': 'id', 'order_by': 'asc'}
                 {'name': 'time_valid', 'order_by': 'asc'}
             ]
         }
     }
 
-    emr = ExptMetricRequest(request_dict)
-    result = emr.submit()
+    eamr = ExptArrayMetricRequest(request_dict)
+    result = eamr.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)

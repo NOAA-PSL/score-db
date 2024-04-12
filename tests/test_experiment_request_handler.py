@@ -63,8 +63,7 @@ def test_send_get_request():
         'params': {
             'filters': {
                 'name': {
-                    # 'like': '%_3DVAR_%',
-                    'exact': 'C96L64.UFSRNR.GSI_SOCA_3DVAR.012016'
+                    'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016'
                 },
                 'cycle_start': {
                     'from': '2015-01-01 00:00:00',
@@ -81,14 +80,14 @@ def test_send_get_request():
                 #     'exact': 'gsienkf'
                 # },
                 'experiment_type': {
-                    'like': '%COUPLED%'
+                    'like': '%UFSRNR%'
                 },
                 'platform': {
                     'exact': 'pw_awv1'
                 },
                 'wallclock_start': {
-                    'from': '2022-01-01 00:00:00',
-                    'to': '2022-07-01 00:00:00'
+                    'from': '2021-01-01 00:00:00',
+                    'to': '2021-08-01 00:00:00'
                 },
                 # 'wallclock_end': {
                 #     'from': '2015-01-01 00:00:00',
@@ -107,3 +106,4 @@ def test_send_get_request():
     er = ExperimentRequest(request_dict)
     result = er.submit()
     assert(result.success)
+    assert(result.details.get('record_count') > 0)

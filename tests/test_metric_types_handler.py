@@ -227,3 +227,4 @@ def test_send_get_request():
     er = MetricTypeRequest(request_dict)
     result = er.submit()
     assert(result.success)
+    assert(result.details.get('record_count') > 0)

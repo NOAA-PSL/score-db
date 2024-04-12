@@ -48,3 +48,4 @@ def test_file_type_get_request():
     result = ftr.submit()
     print(f'File type GET results: {result}')
     assert(result.success)
+    assert(result.details.get('record_count') > 0)
