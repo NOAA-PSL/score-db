@@ -60,6 +60,7 @@ def test_get_expt_file_counts_dict():
                         'exact': 's3_example_bucket',
                     },
                 },
+                'forecast_hour': 120
             }
         }
     }

@@ -50,6 +50,27 @@ psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
 ExptFileCountData = namedtuple(
     'ExptFileCountData',
     [
+        'id',
+        'count',
+        'folder_path',
+        'cycle',
+        'time_valid',
+        'forecast_hour',
+        'file_size_bytes',
+        'experiment_id',
+        'experiment_name',
+        'wallclock_start',
+        'file_type_id',
+        'file_type_name',
+        'storage_location_id',
+        'storage_location_name',
+        'created_at'
+    ]
+)
+
+ExptFileCountInputData = namedtuple(
+    'ExptFileCountInputData',
+    [
         'count',
         'folder_path',
         'cycle',
@@ -81,10 +102,10 @@ class ExptFileCount:
     experiment_id: int
     file_type_id: int
     storage_location_id: int
-    expt_file_count_data: ExptFileCountData = field(init=False)
+    expt_file_count_data: ExptFileCountInputData = field(init=False)
 
     def __post_init__(self):
-        self.expt_file_count_data = ExptFileCountData(
+        self.expt_file_count_data = ExptFileCountInputData(
             self.count,
             self.folder_path,
             self.cycle,
@@ -126,6 +147,47 @@ def get_file_count_from_body(body):
 
     return file_count
     
+# def get_time_filter(filter_dict, cls, key, constructed_filter):
+#     if not isinstance(filter_dict, dict):
+#         msg = f'Invalid type for filters, must be \'dict\', was ' \
+#             f'type: {type(filter_dict)}'
+#         raise TypeError(msg)
+
+#     value = filter_dict.get(key)
+#     if value is None:
+#         print(f'No \'{key}\' filter detected')
+#         return constructed_filter
+
+#     exact_datetime = time_utils.get_time(value.get(db_utils.EXACT_DATETIME))
+
+#     if exact_datetime is not None:
+#         constructed_filter[key] = (
+#             getattr(cls, key) == exact_datetime
+#         )
+#         return constructed_filter
+
+#     from_datetime = time_utils.get_time(value.get(db_utils.FROM_DATETIME))
+#     to_datetime = time_utils.get_time(value.get(db_utils.TO_DATETIME))
+
+#     if from_datetime is not None and to_datetime is not None:
+#         if to_datetime < from_datetime:
+#             raise ValueError('\'from\' must be older than \'to\'')
+        
+#         constructed_filter[key] = and_(
+#             getattr(cls, key) >= from_datetime,
+#             getattr(cls, key) <= to_datetime
+#         )
+#     elif from_datetime is not None:
+#         constructed_filter[key] = (
+#             getattr(cls, key) >= from_datetime
+#         )
+#     elif to_datetime is not None:
+#         constructed_filter[key] = (
+#             getattr(cls, key) <= to_datetime
+#         )
+
+#     return constructed_filter
+
 def get_time_filter(filter_dict, cls, key, constructed_filter):
     if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filters, must be \'dict\', was ' \
@@ -140,7 +202,7 @@ def get_time_filter(filter_dict, cls, key, constructed_filter):
     exact_datetime = time_utils.get_time(value.get(db_utils.EXACT_DATETIME))
 
     if exact_datetime is not None:
-        constructed_filter[key] = (
+        constructed_filter[f'{cls.__name__}.{key}'] = (
             getattr(cls, key) == exact_datetime
         )
         return constructed_filter
@@ -152,16 +214,16 @@ def get_time_filter(filter_dict, cls, key, constructed_filter):
         if to_datetime < from_datetime:
             raise ValueError('\'from\' must be older than \'to\'')
         
-        constructed_filter[key] = and_(
+        constructed_filter[f'{cls.__name__}.{key}'] = and_(
             getattr(cls, key) >= from_datetime,
             getattr(cls, key) <= to_datetime
         )
     elif from_datetime is not None:
-        constructed_filter[key] = (
+        constructed_filter[f'{cls.__name__}.{key}'] = (
             getattr(cls, key) >= from_datetime
         )
     elif to_datetime is not None:
-        constructed_filter[key] = (
+        constructed_filter[f'{cls.__name__}.{key}'] = (
             getattr(cls, key) <= to_datetime
         )
 
@@ -185,6 +247,49 @@ def validate_list_of_strings(values):
     
     return values
 
+# def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
+#     if not isinstance(filter_dict, dict):
+#         msg = f'Invalid type for filters, must be \'dict\', was ' \
+#             f'type: {type(filter_dict)}'
+#         raise TypeError(msg)
+
+#     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+#     string_flt = filter_dict.get(key)
+#     print(f'string_flt: {string_flt}')
+
+#     if string_flt is None:
+#         print(f'No \'{key}\' filter detected')
+#         return constructed_filter
+
+#     like_filter = string_flt.get('like')
+#     # prefer like search over exact match if both exist
+#     if like_filter is not None:
+#         constructed_filter[key_name] = (getattr(cls, key).like(like_filter))
+#         return constructed_filter
+
+#     exact_match_filter = validate_list_of_strings(string_flt.get('exact'))
+#     if exact_match_filter is not None:
+#         constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
+
+#     return constructed_filter
+
+# def get_float_filter(filter_dict, cls, key, constructed_filter):
+#     if not isinstance(filter_dict, dict):
+#         msg = f'Invalid type for filters, must be \'dict\', was ' \
+#             f'type: {type(filter_dict)}'
+#         raise TypeError(msg)
+
+#     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+#     float_flt = filter_dict.get(key)
+
+#     if float_flt is None:
+#         print(f'No \'{key}\' filter detected')
+#         return constructed_filter
+
+#     constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    
+#     return constructed_filter
+
 def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filters, must be \'dict\', was ' \
@@ -192,7 +297,7 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
         raise TypeError(msg)
 
     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-    string_flt = filter_dict.get(key)
+    string_flt = filter_dict.get(key_name)
     print(f'string_flt: {string_flt}')
 
     if string_flt is None:
@@ -202,12 +307,12 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     like_filter = string_flt.get('like')
     # prefer like search over exact match if both exist
     if like_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).like(like_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).like(like_filter))
         return constructed_filter
 
     exact_match_filter = validate_list_of_strings(string_flt.get('exact'))
     if exact_match_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).in_(exact_match_filter))
 
     return constructed_filter
 
@@ -224,7 +329,7 @@ def get_float_filter(filter_dict, cls, key, constructed_filter):
         print(f'No \'{key}\' filter detected')
         return constructed_filter
 
-    constructed_filter[key] = ( getattr(cls, key) == float_flt )
+    constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == float_flt )
     
     return constructed_filter
 
@@ -463,7 +568,7 @@ class ExptFileCountRequest:
         else:
             print(f'In ExptFileCountRequest - params: {self.params}')
             if isinstance(self.params, dict):
-                self.filters = self.construct_filters(self.params.get('filters'))
+                self.filters = self.params.get('filters')
                 self.ordering = self.params.get('ordering')
                 self.record_limit = self.params.get('record_limit')
 
@@ -483,7 +588,7 @@ class ExptFileCountRequest:
             errors=error_msg
         )
     
-    def construct_filters(self, filters):
+    def construct_filters(self, filters, query):
         if not isinstance(filters, dict):
             msg = f'Filters must be of the form dict, filters: {type(self.filters)}'
             raise ExptFileCountsError(msg)
@@ -537,7 +642,7 @@ class ExptFileCountRequest:
                     f'filter: {value}, err: {err}'
                 raise ExptFileCountsError(msg) from err 
             
-        return constructed_filter
+        return query
 
     def submit(self):
         if self.method == db_utils.HTTP_GET:
@@ -603,26 +708,18 @@ class ExptFileCountRequest:
         session = stm.get_session()
 
         q = session.query(
-            esfc.id,
-            esfc.count,
-            esfc.folder_path,
-            esfc.cycle,
-            esfc.time_valid,
-            esfc.forecast_hour,
-            esfc.file_size_bytes,
-            esfc.experiment_id,
-            esfc.file_type_id,
-            esfc.storage_location_id,
-            esfc.created_at
-        ).select_from(
             esfc
+        ).join(
+            exp, esfc.experiment
+        ).join(
+            ft, esfc.file_type
+        ).join(
+            sl, esfc.storage_location
         )
 
         print('Before adding filters to the expt file counts request####')
         if self.filters is not None and len(self.filters) > 0:
-            for key, value in self.filters.items():
-                q = q.filter(value)
-        
+            q = self.construct_filters(self.filters, q)
         print('After adding filters to the expt file counts request####')
 
         # add column ordering
@@ -637,20 +734,40 @@ class ExptFileCountRequest:
 
         file_counts = q.all()
 
+        parsed_counts = []
+        for count in file_counts:
+            record = ExptFileCountData(
+                id=count.id,
+                count=count.count, 
+                folder_path=count.folder_path,
+                cycle=count.cycle,
+                time_valid=count.time_valid,
+                forecast_hour=count.forecast_hour,
+                file_size_bytes=count.file_size_bytes,
+                experiment_id=count.experiment.id,
+                experiment_name=count.experiment.name,
+                wallclock_start=count.experiment.wallclock_start,
+                file_type_id=count.file_type.id,
+                file_type_name=count.file_type.name,
+                storage_location_id=count.storage_location.id,
+                storage_location_name=count.storage_location.name,
+                created_at=count.created_at
+            )
+            parsed_counts.append(record)
+    
+
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
             if len(file_counts) > 0:
-                results = DataFrame(file_counts, columns = file_counts[0]._fields)
+                results = DataFrame(parsed_counts, columns = ExptFileCountData._fields)
             
         except Exception as err:
             message = 'Request for expt file counts records FAILED'
             error_msg = f'Failed to get expt file counts records - err: {err}'
         else:
             message = 'Request for expt file counts records SUCCEEDED'
-            for idx, row in results.iterrows():
-                print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)
         
         details = {}
