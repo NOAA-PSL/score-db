@@ -9,6 +9,7 @@ from expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
 
 #TODO: NEED TO TEST IF WE CAN GIVE JUST PART OF THE SAT META INFO TO GET THE ID
 
+#TODO: the expt array input data has sat stuff now! and no bias correction 
 
 def test_put_exp_array_metrics_request():
     request_dict = {

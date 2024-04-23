@@ -44,7 +44,11 @@ ExptArrayMetricInputData = namedtuple(
         'assimilated',
         'time_valid',
         'forecast_hour',
-        'ensemble_member'
+        'ensemble_member',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
     ],
 ) 
 
@@ -350,14 +354,14 @@ def get_expt_record_id(body):
         
     return experiment_id
 
-def get_sat_meta_id(body):
+def get_sat_meta_id_from_metric(metric):
     sat_meta_id = -1
     try:    
-        sat_meta_name = body.get('sat_meta_name')
-        sat_id = body.get('sat_id')
-        sat_name = body.get('sat_name')
-        sat_short_name = body.get('sat_short_name')
-    except KeyError as err:
+        sat_meta_name = metric.sat_meta_name
+        sat_id = metric.sat_id
+        sat_name = metric.sat_name
+        sat_short_name = metric.sat_short_name
+    except Exception as err:
         print(f'Required sat meta input value not found: {err}')
         return sat_meta_id
 
@@ -543,7 +547,6 @@ class ExptArrayMetricRequest:
 
         regions = rg.get_regions_from_name_list(list(unique_regions))
         array_metric_types = amts.get_all_array_metric_types()
-        #TO DO: ADD A WAY TO GET THE SAT META STUFF HERE 
 
         rg_df = regions.details.get('records')
         if rg_df.shape[0] != len(unique_regions):
@@ -563,12 +566,14 @@ class ExptArrayMetricRequest:
         for row in metrics:
             
             value = row.value
+            sat_meta_id = get_sat_meta_id_from_metric(row)
+            sat_meta_input_id = sat_meta_id if sat_meta_id > 0 else None
             
             item = ex_arr_mt(
                 experiment_id=self.expt_id,
                 array_metric_type_id=amt_df_dict[row.name],
                 region_id=rg_df_dict[row.region_name],
-                #SAT META ID
+                sat_meta_id=sat_meta_input_id,
                 value=value,
                 bias_correction=row.bias_correction,
                 assimilated=row.assimilated,
