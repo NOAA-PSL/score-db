@@ -17,9 +17,7 @@ def test_sat_meta_input_dict():
             'name': 'example_sat_meta',
             'sat_id': 123456789,
             'sat_name': 'Example Sat Name',
-            'sensor': 'examplesensor',
-            'channel': '1',
-            'scan_angle':'90 degreees sectors fore- and aft-'
+            'short_name': 'esm_1',
         }
     }
 
