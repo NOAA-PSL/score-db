@@ -263,7 +263,7 @@ class ArrayMetricType(Base):
             'measurement_units',
             'stat_type',
             'obs_platform',
-            'sat_meta_id',
+            'instrument_meta_id',
             name='unique_array_metric_type'
         ),
     )

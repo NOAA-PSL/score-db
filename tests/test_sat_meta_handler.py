@@ -9,7 +9,7 @@ Unit tests for sat_meta.py
 from sat_meta import SatMetaRequest
 
 
-def test_sat_meta_input_dict():
+def test_sat_meta_put_request():
     request_dict = {
         'name': 'sat_meta',
         'method' : 'PUT',
