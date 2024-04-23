@@ -35,6 +35,7 @@ EXPT_STORED_FILE_COUNTS_TABLE = 'expt_stored_file_counts'
 EXPT_ARRAY_METRICS_TABLE = 'expt_array_metrics'
 ARRAY_METRIC_TYPES_TABLE = 'array_metric_types'
 SAT_META_TABLE = 'sat_meta'
+INSTRUMENT_META_TABLE = 'instrument_meta'
 
 
 # temporary use dotenv to load the db environment
@@ -240,8 +241,8 @@ class ExptArrayMetric(Base):
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     array_metric_type_id = Column(Integer, ForeignKey('array_metric_types.id'))
     region_id = Column(Integer, ForeignKey('regions.id'))
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
     value = Column(ARRAY(Float))
-    bias_correction = Column(ARRAY(Float))
     assimilated = Column(Boolean)
     time_valid = Column(DateTime)
     forecast_hour = Column(Float)
@@ -251,6 +252,7 @@ class ExptArrayMetric(Base):
     experiment = relationship('Experiment', back_populates='array_metrics')
     array_metric_type = relationship('ArrayMetricType', back_populates='array_metrics')
     region = relationship('Region', back_populates='array_metrics')
+    sat_meta = relationship('SatMeta', back_populates='array_metrics')
     
 class ArrayMetricType(Base):
     __tablename__ = ARRAY_METRIC_TYPES_TABLE
@@ -267,8 +269,8 @@ class ArrayMetricType(Base):
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
     obs_platform = Column(String(128))
+    instrument_meta_id = Column(Integer, ForeignKey('instrument_meta.id'), nullable=True)
     name = Column(String(128), nullable=False)
     long_name = Column(String(128))
     measurement_type = Column(String(64), nullable=False)
@@ -283,7 +285,8 @@ class ArrayMetricType(Base):
     updated_at = Column(DateTime)
 
     array_metrics = relationship('ExptArrayMetric', back_populates='array_metric_type')
-    sat_meta = relationship('SatMeta', back_populates='array_metric_type')
+    instrument_meta = relationship('InstrumentMeta', back_populates='array_metric_type')
+
 
 class SatMeta(Base):
     __tablename__ = SAT_META_TABLE
@@ -291,9 +294,7 @@ class SatMeta(Base):
         UniqueConstraint(
             'sat_name',
             'sat_id',
-            'sensor',
-            'channel',
-            'scan_angle',
+            'short_name',
             name='unique_sat_meta'
         ),
     )
@@ -302,13 +303,29 @@ class SatMeta(Base):
     name = Column(String(256))
     sat_id = Column(Integer)
     sat_name = Column(String(128))
-    sensor = Column(String(64))
-    channel = Column(String(64))
-    scan_angle = Column(String(64))
+    short_name = Column(String(64))
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime) 
 
-    array_metric_type = relationship('ArrayMetricType', back_populates='sat_meta')
+    array_metrics = relationship('ExptArrayMetric', back_populates='sat_meta')
+
+class InstrumentMeta(Base):
+    __tablename__ = INSTRUMENT_META_TABLE
+    __table_args__ = (
+        UniqueConstraint(
+            'name',
+            name='unique_instrument_meta'
+        ),
+    )
+ 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(256))
+    num_channels = Column(Integer)
+    scan_angle = Column(String(256), nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime) 
+
+    array_metric_type = relationship('ArrayMetricType', back_populates='instrument_meta')
 
 
 

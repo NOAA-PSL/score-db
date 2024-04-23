@@ -7,6 +7,9 @@ Unit tests for expt_array_metrics.py
 
 from expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
 
+#TODO: NEED TO TEST IF WE CAN GIVE JUST PART OF THE SAT META INFO TO GET THE ID
+
+
 def test_put_exp_array_metrics_request():
     request_dict = {
         'name': 'expt_array_metrics',

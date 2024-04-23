@@ -24,7 +24,9 @@ from score_table_models import ExptArrayMetric as ex_arr_mt
 from score_table_models import ArrayMetricType as amt
 from score_table_models import SatMeta as sm
 from score_table_models import Region as rgs
+from score_table_models import InstrumentMeta as im
 from experiments import ExperimentRequest
+from sat_meta import SatMetaRequest
 import regions as rg
 import array_metric_types as amts
 import time_utils
@@ -39,7 +41,6 @@ ExptArrayMetricInputData = namedtuple(
         'name',
         'region_name',
         'value',
-        'bias_correction',
         'assimilated',
         'time_valid',
         'forecast_hour',
@@ -52,7 +53,6 @@ ExptArrayMetricsData = namedtuple(
     [
         'id',
         'value',
-        'bias_correction',
         'assimilated',
         'time_valid',
         'forecast_hour',
@@ -72,6 +72,11 @@ ExptArrayMetricsData = namedtuple(
         'array_index_values',
         'region_id',
         'region',
+        'sat_meta_id',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
         'created_at'
     ],
 )
@@ -254,7 +259,7 @@ def get_array_metric_types_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_string_filter(filter_dict, amt, 'stat_type', constructed_filter, 'stat_type')
     
-    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'sat_meta_name')
+    constructed_filter = get_string_filter(filter_dict, im, 'name', constructed_filter, 'instrument_meta_name')
 
     return constructed_filter   
 
@@ -344,6 +349,73 @@ def get_expt_record_id(body):
         raise ExptArrayMetricsError(error_msg) 
         
     return experiment_id
+
+def get_sat_meta_id(body):
+    sat_meta_id = -1
+    try:    
+        sat_meta_name = body.get('sat_meta_name')
+        sat_id = body.get('sat_id')
+        sat_name = body.get('sat_name')
+        sat_short_name = body.get('sat_short_name')
+    except KeyError as err:
+        print(f'Required sat meta input value not found: {err}')
+        return sat_meta_id
+
+    sat_meta_request = {
+        'name': 'sat_meta',
+        'method': db_utils.HTTP_GET,
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': sat_meta_name
+                },
+                'sat_name': {
+                    'exact': sat_name
+                },
+                'short_name': {
+                    'exact': sat_short_name
+                },
+                'sat_id': sat_id
+            },
+            'record_limit': 1
+        }
+    }
+
+    print(f'sat_meta_request: {sat_meta_request}')
+
+    smr = SatMetaRequest(sat_meta_request)
+
+    results = smr.submit()
+    print(f'results: {results}')
+
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            if records is None:
+                msg = 'Request for sat meta record did not return a record'
+                raise ExptArrayMetricsError(msg)
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting sat meta data.'
+            # create error return db_action_response
+            raise ExptArrayMetricsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for sat meta record did not return a record'
+            raise ExptArrayMetricsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting sat meta data. err - {err}'
+        raise ExptArrayMetricsError(msg)
+        
+    try:
+        sat_meta_id = records[sm.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding sat meta id from record: {records} ' \
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ExptArrayMetricsError(error_msg) 
+    return sat_meta_id
 
 @dataclass 
 class ExptArrayMetricRequest:
@@ -471,6 +543,7 @@ class ExptArrayMetricRequest:
 
         regions = rg.get_regions_from_name_list(list(unique_regions))
         array_metric_types = amts.get_all_array_metric_types()
+        #TO DO: ADD A WAY TO GET THE SAT META STUFF HERE 
 
         rg_df = regions.details.get('records')
         if rg_df.shape[0] != len(unique_regions):
@@ -495,6 +568,7 @@ class ExptArrayMetricRequest:
                 experiment_id=self.expt_id,
                 array_metric_type_id=amt_df_dict[row.name],
                 region_id=rg_df_dict[row.region_name],
+                #SAT META ID
                 value=value,
                 bias_correction=row.bias_correction,
                 assimilated=row.assimilated,
@@ -566,6 +640,8 @@ class ExptArrayMetricRequest:
             amt, ex_arr_mt.array_metric_type
         ).join(
             rgs, ex_arr_mt.region
+        ).join(
+            sm, ex_arr_mt.sat_meta
         )
 
         q = self.construct_filters(q)
@@ -602,6 +678,11 @@ class ExptArrayMetricRequest:
                 array_index_values=metric.array_metric_type.array_index_values,
                 region_id=metric.region.id,
                 region=metric.region.name,
+                sat_meta_id=metric.sat_meta.id,
+                sat_meta_name=metric.sat_meta.name,
+                sat_id=metric.sat_meta.sat_id,
+                sat_name=metric.sat_meta.sat_name,
+                sat_short_name=metric.sat_meta.short_name,
                 created_at=metric.created_at
             )
             parsed_metrics.append(record)

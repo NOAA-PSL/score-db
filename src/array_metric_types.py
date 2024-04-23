@@ -14,8 +14,8 @@ import pprint
 from db_action_response import DbActionResponse
 import score_table_models as stm
 from score_table_models import ArrayMetricType as amt
-from score_table_models import SatMeta as sm
-from sat_meta import SatMetaRequest
+from score_table_models import InstrumentMeta as im
+from instrument_meta import InstrumentMetaRequest
 import time_utils
 import db_utils
 import traceback
@@ -60,13 +60,10 @@ ArrayMetricTypeData = namedtuple(
         'array_index_values',
         'array_dimensions',
         'description',
-        'sat_meta_id',
-        'sat_meta_name',
-        'sat_id',
-        'sat_name',
-        'sensor',
-        'channel',
-        'scan_angle'
+        'instrument_meta_id',
+        'instrument_name',
+        'instrument_num_channels',
+        'instrument_scan_angle'
     ]
 )
 
@@ -202,7 +199,7 @@ def construct_filters(filters):
 
     constructed_filter = get_string_filter(filters, amt, 'stat_type', constructed_filter, 'stat_type')
     
-    constructed_filter = get_string_filter(filters, sm, 'name', constructed_filter, 'sat_meta_name')
+    constructed_filter = get_string_filter(filters, im, 'name', constructed_filter, 'instrument_meta_name')
     
     return constructed_filter
 
@@ -215,46 +212,32 @@ def get_all_array_metric_types():
     amtr = ArrayMetricTypeRequest(request_dict)
     return amtr.submit()
 
-def get_sat_meta_id(body):
-    sat_meta_id = -1
+def get_instrument_meta_id(body):
+    instrument_meta_id = -1
     try:    
-        sat_meta_name = body.get('sat_meta_name')
-        sat_id = body.get('sat_id')
-        sat_name = body.get('sat_name')
-        sat_sensor = body.get('sat_sensor')
-        sat_channel = body.get('sat_channel')
+        instrument_meta_name = body.get('instrument_meta_name')
     except KeyError as err:
-        print(f'Required sat meta input value not found: {err}')
-        return sat_meta_id
+        print(f'Required instrument meta input value not found: {err}')
+        return instrument_meta_id
 
-    sat_meta_request = {
-        'name': 'sat_meta',
+    instrument_meta_request = {
+        'name': 'instrument_meta',
         'method': db_utils.HTTP_GET,
         'params': {
             'filters': {
                 'name': {
-                    'exact': sat_meta_name
+                    'exact': instrument_meta_name
                 },
-                'sat_name': {
-                    'exact': sat_name
-                },
-                'sensor': {
-                    'exact': sat_sensor
-                },
-                'sat_id': sat_id,
-                'channel':{
-                    'exact': sat_channel
-                }
             },
             'record_limit': 1
         }
     }
 
-    print(f'sat_meta_request: {sat_meta_request}')
+    print(f'sat_meta_request: {instrument_meta_request}')
 
-    smr = SatMetaRequest(sat_meta_request)
+    imr = InstrumentMetaRequest(instrument_meta_request)
 
-    results = smr.submit()
+    results = imr.submit()
     print(f'results: {results}')
 
     record_cnt = 0
@@ -262,29 +245,29 @@ def get_sat_meta_id(body):
         if results.success is True:
             records = results.details.get('records')
             if records is None:
-                msg = 'Request for sat meta record did not return a record'
+                msg = 'Request for instrument meta record did not return a record'
                 raise ArrayMetricTypeError(msg)
             record_cnt = records.shape[0]
         else:
-            msg = f'Problems encountered requesting sat meta data.'
+            msg = f'Problems encountered requesting instrument meta data.'
             # create error return db_action_response
             raise ArrayMetricTypeError(msg)
         if record_cnt <= 0:
-            msg = 'Request for sat meta record did not return a record'
+            msg = 'Request for instrument meta record did not return a record'
             raise ArrayMetricTypeError(msg)
         
     except Exception as err:
-        msg = f'Problems encountered requesting sat meta data. err - {err}'
+        msg = f'Problems encountered requesting instrument meta data. err - {err}'
         raise ArrayMetricTypeError(msg)
         
     try:
-        sat_meta_id = records[sm.id.name].iat[0]
+        instrument_meta_id = records[im.id.name].iat[0]
     except Exception as err:
-        error_msg = f'Problem finding sat meta id from record: {records} ' \
+        error_msg = f'Problem finding instrument meta id from record: {records} ' \
             f'- err: {err}'
         print(f'error_msg: {error_msg}')
         raise ArrayMetricTypeError(error_msg) 
-    return sat_meta_id
+    return instrument_meta_id
 
 @dataclass
 class ArrayMetricTypeRequest:
@@ -297,7 +280,7 @@ class ArrayMetricTypeRequest:
     body: dict = field(default_factory=dict, init=False)
     array_metric_type: ArrayMetricType = field(init=False)
     array_metric_type_data: namedtuple = field(init=False)
-    sat_meta_id: int = field(default_factory=int, init=False)
+    instrument_meta_id: int = field(default_factory=int, init=False)
     response: dict = field(default_factory=dict, init=False)
 
     def __post_init__(self):
@@ -309,7 +292,7 @@ class ArrayMetricTypeRequest:
             try:
                 self.array_metric_type = get_array_metric_type_from_body(self.body)
                 self.array_metric_type_data = self.array_metric_type.get_array_metric_type_data()
-                self.sat_meta_id = get_sat_meta_id(self.body)
+                self.instrument_meta_id = get_instrument_meta_id(self.body)
             except Exception as err:
                 error_msg = 'Failed to get array metric type information to insert -' \
                     f' err: {err}'
@@ -353,13 +336,13 @@ class ArrayMetricTypeRequest:
     def put_array_metric_type(self):
         session = stm.get_session()
 
-        sat_meta_id = self.sat_meta_id if self.sat_meta_id > 0 else None
+        instrument_meta_id = self.instrument_meta_id if self.instrument_meta_id > 0 else None
 
         insert_stmt = insert(amt).values(
             name=self.array_metric_type_data.name,
             long_name=self.array_metric_type_data.long_name, 
             obs_platform=self.array_metric_type_data.obs_platform,
-            sat_meta_id=sat_meta_id, 
+            instrument_meta_id=instrument_meta_id, 
             measurement_type=self.array_metric_type_data.measurement_type,
             measurement_units=self.array_metric_type_data.measurement_units,
             stat_type=self.array_metric_type_data.stat_type,
@@ -432,7 +415,7 @@ class ArrayMetricTypeRequest:
         q = session.query(
             amt
         ).join(
-            sm, amt.sat_meta
+            im, amt.instrument_meta
         )
 
         print('Before adding filters to array metric types request########################')
@@ -469,13 +452,10 @@ class ArrayMetricTypeRequest:
                 array_index_values=metric_type.array_index_values,
                 array_dimensions=metric_type.array_dimensions,
                 description=metric_type.description,
-                sat_meta_id=metric_type.sat_meta.id,
-                sat_meta_name=metric_type.sat_meta.name,
-                sat_id=metric_type.sat_meta.sat_id,
-                sat_name=metric_type.sat_meta.sat_name,
-                sensor=metric_type.sat_meta.sensor,
-                channel=metric_type.sat_meta.channel,
-                scan_angle=metric_type.sat_meta.scan_angle
+                instrument_meta_id=metric_type.instrument_meta.id,
+                instrument_name=metric_type.instrument_meta.name,
+                instrument_num_channels=metric_type.instrument_meta.num_channels,
+                instrument_scan_angle=metric_type.instrument_meta.scan_angle
             )
             parsed_types.append(record)
 
