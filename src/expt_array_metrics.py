@@ -406,7 +406,10 @@ def get_sat_meta_id_from_metric(metric):
     except Exception as err:
         print(f'Required sat meta input value not found: {err}')
         return sat_meta_id
-
+    
+    if sat_meta_name is None and sat_id is None and sat_name is None and sat_short_name is None:
+        return sat_meta_id
+    
     sat_meta_request = {
         'name': 'sat_meta',
         'method': db_utils.HTTP_GET,
@@ -619,7 +622,6 @@ class ExptArrayMetricRequest:
                 region_id=rg_df_dict[row.region_name],
                 sat_meta_id=sat_meta_input_id,
                 value=value,
-                bias_correction=row.bias_correction,
                 assimilated=row.assimilated,
                 time_valid=row.time_valid,
                 forecast_hour=row.forecast_hour,
@@ -655,7 +657,6 @@ class ExptArrayMetricRequest:
             #     msg += f'record.array_metric_type_id: {record.array_metric_type_id}, '
             #     msg += f'record.region_id: {record.region_id}, '
             #     msg += f'record.value: {record.value}, '
-            #     msg += f'record.bias_correction: {record.bias_correction}, '
             #     msg += f'record.assimilated: {record.assimilated}, '
             #     msg += f'record.time_valid: {record.time_valid}, '
             #     msg += f'record.forecast_hour: {record.forecast_hour}, '
@@ -689,7 +690,7 @@ class ExptArrayMetricRequest:
             amt, ex_arr_mt.array_metric_type
         ).join(
             rgs, ex_arr_mt.region
-        ).join(
+        ).outerjoin(
             sm, ex_arr_mt.sat_meta
         )
 
@@ -707,7 +708,6 @@ class ExptArrayMetricRequest:
             record = ExptArrayMetricsData(
                 id=metric.id,
                 value=metric.value,
-                bias_correction=metric.bias_correction,
                 assimilated=metric.assimilated,
                 time_valid=metric.time_valid,
                 forecast_hour=metric.forecast_hour,
@@ -727,13 +727,19 @@ class ExptArrayMetricRequest:
                 array_index_values=metric.array_metric_type.array_index_values,
                 region_id=metric.region.id,
                 region=metric.region.name,
-                sat_meta_id=metric.sat_meta.id,
-                sat_meta_name=metric.sat_meta.name,
-                sat_id=metric.sat_meta.sat_id,
-                sat_name=metric.sat_meta.sat_name,
-                sat_short_name=metric.sat_meta.short_name,
+                sat_meta_id=None,
+                sat_meta_name=None,
+                sat_id=None,
+                sat_name=None,
+                sat_short_name=None,
                 created_at=metric.created_at
             )
+            if metric.sat_meta is not None:
+                record.sat_meta_id=metric.sat_meta.id
+                record.sat_meta_name=metric.sat_meta.name
+                record.sat_id=metric.sat_meta.sat_id
+                record.sat_name=metric.sat_meta.sat_name
+                record.sat_short_name=metric.sat_meta.short_name
             parsed_metrics.append(record)
         
         try:

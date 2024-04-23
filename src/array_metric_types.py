@@ -222,6 +222,9 @@ def get_instrument_meta_id(body):
         print(f'Required instrument meta input value not found: {err}')
         return instrument_meta_id
 
+    if instrument_meta_name is None:
+        return instrument_meta_id
+
     instrument_meta_request = {
         'name': 'instrument_meta',
         'method': db_utils.HTTP_GET,
@@ -235,7 +238,7 @@ def get_instrument_meta_id(body):
         }
     }
 
-    print(f'sat_meta_request: {instrument_meta_request}')
+    print(f'instrument_meta_request: {instrument_meta_request}')
 
     imr = InstrumentMetaRequest(instrument_meta_request)
 
@@ -416,7 +419,7 @@ class ArrayMetricTypeRequest:
 
         q = session.query(
             amt
-        ).join(
+        ).outerjoin(
             im, amt.instrument_meta
         )
 
@@ -454,11 +457,16 @@ class ArrayMetricTypeRequest:
                 array_index_values=metric_type.array_index_values,
                 array_dimensions=metric_type.array_dimensions,
                 description=metric_type.description,
-                instrument_meta_id=metric_type.instrument_meta.id,
-                instrument_name=metric_type.instrument_meta.name,
-                instrument_num_channels=metric_type.instrument_meta.num_channels,
-                instrument_scan_angle=metric_type.instrument_meta.scan_angle
+                instrument_meta_id=None,
+                instrument_name=None,
+                instrument_num_channels=None,
+                instrument_scan_angle=None
             )
+            if metric_type.instrument_meta is not None:
+                record.instrument_meta_id=metric_type.instrument_meta.id
+                record.instrument_name=metric_type.instrument_meta.name
+                record.instrument_num_channels=metric_type.instrument_meta.num_channels
+                record.instrument_scan_angle=metric_type.instrument_meta.scan_angle
             parsed_types.append(record)
 
         try:
