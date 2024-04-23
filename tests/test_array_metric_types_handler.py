@@ -9,6 +9,8 @@ import json
 import numpy as np 
 from array_metric_types import ArrayMetricTypeRequest
 
+#TODO: need to change sat meta info to instrument meta info 
+
 def test_put_array_metric_type_with_sat():
     request_dict = {
         'name': 'array_metric_types',
