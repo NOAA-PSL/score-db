@@ -9,9 +9,7 @@ import json
 import numpy as np 
 from array_metric_types import ArrayMetricTypeRequest
 
-#TODO: need to change sat meta info to instrument meta info 
-
-def test_put_array_metric_type_with_sat():
+def test_put_array_metric_type_with_instrument():
     request_dict = {
         'name': 'array_metric_types',
         'method': 'PUT',
@@ -27,11 +25,7 @@ def test_put_array_metric_type_with_sat():
             'array_index_values': [[10, 20, 30],[1000, 5000, 10000]],
             'array_dimensions': [3, 3],
             'description': json.dumps("example array metric type for testing purposes"),
-            'sat_meta_name': 'example_sat_meta',
-            'sat_id': 123456789,
-            'sat_name': 'Example Sat Name',
-            'sat_sensor':'examplesensor',
-            'sat_channel':'1'
+            'instrument_meta_name': 'example_instrument',
         }
     }
 
@@ -40,7 +34,7 @@ def test_put_array_metric_type_with_sat():
     print(f'Array Metric Type PUT result: {result}')
     assert(result.success)
 
-def test_get_array_metric_type_with_sat():
+def test_get_array_metric_type_with_instrument():
     request_dict = {
         'name':'array_metric_types',
         'method':'GET',
@@ -49,8 +43,8 @@ def test_get_array_metric_type_with_sat():
                 'name':{
                     'exact':'vertical_example_metric'
                 },
-                'sat_meta_name':{
-                    'exact': 'example_sat_meta'
+                'instrument_meta_name':{
+                    'exact': 'example_instrument'
                 },
                 'stat_type':{
                     'exact':'example_stat'
@@ -66,7 +60,7 @@ def test_get_array_metric_type_with_sat():
     assert(result.success)
     assert(result.details.get('record_count') > 0)
 
-def test_put_array_metric_type_no_sat():
+def test_put_array_metric_type_no_instrument():
     request_dict = {
         'name': 'array_metric_types',
         'method': 'PUT',
@@ -90,7 +84,7 @@ def test_put_array_metric_type_no_sat():
     print(f'Array Metric Type PUT result: {result}')
     assert(result.success)
 
-def test_get_array_metric_type_no_sat():
+def test_get_array_metric_type_no_instrument():
     request_dict = {
         'name':'array_metric_types',
         'method':'GET',

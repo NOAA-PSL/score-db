@@ -200,6 +200,8 @@ def construct_filters(filters):
     constructed_filter = get_string_filter(filters, amt, 'stat_type', constructed_filter, 'stat_type')
     
     constructed_filter = get_string_filter(filters, im, 'name', constructed_filter, 'instrument_meta_name')
+
+    constructed_filter = get_string_filter(filters, im, 'name', constructed_filter, 'instrument_name') #this way the user could include the meta or not for the filter
     
     return constructed_filter
 
