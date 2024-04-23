@@ -212,6 +212,23 @@ def get_boolean_filter(filter_dict, cls, key, constructed_filter):
     
     return constructed_filter
 
+def get_int_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    int_flt = filters.get(key)
+
+    if int_flt is None:
+        print(f'No \'{key}\' filter detected')
+        return constructed_filter
+
+    constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    
+    return constructed_filter
+
 def get_experiments_filter(filter_dict, constructed_filter):
     if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filter, must be \'dict\', was ' \
@@ -293,6 +310,31 @@ def get_regions_filter(filter_dict, constructed_filter):
     constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
 
     return constructed_filter
+
+def get_sat_meta_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        return constructed_filter
+
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter)
+
+    constructed_filter = get_int_filter(filter_dict, sm, 'sat_id', constructed_filter)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter)
+
+    return constructed_filter
+
 
 def get_expt_record_id(body):
     expt_name = body.get('expt_name')
@@ -505,6 +547,8 @@ class ExptArrayMetricRequest:
         
         constructed_filter = get_regions_filter(
             self.filters.get('regions'), constructed_filter)
+        
+        constructed_filter = get_sat_meta_filter(self.filters.get('sat_meta'), constructed_filter)
 
         constructed_filter = get_time_filter(
             self.filters, ex_arr_mt, 'time_valid', constructed_filter)
