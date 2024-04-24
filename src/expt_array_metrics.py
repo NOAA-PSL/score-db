@@ -70,7 +70,7 @@ ExptArrayMetricsData = namedtuple(
         'metric_unit',
         'metric_stat_type',
         'metric_obs_platform',
-        'metric_instrument_id',
+        'metric_instrument_meta_id',
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
@@ -325,13 +325,13 @@ def get_sat_meta_filter(filter_dict, constructed_filter):
             f'was type: {type(filter_dict)}'
         raise TypeError(msg)
 
-    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter)
+    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'name')
 
     constructed_filter = get_int_filter(filter_dict, sm, 'sat_id', constructed_filter)
 
-    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter)
+    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter, 'sat_name')
 
-    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter)
+    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter, 'short_name')
 
     return constructed_filter
 

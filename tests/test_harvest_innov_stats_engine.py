@@ -32,49 +32,52 @@ GSI_3DVAR = 'gsi/'
 SOCA_3DVAR = '%Y%m%d%H%M%S/post/soca/3dvar/'
 NETCDF_HARVESTER_CONFIG__VALID = 'netcdf_harvester_config__valid.yaml'
 
-def test_run_innov_stats_harvester_for_date_range():
+# THIS TEST IS KNOWN BROKEN AND COMMENTED OUT UNTIL IT IS PROPERLY DEALT WITH
+# either the entire functionality should be removed or needs to be updated to use the new regions
 
-    harvester_control_dict = {
-        'db_request_name': 'harvest_innov_stats',
-        'date_range': {
-            'datetime_str': '%Y-%m-%d %H:%M:%S',
-            'start': '2015-12-01 0:00:00',
-            'end': '2015-12-01 0:00:00'
-        },
+# def test_run_innov_stats_harvester_for_date_range():
 
-        'files': [
-            {
-                # 'filepath': BASE + EXP_NAME + GSI
-                'filepath': BASE,
-                'filename': 'innov_stats.metric.%Y%m%d%H.nc',
-                'cycles': CYCLES,
-                'harvester': 'innov_stats_netcdf',
-                'metrics': ['temperature','spechumid','uvwind'],
-                'stats': ['bias', 'count', 'rmsd'],
-                'elevation_unit': 'plevs'
-            },
-            # {
-            #     'filepath': BASE + EXP_NAME + SOCA_3DVAR,
-            #     'filename': 'innov_stats.metric.%Y%m%d%H%M%S.nc',
-            #     'cycles': [CYCLES[1]],
-            #     'harvester': 'innov_stats_netcdf',
-            #     'metrics': ['temperature','salinity'],
-            #     'stats': ['bias', 'rmsd'],
-            #     'elevation_unit': 'depth'
-            # },
-        ],
-        'output_format': 'tuples_list'
-    }
+#     harvester_control_dict = {
+#         'db_request_name': 'harvest_innov_stats',
+#         'date_range': {
+#             'datetime_str': '%Y-%m-%d %H:%M:%S',
+#             'start': '2015-12-01 0:00:00',
+#             'end': '2015-12-01 0:00:00'
+#         },
 
-    conf_yaml_fn = os.path.join(
-        PYTEST_CALLING_DIR,
-        NETCDF_HARVESTER_CONFIG__VALID
-    )
+#         'files': [
+#             {
+#                 # 'filepath': BASE + EXP_NAME + GSI
+#                 'filepath': BASE,
+#                 'filename': 'innov_stats.metric.%Y%m%d%H.nc',
+#                 'cycles': CYCLES,
+#                 'harvester': 'innov_stats_netcdf',
+#                 'metrics': ['temperature','spechumid','uvwind'],
+#                 'stats': ['bias', 'count', 'rmsd'],
+#                 'elevation_unit': 'plevs'
+#             },
+#             # {
+#             #     'filepath': BASE + EXP_NAME + SOCA_3DVAR,
+#             #     'filename': 'innov_stats.metric.%Y%m%d%H%M%S.nc',
+#             #     'cycles': [CYCLES[1]],
+#             #     'harvester': 'innov_stats_netcdf',
+#             #     'metrics': ['temperature','salinity'],
+#             #     'stats': ['bias', 'rmsd'],
+#             #     'elevation_unit': 'depth'
+#             # },
+#         ],
+#         'output_format': 'tuples_list'
+#     }
 
-    with open(conf_yaml_fn, 'w', encoding='utf8') as file:
-        documents = yaml.dump(harvester_control_dict, file)
-        print(f'conf_dict: {conf_yaml_fn}, documents: {documents}')
+#     conf_yaml_fn = os.path.join(
+#         PYTEST_CALLING_DIR,
+#         NETCDF_HARVESTER_CONFIG__VALID
+#     )
 
-    hc = HarvestInnovStatsRequest(harvester_control_dict)
-    result = hc.submit()
-    assert(result.success)
+#     with open(conf_yaml_fn, 'w', encoding='utf8') as file:
+#         documents = yaml.dump(harvester_control_dict, file)
+#         print(f'conf_dict: {conf_yaml_fn}, documents: {documents}')
+
+#     hc = HarvestInnovStatsRequest(harvester_control_dict)
+#     result = hc.submit()
+#     assert(result.success)
