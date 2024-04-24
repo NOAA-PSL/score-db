@@ -444,7 +444,8 @@ class ArrayMetricTypeRequest:
 
         parsed_types = []
         for metric_type in array_metric_types:
-            record = ArrayMetricTypeData(
+            if metric_type.instrument_meta is not None:
+                record = ArrayMetricTypeData(
                 id=metric_type.id,
                 name=metric_type.name,
                 long_name=metric_type.long_name,
@@ -457,16 +458,30 @@ class ArrayMetricTypeRequest:
                 array_index_values=metric_type.array_index_values,
                 array_dimensions=metric_type.array_dimensions,
                 description=metric_type.description,
-                instrument_meta_id=None,
-                instrument_name=None,
-                instrument_num_channels=None,
-                instrument_scan_angle=None
+                instrument_meta_id=metric_type.instrument_meta.id,
+                instrument_name=metric_type.instrument_meta.name,
+                instrument_num_channels=metric_type.instrument_meta.num_channels,
+                instrument_scan_angle=metric_type.instrument_meta.scan_angle
             )
-            if metric_type.instrument_meta is not None:
-                record.instrument_meta_id=metric_type.instrument_meta.id
-                record.instrument_name=metric_type.instrument_meta.name
-                record.instrument_num_channels=metric_type.instrument_meta.num_channels
-                record.instrument_scan_angle=metric_type.instrument_meta.scan_angle
+            else:
+                record = ArrayMetricTypeData(
+                    id=metric_type.id,
+                    name=metric_type.name,
+                    long_name=metric_type.long_name,
+                    obs_platform=metric_type.obs_platform,
+                    measurement_type=metric_type.measurement_type,
+                    measurement_units=metric_type.measurement_units,
+                    stat_type=metric_type.stat_type,
+                    array_coord_labels=metric_type.array_coord_labels,
+                    array_coord_units=metric_type.array_coord_units,
+                    array_index_values=metric_type.array_index_values,
+                    array_dimensions=metric_type.array_dimensions,
+                    description=metric_type.description,
+                    instrument_meta_id=None,
+                    instrument_name=None,
+                    instrument_num_channels=None,
+                    instrument_scan_angle=None
+                )
             parsed_types.append(record)
 
         try:
