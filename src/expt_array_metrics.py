@@ -71,6 +71,7 @@ ExptArrayMetricsData = namedtuple(
         'metric_stat_type',
         'metric_obs_platform',
         'metric_instrument_meta_id',
+        'metric_instrument_name',
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
@@ -687,11 +688,13 @@ class ExptArrayMetricRequest:
         ).join(
             exp, ex_arr_mt.experiment
         ).join(
-            amt, ex_arr_mt.array_metric_type
-        ).join(
             rgs, ex_arr_mt.region
         ).outerjoin(
             sm, ex_arr_mt.sat_meta
+        ).join(
+            amt, ex_arr_mt.array_metric_type
+        ).outerjoin(
+            im, amt.instrument_meta
         )
 
         q = self.construct_filters(q)
@@ -705,7 +708,7 @@ class ExptArrayMetricRequest:
 
         parsed_metrics = []
         for metric in array_metrics:
-            if metric.sat_meta is not None:
+            if metric.sat_meta is not None and metric.array_metric_type.instrument_meta is not None:
                 record = ExptArrayMetricsData(
                     id=metric.id,
                     value=metric.value,
@@ -722,6 +725,7 @@ class ExptArrayMetricRequest:
                     metric_unit=metric.array_metric_type.measurement_units,
                     metric_stat_type=metric.array_metric_type.stat_type,
                     metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
+                    metric_instrument_name=metric.array_metric_type.instrument_meta.name,
                     metric_obs_platform=metric.array_metric_type.obs_platform,
                     array_coord_labels=metric.array_metric_type.array_coord_labels,
                     array_coord_units=metric.array_metric_type.array_coord_units,
@@ -733,6 +737,68 @@ class ExptArrayMetricRequest:
                     sat_id=metric.sat_meta.sat_id,
                     sat_name=metric.sat_meta.sat_name,
                     sat_short_name=metric.sat_meta.short_name,
+                    created_at=metric.created_at
+                )
+            elif metric.sat_meta is not None:
+                record = ExptArrayMetricsData(
+                    id=metric.id,
+                    value=metric.value,
+                    assimilated=metric.assimilated,
+                    time_valid=metric.time_valid,
+                    forecast_hour=metric.forecast_hour,
+                    ensemble_member=metric.ensemble_member,
+                    expt_id=metric.experiment.id,
+                    expt_name=metric.experiment.name,
+                    wallclock_start=metric.experiment.wallclock_start,
+                    metric_id=metric.array_metric_type.id,
+                    metric_long_name=metric.array_metric_type.long_name,
+                    metric_type=metric.array_metric_type.measurement_type,
+                    metric_unit=metric.array_metric_type.measurement_units,
+                    metric_stat_type=metric.array_metric_type.stat_type,
+                    metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
+                    metric_instrument_name=None,
+                    metric_obs_platform=metric.array_metric_type.obs_platform,
+                    array_coord_labels=metric.array_metric_type.array_coord_labels,
+                    array_coord_units=metric.array_metric_type.array_coord_units,
+                    array_index_values=metric.array_metric_type.array_index_values,
+                    region_id=metric.region.id,
+                    region=metric.region.name,
+                    sat_meta_id=metric.sat_meta.id,
+                    sat_meta_name=metric.sat_meta.name,
+                    sat_id=metric.sat_meta.sat_id,
+                    sat_name=metric.sat_meta.sat_name,
+                    sat_short_name=metric.sat_meta.short_name,
+                    created_at=metric.created_at
+                )
+            elif metric.array_metric_type.instrument_meta is not None:
+                record = ExptArrayMetricsData(
+                    id=metric.id,
+                    value=metric.value,
+                    assimilated=metric.assimilated,
+                    time_valid=metric.time_valid,
+                    forecast_hour=metric.forecast_hour,
+                    ensemble_member=metric.ensemble_member,
+                    expt_id=metric.experiment.id,
+                    expt_name=metric.experiment.name,
+                    wallclock_start=metric.experiment.wallclock_start,
+                    metric_id=metric.array_metric_type.id,
+                    metric_long_name=metric.array_metric_type.long_name,
+                    metric_type=metric.array_metric_type.measurement_type,
+                    metric_unit=metric.array_metric_type.measurement_units,
+                    metric_stat_type=metric.array_metric_type.stat_type,
+                    metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
+                    metric_instrument_name=metric.array_metric_type.instrument_meta.name,
+                    metric_obs_platform=metric.array_metric_type.obs_platform,
+                    array_coord_labels=metric.array_metric_type.array_coord_labels,
+                    array_coord_units=metric.array_metric_type.array_coord_units,
+                    array_index_values=metric.array_metric_type.array_index_values,
+                    region_id=metric.region.id,
+                    region=metric.region.name,
+                    sat_meta_id=None,
+                    sat_meta_name=None,
+                    sat_id=None,
+                    sat_name=None,
+                    sat_short_name=None,
                     created_at=metric.created_at
                 )
             else:
@@ -752,6 +818,7 @@ class ExptArrayMetricRequest:
                     metric_unit=metric.array_metric_type.measurement_units,
                     metric_stat_type=metric.array_metric_type.stat_type,
                     metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
+                    metric_instrument_name=None,
                     metric_obs_platform=metric.array_metric_type.obs_platform,
                     array_coord_labels=metric.array_metric_type.array_coord_labels,
                     array_coord_units=metric.array_metric_type.array_coord_units,
