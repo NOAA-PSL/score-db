@@ -87,6 +87,10 @@ Currently valid registry options are:
 'storage_locations' : 'Add, get, or update storage locations'
 'expt_file_counts' : 'Add or get experiment file counts'
 'harvest_metrics' : 'Harvest and store metrics'
+'array_metric_types' : 'Add or get or update array metrics types'
+'sat_meta' : 'Add or get or update sat meta data'
+'expt_array_metrics' : 'Add or get experiment array metrics data'
+'instrument_meta' : 'Add or get or update instrument meta data'
 ```
 
 Example request dictionaries for each registry option are provided in the Appendix.
@@ -502,8 +506,8 @@ expt_array_metrics
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     array_metric_type_id = Column(Integer, ForeignKey('array_metric_types.id'))
     region_id = Column(Integer, ForeignKey('regions.id'))
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
     value = Column(ARRAY(Float))
-    bias_correction = Column(ARRAY(Float))
     assimilated = Column(Boolean)
     time_valid = Column(DateTime)
     forecast_hour = Column(Float)
@@ -513,13 +517,14 @@ expt_array_metrics
     experiment = relationship('Experiment', back_populates='array_metrics')
     array_metric_type = relationship('ArrayMetricType', back_populates='array_metrics')
     region = relationship('Region', back_populates='array_metrics')
+    sat_meta = relationship('SatMeta', back_populates='array_metrics')
 ```
 
 ```sh
 array_metric_types
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
+    instrument_meta_id = Column(Integer, ForeignKey('instrument_meta.id'), nullable=True)
     obs_platform = Column(String(128))
     name = Column(String(128), nullable=False)
     long_name = Column(String(128))
@@ -535,7 +540,7 @@ array_metric_types
     updated_at = Column(DateTime)
 
     array_metrics = relationship('ExptArrayMetric', back_populates='array_metric_type')
-    sat_meta = relationship('SatMeta', back_populates='array_metric_type')  
+    instrument_meta = relationship('InstrumentMeta', back_populates='array_metric_type') 
 ```
 
 ```sh
@@ -545,13 +550,24 @@ sat_meta
     name = Column(String(256))
     sat_id = Column(Integer)
     sat_name = Column(String(128))
-    sensor = Column(String(64))
-    channel = Column(String(64))
-    scan_angle = Column(String(64))
+    short_name = Column(String(64))
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime)
+
+    array_metrics = relationship('ExptArrayMetric', back_populates='sat_meta')
+```
+
+```sh
+instrument_meta
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(256))
+    num_channels = Column(Integer)
+    scan_angle = Column(String(256), nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime) 
 
-    array_metric_type = relationship('ArrayMetricType', back_populates='sat_meta')
+    array_metric_type = relationship('ArrayMetricType', back_populates='instrument_meta')
 ```
 
 ## Request Dictionaries / YAML Formats
@@ -983,13 +999,43 @@ request_dict = {
             'name': 'example_sat_meta',
             'sat_id': 123456789,
             'sat_name': 'Example Sat Name',
-            'sensor': 'examplesensor',
-            'channel': '1',
-            'scan_angle':'90 degreees sectors fore- and aft-'
+            'short_name': 'esm_1',
         }
     }
 ```
-Each value can be null as necessary. A unique sat meta is considered the combination of sat_name, sat_id, sensor, channel, and scan_angle. 
+Each value can be null as necessary. A combination of sat_name, sat_id, and short_name is a unique sat meta. 
+
+### Instrument Meta Dictionaries
+Example dictionaries for 'instrument_meta' calls. 
+
+GET:
+```sh
+request_dict = {
+        'name': 'instrument_meta',
+        'method': 'GET',
+        'params' : {
+            'filters' : {
+                'name' : {
+                    'exact' : 'example_instrument'
+                }
+            }
+        }
+    }
+```
+
+PUT:
+```sh
+request_dict = {
+        'name': 'instrument_meta',
+        'method' : 'PUT',
+        'body' : {
+            'name': 'example_instrument',
+            'num_channels': 34,
+            'scan_angle': 'The example of scan angle'
+        }
+    }
+```
+Values which can be null: scan_angle and num_channels
 
 ### Array Metric Type Dictionaries
 Example dictionaries for 'array_metric_types' calls.
@@ -1004,8 +1050,8 @@ GET:
                 'name':{
                     'exact':'vertical_example_metric'
                 },
-                'sat_meta_name':{
-                    'exact': 'example_sat_meta'
+                'instrument_meta_name':{
+                    'exact':'example_instrument'
                 },
                 'stat_type':{
                     'exact':'example_stat'
@@ -1015,7 +1061,7 @@ GET:
         }
     }
 ```
-To search based on sat_meta values, add the sat_meta in front of the value to filter on. 
+To search based on instrument_meta use instrument_meta_name or innstrument_name. 
 
 PUT:
 ```sh
@@ -1034,15 +1080,11 @@ request_dict = {
             'array_index_values': [[10, 20, 30],[1000, 5000, 10000]],
             'array_dimensions': [3, 3],
             'description': json.dumps("example array metric type for testing purposes"),
-            'sat_meta_name': 'example_sat_meta',
-            'sat_id': 123456789,
-            'sat_name': 'Example Sat Name',
-            'sat_sensor':'examplesensor',
-            'sat_channel':'1'
+            'instrument_meta_name': 'example_instrument',
         }
     }
 ```
-The 'sat' values are only required when obs_platform is satellite to associate the appropriate sat_meta value to the type. The sat_meta value must be pre-registered before registering the array metric type. 
+The 'instrument_meta_name' is only required when obs_platform is satellite to associate the appropriate instrument_meta value to the type. The instrument_meta value must be pre-registered before registering the array metric type. 
 
 ### Experiment Array Metric Type Dictionaries
 Example dictionaries for 'expt_array_metrics' calls.
@@ -1096,8 +1138,8 @@ request_dict = {
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
             'array_metrics': [
-                ExptArrayMetricInputData('vertical_example_metric','global',[[1, 2, 3],[4, 5, 6],[7, 8, 9]], [[0, 1, 0],[1, 0, 1],[0, 0, 1]], True, '2015-12-02 06:00:00', None, None),
-                ExptArrayMetricInputData('vertical_example_metric2','global',[[111, 222, 333],[444, 555, 666],[777, 888, 999]], [[1, 1, 0],[1, 0, 1],[1, 0, 0]], True, '2015-12-02 18:00:00', 24, 12)
+                ExptArrayMetricInputData('vertical_example_metric','global',[[1, 2, 3],[4, 5, 6],[7, 8, 9]], True, '2015-12-02 06:00:00', None, None, 'example_sat_meta', None, None, None),
+                ExptArrayMetricInputData('vertical_example_metric2','global',[[111, 222, 333],[444, 555, 666],[777, 888, 999]], True, '2015-12-02 18:00:00', 24, 12, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1')
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
