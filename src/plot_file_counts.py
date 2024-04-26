@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-"""Copyright 2023 NOAA
+"""
+Copyright 2023 NOAA
 All rights reserved.
 
 Collection of methods to facilitate handling of score db requests
@@ -23,19 +24,19 @@ from file_counts_plot_attrs import plot_attrs
 from plot_innov_stats import PlotInnovStatsRequest
 
 # figure output directory
-WORK_DIR = os.path.join('/', 'home', 'Adam.Schneider', 'gsienkf', 'results')
+WORK_DIR = os.path.join('/', 'media', 'sfs_dev_darr', 'share', 'Adam.Schneider', 'plots')
 
 RequestData = namedtuple('RequestData', ['datetime_str', 'experiment',
                                          'metric_format_str', 'metric',
                                          'time_valid'],)
 plot_control_dict1 = {'date_range': {'datetime_str': '%Y-%m-%d %H:%M:%S',
-                                    'end': '1985-01-01 00:00:00',
+                                    'end': '1981-07-01 00:00:00',
                                     'start': '1979-01-01 00:00:00'},
                      'db_request_name': 'expt_file_counts',
                      'method': 'GET',
                      'experiments': [{'graph_color': 'black',
                                       'graph_label': 'Number of files',
-                                      'name': 'scout_runs_gsi3dvar',
+                                      'name': 'scout_runs_gsi3dvar_1979stream',
                                       'wallclock_start': '2023-12-15 17:30:10'}],
                      'fig_base_fn': 'files',
                      'stat_groups': [{'cycles': [0, 21600, 43200, 64800],
@@ -146,10 +147,11 @@ def get_experiment_file_counts(request_data):
                                     'exact':
                                         request_data.experiment['name']['exact']
                                 }
-                            }
+                            }  
                         }
                     }
     }
+                                    
     print(f'request_dict: {request_dict}')
 
     efcr = ExptFileCountRequest(request_dict)
@@ -338,7 +340,7 @@ class PlotFileCountRequest(PlotInnovStatsRequest):
 
 if __name__=='__main__':
     for i, plot_control_dict in enumerate([plot_control_dict1,
-                                           #plot_control_dict2,
+                                           plot_control_dict2,
                                            #plot_control_dict3,
                                            #plot_control_dict4,
                                            #plot_control_dict5,
