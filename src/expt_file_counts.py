@@ -250,10 +250,15 @@ def get_float_filter(filter_dict, cls, key, constructed_filter):
     return constructed_filter
 
 def get_experiments_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        print('No experiment filters provided')
+        return constructed_filter
+    
     if not isinstance(filter_dict, dict):
-        msg = f'Invalid type for filter, must be \'dict\', was ' \
-            f'type: {type(filter_dict)}'
-        raise TypeError(msg)
+        msg = f'Invalid type for experiment filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}. No experiment filters will be added.'
+        print(msg)
+        return constructed_filter
     
     if not isinstance(constructed_filter, dict):
         msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
@@ -275,6 +280,21 @@ def get_experiments_filter(filter_dict, constructed_filter):
     return constructed_filter
 
 def get_file_types_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        print('No file type filters provided')
+        return constructed_filter
+    
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for file type filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}. No file type filters will be added.'
+        print(msg)
+        return constructed_filter
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)   
+    
     constructed_filter = get_string_filter(
         filter_dict, ft, 'name', constructed_filter, 'file_type_name')
 
@@ -287,6 +307,21 @@ def get_file_types_filter(filter_dict, constructed_filter):
     return constructed_filter
 
 def get_storage_locations_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        print('No storage location filters provided')
+        return constructed_filter
+    
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for storage location filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}. No storage location filters will be added.'
+        print(msg)
+        return constructed_filter
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)   
+    
     constructed_filter = get_string_filter(
         filter_dict, sl, 'name', constructed_filter, 'storage_location_name')
 
