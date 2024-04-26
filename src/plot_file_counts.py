@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Copyright 2023 NOAA
+"""Copyright 2023 NOAA
 All rights reserved.
 
 Collection of methods to facilitate handling of score db requests
@@ -18,7 +17,6 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from matplotlib import pyplot as plt
-
 
 from expt_file_counts import ExptFileCountRequest
 from file_counts_plot_attrs import plot_attrs
@@ -139,13 +137,19 @@ def get_experiment_file_counts(request_data):
     time_valid_to = datetime.strftime(request_data.time_valid.end, 
                                       request_data.datetime_str)
     
-    request_dict = {'name' : 'expt_file_counts', 'method': 'GET',
-                    'params' : {'filters':
-                                   {'experiment': {'experiment_name': {
-                                           'exact': request_data.experiment['name']['exact']}},
-                                    'file_types': {'file_type_name': {'exact': 'example_type'}},
-                                    'storage_locations': {'storage_loc_name':
-                                                            {'exact': 's3_example_bucket'}}}}}
+    request_dict = {'name': 'expt_file_counts',
+                    'method': 'GET',
+                    'params': {
+                        'filters': {
+                            'experiment': {
+                                'experiment_name': {
+                                    'exact':
+                                        request_data.experiment['name']['exact']
+                                }
+                            }
+                        }
+                    }
+    }
     print(f'request_dict: {request_dict}')
 
     efcr = ExptFileCountRequest(request_dict)

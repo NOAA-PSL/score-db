@@ -19,6 +19,9 @@ from file_types import FileTypeRequest
 from storage_locations import StorageLocationRequest
 from expt_file_counts import ExptFileCountRequest
 from harvest_metrics import HarvestMetricsRequest
+from array_metric_types import ArrayMetricTypeRequest
+from sat_meta import SatMetaRequest
+from expt_array_metrics import ExptArrayMetricRequest
 
 NAMED_TUPLES_LIST = 'tuples_list'
 PANDAS_DATAFRAME = 'pandas_dataframe'
@@ -84,6 +87,21 @@ request_registry = {
     'harvest_metrics': RequestHandler(
         'Harvest and store metrics',
         HarvestMetricsRequest,
+        DbActionResponse
+    ),
+    'array_metric_types': RequestHandler(
+        'Add or get or update array metric types',
+        ArrayMetricTypeRequest,
+        DbActionResponse
+    ),
+    'sat_meta': RequestHandler(
+        'Add or get or update sat metadata',
+        SatMetaRequest,
+        DbActionResponse
+    ),
+    'expt_array_metrics': RequestHandler(
+        'Add or get experiment array metrics data',
+        ExptArrayMetricRequest,
         DbActionResponse
     )
 }

@@ -33,7 +33,8 @@ def test_run_atm_inc_log_harvester():
             'harvester_name': 'inc_logs',
             'filename': FILE_PATH_ATM_INC_LOGS,
             'statistic': ['mean'],
-            'variable': ['o3mr_inc']
+            'variable': ['o3mr_inc'],
+            'cycletime': '1995-01-01 00:00:00'
         }
     }
 
