@@ -146,47 +146,6 @@ def get_file_count_from_body(body):
     )
 
     return file_count
-    
-# def get_time_filter(filter_dict, cls, key, constructed_filter):
-#     if not isinstance(filter_dict, dict):
-#         msg = f'Invalid type for filters, must be \'dict\', was ' \
-#             f'type: {type(filter_dict)}'
-#         raise TypeError(msg)
-
-#     value = filter_dict.get(key)
-#     if value is None:
-#         print(f'No \'{key}\' filter detected')
-#         return constructed_filter
-
-#     exact_datetime = time_utils.get_time(value.get(db_utils.EXACT_DATETIME))
-
-#     if exact_datetime is not None:
-#         constructed_filter[key] = (
-#             getattr(cls, key) == exact_datetime
-#         )
-#         return constructed_filter
-
-#     from_datetime = time_utils.get_time(value.get(db_utils.FROM_DATETIME))
-#     to_datetime = time_utils.get_time(value.get(db_utils.TO_DATETIME))
-
-#     if from_datetime is not None and to_datetime is not None:
-#         if to_datetime < from_datetime:
-#             raise ValueError('\'from\' must be older than \'to\'')
-        
-#         constructed_filter[key] = and_(
-#             getattr(cls, key) >= from_datetime,
-#             getattr(cls, key) <= to_datetime
-#         )
-#     elif from_datetime is not None:
-#         constructed_filter[key] = (
-#             getattr(cls, key) >= from_datetime
-#         )
-#     elif to_datetime is not None:
-#         constructed_filter[key] = (
-#             getattr(cls, key) <= to_datetime
-#         )
-
-#     return constructed_filter
 
 def get_time_filter(filter_dict, cls, key, constructed_filter):
     if not isinstance(filter_dict, dict):
@@ -246,49 +205,6 @@ def validate_list_of_strings(values):
             raise TypeError(msg)
     
     return values
-
-# def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
-#     if not isinstance(filter_dict, dict):
-#         msg = f'Invalid type for filters, must be \'dict\', was ' \
-#             f'type: {type(filter_dict)}'
-#         raise TypeError(msg)
-
-#     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-#     string_flt = filter_dict.get(key)
-#     print(f'string_flt: {string_flt}')
-
-#     if string_flt is None:
-#         print(f'No \'{key}\' filter detected')
-#         return constructed_filter
-
-#     like_filter = string_flt.get('like')
-#     # prefer like search over exact match if both exist
-#     if like_filter is not None:
-#         constructed_filter[key_name] = (getattr(cls, key).like(like_filter))
-#         return constructed_filter
-
-#     exact_match_filter = validate_list_of_strings(string_flt.get('exact'))
-#     if exact_match_filter is not None:
-#         constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
-
-#     return constructed_filter
-
-# def get_float_filter(filter_dict, cls, key, constructed_filter):
-#     if not isinstance(filter_dict, dict):
-#         msg = f'Invalid type for filters, must be \'dict\', was ' \
-#             f'type: {type(filter_dict)}'
-#         raise TypeError(msg)
-
-#     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-#     float_flt = filter_dict.get(key)
-
-#     if float_flt is None:
-#         print(f'No \'{key}\' filter detected')
-#         return constructed_filter
-
-#     constructed_filter[key] = ( getattr(cls, key) == float_flt )
-    
-#     return constructed_filter
 
 def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     if not isinstance(filter_dict, dict):
