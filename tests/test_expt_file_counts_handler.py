@@ -60,7 +60,29 @@ def test_get_expt_file_counts_dict():
                         'exact': 's3_example_bucket',
                     },
                 },
+                'forecast_hour': 120
             }
+        }
+    }
+
+    efcr = ExptFileCountRequest(request_dict)
+    result = efcr.submit()
+    print(f'Expt File Counts GET results: {result}')
+    assert(result.success)
+    assert(result.details.get('record_count') > 0)
+
+def test_get_expt_file_counts_dict_only_count_filter():
+    request_dict = {
+        'name' : 'expt_file_counts',
+        'method': 'GET',
+        'params' : {
+            'filters': {
+                'count': 1230,
+                'folder_path': {
+                    'exact': 'noaa-example-score-db-bucket/reanalysis/2023/02/23/2023022306'
+                }
+            },
+            
         }
     }
 
