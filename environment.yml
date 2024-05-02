@@ -1,4 +1,4 @@
-name: score-db
+name: score-db-test-env
 channels:
   - conda-forge
 dependencies:
