@@ -287,7 +287,6 @@ class ArrayMetricType(Base):
     array_metrics = relationship('ExptArrayMetric', back_populates='array_metric_type')
     instrument_meta = relationship('InstrumentMeta', back_populates='array_metric_type')
 
-
 class SatMeta(Base):
     __tablename__ = SAT_META_TABLE
     __table_args__ = (

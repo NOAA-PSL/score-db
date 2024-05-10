@@ -456,7 +456,7 @@ def get_sat_meta_id_from_metric(metric):
         
     except Exception as err:
         msg = f'Problems encountered requesting sat meta data. err - {err}'
-        raise ExptArrayMetricsError(msg)
+        raise ExptArrayMetricsError(msg) from err
         
     try:
         sat_meta_id = records[sm.id.name].iat[0]
@@ -464,7 +464,7 @@ def get_sat_meta_id_from_metric(metric):
         error_msg = f'Problem finding sat meta id from record: {records} ' \
             f'- err: {err}'
         print(f'error_msg: {error_msg}')
-        raise ExptArrayMetricsError(error_msg) 
+        raise ExptArrayMetricsError(error_msg) from err
     return sat_meta_id
 
 @dataclass 
