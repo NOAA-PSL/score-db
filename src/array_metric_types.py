@@ -240,9 +240,9 @@ def get_instrument_meta_id(body):
 
     print(f'instrument_meta_request: {instrument_meta_request}')
 
-    imr = InstrumentMetaRequest(instrument_meta_request)
+    im_request = InstrumentMetaRequest(instrument_meta_request)
 
-    results = imr.submit()
+    results = im_request.submit()
     print(f'results: {results}')
 
     record_cnt = 0

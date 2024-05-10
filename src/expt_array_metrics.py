@@ -75,6 +75,7 @@ ExptArrayMetricsData = namedtuple(
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
+        'array_dimensions',
         'region_id',
         'region',
         'sat_meta_id',
@@ -224,9 +225,8 @@ def get_int_filter(filters, cls, key, constructed_filter):
 
     if int_flt is None:
         print(f'No \'{key}\' filter detected')
-        return constructed_filter
-
-    constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    else:
+        constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
     
     return constructed_filter
 
@@ -745,6 +745,7 @@ class ExptArrayMetricRequest:
                 array_coord_labels=metric.array_metric_type.array_coord_labels,
                 array_coord_units=metric.array_metric_type.array_coord_units,
                 array_index_values=metric.array_metric_type.array_index_values,
+                array_dimensions=metric.array_metric_type.array_dimensions,
                 region_id=metric.region.id,
                 region=metric.region.name,
                 sat_meta_id=sat_meta_id,
