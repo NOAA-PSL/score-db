@@ -21,6 +21,7 @@ import time_utils
 from time_utils import DateRange
 from score_hv.harvester_base import harvest
 from expt_metrics import ExptMetricInputData, ExptMetricRequest
+from expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
 
 @dataclass
 class HarvestMetricsRequest(object):
@@ -31,11 +32,15 @@ class HarvestMetricsRequest(object):
     expt_wallclock_start: str = field(default_factory=str, init=False) 
     datetime_str: str = field(default_factory=str, init=False)
     hv_translator: str = field(default_factory=str, init=False)
+    is_array: bool = field(default_factory=str, init=False)
 
     def __post_init__(self):
         self.body = self.request_dict.get('body')
         self.hv_config = self.request_dict.get('harvest_config')
         self.hv_translator = self.request_dict.get('hv_translator')
+        self.is_array = self.request_dict.get('is_array')
+        if self.is_array is None:
+            self.is_array = False
 
         self.expt_name = self.body.get('expt_name')
         self.expt_wallclock_start = self.body.get('expt_wallclock_start')
@@ -51,6 +56,13 @@ class HarvestMetricsRequest(object):
         )
 
     def submit(self):
+        if self.is_array:
+            return self.submit_array_metrics(self)
+        else:
+            return self.submit_single_metrics(self)
+
+    #function for harvesting and saving to expt metrics table
+    def submit_single_metrics(self):
         # get harvested data
         print(f'harvest config: {self.hv_config}')
         harvested_data = harvest(self.hv_config)
@@ -97,4 +109,57 @@ class HarvestMetricsRequest(object):
 
         emr = ExptMetricRequest(request_dict)
         result = emr.submit()
+        return result
+    
+    #function for harvesting and saving values to expt array metrics
+    def submit_array_metrics(self):
+        # get harvested data
+        print(f'harvest config: {self.hv_config}')
+        harvested_data = harvest(self.hv_config)
+
+        expt_array_metrics = []
+        print(f'harvested_data: type: {type(harvested_data)}')
+        for row in harvested_data:
+            data = ""
+            #Call appropriate translator if one is provided
+            if self.hv_translator != "":
+                try:
+                    translator = hvtr.translator_registry.get(self.hv_translator)
+                    data = translator.translate(row)
+                except Exception as err: 
+                    error_message = f'An error occurred when translating the data with translator input {self.hv_translator}. ' \
+                          f'Valid translators: {hvtr.valid_translators}. Error: {err}'
+                    return self.failed_request(error_message)
+            else:
+                data = row
+
+            item = ExptArrayMetricInputData(
+                data.name,
+                data.region_name,
+                data.value,
+                data.assimilated,
+                data.time_valid,
+                data.forecast_hour,
+                data.ensemble_member,
+                data.sat_meta_name, 
+                data.sat_id,
+                data.sat_name,
+                data.sat_short_name
+            )
+
+            expt_array_metrics.append(item)
+
+        request_dict = {
+            'name': 'expt_array_metrics',
+            'method': 'PUT',
+            'body': {
+                'expt_name': self.expt_name,
+                'expt_wallclock_start': self.expt_wallclock_start,
+                'array_metrics': expt_array_metrics,
+                'datestr_format': self.datetime_str
+            }
+        }
+
+        eamr = ExptArrayMetricRequest(request_dict)
+        result = eamr.submit()
         return result
