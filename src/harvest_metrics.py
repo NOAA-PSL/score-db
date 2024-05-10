@@ -57,9 +57,9 @@ class HarvestMetricsRequest(object):
 
     def submit(self):
         if self.is_array:
-            return self.submit_array_metrics(self)
+            return self.submit_array_metrics()
         else:
-            return self.submit_single_metrics(self)
+            return self.submit_single_metrics()
 
     #function for harvesting and saving to expt metrics table
     def submit_single_metrics(self):
