@@ -10,8 +10,9 @@ the db table models.
 from collections import namedtuple
 
 #data structure for what is stored in the database, corresponds to the db columns
+#corresponds to singular input metric values 
 MetricTableData = namedtuple(
-    'MetricData',
+    'MetricTableData',
     [
         'name',
         'region_name',
@@ -23,6 +24,24 @@ MetricTableData = namedtuple(
         'ensemble_member'
     ],
 )
+
+#corresponds to array structured metric values 
+ArrayMetricTableData = namedtuple(
+    'ArrayMetricTableData',
+    [
+        'name',
+        'region_name',
+        'value',
+        'assimilated',
+        'time_valid',
+        'forecast_hour',
+        'ensemble_member',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
+    ],
+) 
 
 def inc_logs_translator(harvested_data):
     """ Expected output from inc_logs harvester 

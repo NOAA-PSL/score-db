@@ -24,7 +24,9 @@ from score_table_models import ExptArrayMetric as ex_arr_mt
 from score_table_models import ArrayMetricType as amt
 from score_table_models import SatMeta as sm
 from score_table_models import Region as rgs
+from score_table_models import InstrumentMeta as im
 from experiments import ExperimentRequest
+from sat_meta import SatMetaRequest
 import regions as rg
 import array_metric_types as amts
 import time_utils
@@ -39,11 +41,14 @@ ExptArrayMetricInputData = namedtuple(
         'name',
         'region_name',
         'value',
-        'bias_correction',
         'assimilated',
         'time_valid',
         'forecast_hour',
-        'ensemble_member'
+        'ensemble_member',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
     ],
 ) 
 
@@ -52,7 +57,6 @@ ExptArrayMetricsData = namedtuple(
     [
         'id',
         'value',
-        'bias_correction',
         'assimilated',
         'time_valid',
         'forecast_hour',
@@ -65,13 +69,20 @@ ExptArrayMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
-        'metric_sat_meta_id',
         'metric_obs_platform',
+        'metric_instrument_meta_id',
+        'metric_instrument_name',
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
+        'array_dimensions',
         'region_id',
         'region',
+        'sat_meta_id',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
         'created_at'
     ],
 )
@@ -203,6 +214,22 @@ def get_boolean_filter(filter_dict, cls, key, constructed_filter):
     
     return constructed_filter
 
+def get_int_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    int_flt = filters.get(key)
+
+    if int_flt is None:
+        print(f'No \'{key}\' filter detected')
+    else:
+        constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    
+    return constructed_filter
+
 def get_experiments_filter(filter_dict, constructed_filter):
     if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filter, must be \'dict\', was ' \
@@ -254,7 +281,7 @@ def get_array_metric_types_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_string_filter(filter_dict, amt, 'stat_type', constructed_filter, 'stat_type')
     
-    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'sat_meta_name')
+    constructed_filter = get_string_filter(filter_dict, im, 'name', constructed_filter, 'instrument_meta_name')
 
     return constructed_filter   
 
@@ -284,6 +311,31 @@ def get_regions_filter(filter_dict, constructed_filter):
     constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
 
     return constructed_filter
+
+def get_sat_meta_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        return constructed_filter
+
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'name')
+
+    constructed_filter = get_int_filter(filter_dict, sm, 'sat_id', constructed_filter)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter, 'sat_name')
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter, 'short_name')
+
+    return constructed_filter
+
 
 def get_expt_record_id(body):
     expt_name = body.get('expt_name')
@@ -344,6 +396,76 @@ def get_expt_record_id(body):
         raise ExptArrayMetricsError(error_msg) 
         
     return experiment_id
+
+def get_sat_meta_id_from_metric(metric):
+    sat_meta_id = -1
+    try:    
+        sat_meta_name = metric.sat_meta_name
+        sat_id = metric.sat_id
+        sat_name = metric.sat_name
+        sat_short_name = metric.sat_short_name
+    except Exception as err:
+        print(f'Required sat meta input value not found: {err}')
+        return sat_meta_id
+    
+    if sat_meta_name is None and sat_id is None and sat_name is None and sat_short_name is None:
+        return sat_meta_id
+    
+    sat_meta_request = {
+        'name': 'sat_meta',
+        'method': db_utils.HTTP_GET,
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': sat_meta_name
+                },
+                'sat_name': {
+                    'exact': sat_name
+                },
+                'short_name': {
+                    'exact': sat_short_name
+                },
+                'sat_id': sat_id
+            },
+            'record_limit': 1
+        }
+    }
+
+    print(f'sat_meta_request: {sat_meta_request}')
+
+    smr = SatMetaRequest(sat_meta_request)
+
+    results = smr.submit()
+    print(f'results: {results}')
+
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            if records is None:
+                msg = 'Request for sat meta record did not return a record'
+                raise ExptArrayMetricsError(msg)
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting sat meta data.'
+            # create error return db_action_response
+            raise ExptArrayMetricsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for sat meta record did not return a record'
+            raise ExptArrayMetricsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting sat meta data. err - {err}'
+        raise ExptArrayMetricsError(msg) from err
+        
+    try:
+        sat_meta_id = records[sm.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding sat meta id from record: {records} ' \
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ExptArrayMetricsError(error_msg) from err
+    return sat_meta_id
 
 @dataclass 
 class ExptArrayMetricRequest:
@@ -429,6 +551,8 @@ class ExptArrayMetricRequest:
         
         constructed_filter = get_regions_filter(
             self.filters.get('regions'), constructed_filter)
+        
+        constructed_filter = get_sat_meta_filter(self.filters.get('sat_meta'), constructed_filter)
 
         constructed_filter = get_time_filter(
             self.filters, ex_arr_mt, 'time_valid', constructed_filter)
@@ -490,13 +614,15 @@ class ExptArrayMetricRequest:
         for row in metrics:
             
             value = row.value
+            sat_meta_id = get_sat_meta_id_from_metric(row)
+            sat_meta_input_id = sat_meta_id if sat_meta_id > 0 else None
             
             item = ex_arr_mt(
                 experiment_id=self.expt_id,
                 array_metric_type_id=amt_df_dict[row.name],
                 region_id=rg_df_dict[row.region_name],
+                sat_meta_id=sat_meta_input_id,
                 value=value,
-                bias_correction=row.bias_correction,
                 assimilated=row.assimilated,
                 time_valid=row.time_valid,
                 forecast_hour=row.forecast_hour,
@@ -532,7 +658,6 @@ class ExptArrayMetricRequest:
             #     msg += f'record.array_metric_type_id: {record.array_metric_type_id}, '
             #     msg += f'record.region_id: {record.region_id}, '
             #     msg += f'record.value: {record.value}, '
-            #     msg += f'record.bias_correction: {record.bias_correction}, '
             #     msg += f'record.assimilated: {record.assimilated}, '
             #     msg += f'record.time_valid: {record.time_valid}, '
             #     msg += f'record.forecast_hour: {record.forecast_hour}, '
@@ -563,9 +688,13 @@ class ExptArrayMetricRequest:
         ).join(
             exp, ex_arr_mt.experiment
         ).join(
-            amt, ex_arr_mt.array_metric_type
-        ).join(
             rgs, ex_arr_mt.region
+        ).outerjoin(
+            sm, ex_arr_mt.sat_meta
+        ).join(
+            amt, ex_arr_mt.array_metric_type
+        ).outerjoin(
+            im, amt.instrument_meta
         )
 
         q = self.construct_filters(q)
@@ -579,10 +708,25 @@ class ExptArrayMetricRequest:
 
         parsed_metrics = []
         for metric in array_metrics:
+            #handle potential nulls from outer joins
+            sat_meta_id=None
+            sat_meta_name=None
+            sat_id=None
+            sat_name=None
+            sat_short_name=None
+            metric_instrument_name=None
+            if metric.sat_meta is not None:
+                sat_meta_id=metric.sat_meta.id
+                sat_meta_name=metric.sat_meta.name
+                sat_id=metric.sat_meta.sat_id
+                sat_name=metric.sat_meta.sat_name
+                sat_short_name=metric.sat_meta.short_name
+            if metric.array_metric_type.instrument_meta is not None:
+                metric_instrument_name=metric.array_metric_type.instrument_meta.name
+
             record = ExptArrayMetricsData(
                 id=metric.id,
                 value=metric.value,
-                bias_correction=metric.bias_correction,
                 assimilated=metric.assimilated,
                 time_valid=metric.time_valid,
                 forecast_hour=metric.forecast_hour,
@@ -595,15 +739,23 @@ class ExptArrayMetricRequest:
                 metric_type=metric.array_metric_type.measurement_type,
                 metric_unit=metric.array_metric_type.measurement_units,
                 metric_stat_type=metric.array_metric_type.stat_type,
-                metric_sat_meta_id=metric.array_metric_type.sat_meta_id,
+                metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
+                metric_instrument_name=metric_instrument_name,
                 metric_obs_platform=metric.array_metric_type.obs_platform,
                 array_coord_labels=metric.array_metric_type.array_coord_labels,
                 array_coord_units=metric.array_metric_type.array_coord_units,
                 array_index_values=metric.array_metric_type.array_index_values,
+                array_dimensions=metric.array_metric_type.array_dimensions,
                 region_id=metric.region.id,
                 region=metric.region.name,
+                sat_meta_id=sat_meta_id,
+                sat_meta_name=sat_meta_name,
+                sat_id=sat_id,
+                sat_name=sat_name,
+                sat_short_name=sat_short_name,
                 created_at=metric.created_at
             )
+           
             parsed_metrics.append(record)
         
         try:

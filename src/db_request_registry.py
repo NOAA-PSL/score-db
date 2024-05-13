@@ -22,6 +22,7 @@ from harvest_metrics import HarvestMetricsRequest
 from array_metric_types import ArrayMetricTypeRequest
 from sat_meta import SatMetaRequest
 from expt_array_metrics import ExptArrayMetricRequest
+from instrument_meta import InstrumentMetaRequest
 
 NAMED_TUPLES_LIST = 'tuples_list'
 PANDAS_DATAFRAME = 'pandas_dataframe'
@@ -102,6 +103,11 @@ request_registry = {
     'expt_array_metrics': RequestHandler(
         'Add or get experiment array metrics data',
         ExptArrayMetricRequest,
+        DbActionResponse
+    ),
+    'instrument_meta': RequestHandler(
+        'Add or get or update instrument meta data',
+        InstrumentMetaRequest,
         DbActionResponse
     )
 }

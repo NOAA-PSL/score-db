@@ -9,7 +9,7 @@ Unit tests for sat_meta.py
 from sat_meta import SatMetaRequest
 
 
-def test_sat_meta_input_dict():
+def test_sat_meta_put_request():
     request_dict = {
         'name': 'sat_meta',
         'method' : 'PUT',
@@ -17,9 +17,7 @@ def test_sat_meta_input_dict():
             'name': 'example_sat_meta',
             'sat_id': 123456789,
             'sat_name': 'Example Sat Name',
-            'sensor': 'examplesensor',
-            'channel': '1',
-            'scan_angle':'90 degreees sectors fore- and aft-'
+            'short_name': 'esm_1',
         }
     }
 
