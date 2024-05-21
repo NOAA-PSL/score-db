@@ -19,7 +19,6 @@ from pandas import DataFrame
 
 from sqlalchemy.dialects.postgresql import insert
 
-
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
 
