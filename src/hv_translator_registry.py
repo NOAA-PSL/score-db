@@ -29,7 +29,7 @@ translator_registry = {
         harvest_translator.daily_bfg_translator
     ),
     'gsi_radiance_channel': TranslatorHandler(
-        'translate harvest values from gsi_satellite_radiance harvester'
+        'translate harvest values from gsi_satellite_radiance harvester',
         harvest_translator.gsi_satellite_radiance_translator
     ),
 }

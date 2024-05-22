@@ -1,0 +1,15 @@
+geoalchemy2
+netcdf4
+numpy
+pandas
+python-dotenv
+pyyaml
+scipy
+sqlalchemy
+
+[dev]
+flake8
+autopep8
+pylint
+pytest
+tox
