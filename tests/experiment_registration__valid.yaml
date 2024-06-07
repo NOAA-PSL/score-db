@@ -1,5 +1,5 @@
 ---
-name: experiment
+db_request_name: experiment
 method: PUT
 body:
   name: EXAMPLE_EXPERIMENT_C96L64.UFSRNR.GSI_3DVAR.012016
