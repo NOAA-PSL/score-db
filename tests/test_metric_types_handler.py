@@ -11,10 +11,10 @@ import pytest
 import json
 from collections import namedtuple
 
-import metric_types as mts
-from metric_types import MetricTypeData, MetricType, MetricTypeRequest
+import score_db.metric_types as mts
+from score_db.metric_types import MetricTypeData, MetricType, MetricTypeRequest
 
-from score_db_base import handle_request
+from score_db.score_db_base import handle_request
 
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
@@ -174,7 +174,7 @@ def test_parse_request_dict():
 
     for m_type in metric_types:
         request_dict = {
-            'name': 'metric_types',
+            'db_request_name': 'metric_types',
             'method': 'PUT',
             'body': {
                 'name': m_type.name,
@@ -194,7 +194,7 @@ def test_parse_request_dict():
 def test_send_get_request():
 
     request_dict = {
-        'name': 'metric_types',
+        'db_request_name': 'metric_types',
         'method': 'GET',
         'params': {
             'filters': {

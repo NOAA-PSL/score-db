@@ -6,12 +6,12 @@ Unit tests for expt_metrics.py
 
 """
 
-from expt_metrics import ExptMetricInputData, ExptMetricRequest
+from score_db.expt_metrics import ExptMetricInputData, ExptMetricRequest
 
 def test_put_exp_metrics_request_dict():
 
     request_dict = {
-        'name': 'expt_metrics',
+        'db_request_name': 'expt_metrics',
         'method': 'PUT',
         'body': {
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -32,7 +32,7 @@ def test_put_exp_metrics_request_dict():
 def test_send_get_request():
 
     request_dict = {
-        'name': 'expt_metrics',
+        'db_request_name': 'expt_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',

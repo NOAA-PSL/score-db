@@ -29,20 +29,20 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import joinedload
 
 
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import Experiment as exp
-from score_table_models import FileType as ft
-from score_table_models import StorageLocation as sl
-from score_table_models import ExptStoredFileCount as esfc 
-from experiments import Experiment, ExperimentData
-from experiments import ExperimentRequest
-from file_types import FileTypeRequest
-from storage_locations import StorageLocationRequest
-import regions as rg
-import metric_types as mt
-import time_utils
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import Experiment as exp
+from score_db.score_table_models import FileType as ft
+from score_db.score_table_models import StorageLocation as sl
+from score_db.score_table_models import ExptStoredFileCount as esfc 
+from score_db.experiments import Experiment, ExperimentData
+from score_db.experiments import ExperimentRequest
+from score_db.file_types import FileTypeRequest
+from score_db.storage_locations import StorageLocationRequest
+import score_db.regions as rg
+import score_db.metric_types as mt
+from score_db import time_utils
+from score_db import db_utils
 
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)

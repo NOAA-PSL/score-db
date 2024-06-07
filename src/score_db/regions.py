@@ -19,10 +19,10 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import Region as rg
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import Region as rg
+from score_db import db_utils
 
 from pandas import DataFrame
 from sqlalchemy.dialects.postgresql import insert

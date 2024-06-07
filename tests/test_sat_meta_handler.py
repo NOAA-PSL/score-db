@@ -6,12 +6,12 @@ Unit tests for sat_meta.py
 
 """
 
-from sat_meta import SatMetaRequest
+from score_db.sat_meta import SatMetaRequest
 
 
 def test_sat_meta_put_request():
     request_dict = {
-        'name': 'sat_meta',
+        'db_request_name': 'sat_meta',
         'method' : 'PUT',
         'body' :{
             'name': 'example_sat_meta',
@@ -28,7 +28,7 @@ def test_sat_meta_put_request():
 
 def test_sat_meta_get_request():
     request_dict = {
-        'name': 'sat_meta',
+        'db_request_name': 'sat_meta',
         'method': 'GET',
         'params' : {
             'filters': {

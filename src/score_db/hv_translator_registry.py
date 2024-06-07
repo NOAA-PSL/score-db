@@ -9,7 +9,7 @@ translator type
 """
 
 from collections import namedtuple
-import harvest_translator
+from score_db import harvest_translator
 
 TranslatorHandler = namedtuple(
     'TranslatorHandler',

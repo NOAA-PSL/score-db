@@ -18,9 +18,9 @@ import pandas as pd
 from pandas import DataFrame
 from matplotlib import pyplot as plt
 
-from expt_file_counts import ExptFileCountRequest
-from file_counts_plot_attrs import plot_attrs
-from plot_innov_stats import PlotInnovStatsRequest
+from score_db.expt_file_counts import ExptFileCountRequest
+from score_db.file_counts_plot_attrs import plot_attrs
+from score_db.plot_innov_stats import PlotInnovStatsRequest
 
 # figure output directory
 WORK_DIR = os.path.join('/', 'contrib', 'shared', 'replay', 'results')

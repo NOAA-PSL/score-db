@@ -6,11 +6,11 @@ Unit tests for instrument_meta.py
 
 """
 
-from instrument_meta import InstrumentMetaRequest
+from score_db.instrument_meta import InstrumentMetaRequest
 
 def test_instrument_meta_put_request():
     request_dict = {
-        'name': 'instrument_meta',
+        'db_request_name': 'instrument_meta',
         'method' : 'PUT',
         'body' : {
             'name': 'example_instrument',
@@ -26,7 +26,7 @@ def test_instrument_meta_put_request():
 
 def test_instrument_meta_get_request():
     request_dict = {
-        'name': 'instrument_meta',
+        'db_request_name': 'instrument_meta',
         'method': 'GET',
         'params' : {
             'filters' : {

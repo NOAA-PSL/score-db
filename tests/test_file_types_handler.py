@@ -11,12 +11,12 @@ import pytest
 import json
 from collections import namedtuple
 
-from file_types import FileTypeRequest
+from score_db.file_types import FileTypeRequest
 
 
 def test_file_type_input_dict():
     request_dict = {
-        'name': 'file_types',
+        'db_request_name': 'file_types',
         'method' : 'PUT',
         'body' :{
             'name': 'example_type',
@@ -33,7 +33,7 @@ def test_file_type_input_dict():
 
 def test_file_type_get_request():
     request_dict = {
-        'name': 'file_types',
+        'db_request_name': 'file_types',
         'method': 'GET',
         'params' : {
             'filters': {

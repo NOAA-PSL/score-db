@@ -6,12 +6,12 @@ Unit tests for storage_locations.py
 
 """
 import pytest 
-from storage_locations import StorageLocationRequest
+from score_db.storage_locations import StorageLocationRequest
 
 
 def test_storage_location_input_dict():
     request_dict = {
-        'name': 'storage_locations',
+        'db_request_name': 'storage_locations',
         'method': 'PUT',
         'body': {
             'name': 's3_example_bucket',
@@ -29,7 +29,7 @@ def test_storage_location_input_dict():
 
 def test_storage_location_get_request():
     request_dict = {
-        'name': 'storage_locations',
+        'db_request_name': 'storage_locations',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',

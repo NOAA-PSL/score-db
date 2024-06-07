@@ -7,11 +7,11 @@ Unit tests for array_metric_types.py
 """
 import json
 import numpy as np 
-from array_metric_types import ArrayMetricTypeRequest
+from score_db.array_metric_types import ArrayMetricTypeRequest
 
 def test_put_array_metric_type_with_instrument():
     request_dict = {
-        'name': 'array_metric_types',
+        'db_request_name': 'array_metric_types',
         'method': 'PUT',
         'body': {
             'name': 'vertical_example_metric',
@@ -36,7 +36,7 @@ def test_put_array_metric_type_with_instrument():
 
 def test_get_array_metric_type_with_instrument():
     request_dict = {
-        'name':'array_metric_types',
+        'db_request_name':'array_metric_types',
         'method':'GET',
         'params':{
             'filters':{
@@ -62,7 +62,7 @@ def test_get_array_metric_type_with_instrument():
 
 def test_put_array_metric_type_no_instrument():
     request_dict = {
-        'name': 'array_metric_types',
+        'db_request_name': 'array_metric_types',
         'method': 'PUT',
         'body': {
             'name': 'vertical_example_metric2',
@@ -86,7 +86,7 @@ def test_put_array_metric_type_no_instrument():
 
 def test_get_array_metric_type_no_instrument():
     request_dict = {
-        'name':'array_metric_types',
+        'db_request_name':'array_metric_types',
         'method':'GET',
         'params':{
             'filters':{

@@ -8,10 +8,10 @@ Collection of methods to faciliate interactions with the sat meta table.
 from collections import namedtuple
 from dataclasses import dataclass, field
 from datetime import datetime
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import SatMeta as sm 
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import SatMeta as sm 
+from score_db import db_utils
 
 import numpy as np
 import psycopg2
