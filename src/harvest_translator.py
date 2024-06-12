@@ -95,12 +95,13 @@ def daily_bfg_translator(harvested_data):
     )        
     
     return result
-
+   
 def gsi_satellite_radiance_translator(harvested_data):
     """Expected output from gsi_satellite_radiance harvester
     gsi_satellite_radiance_harvested_data = namedtuple(
         'SatinfoStat', [
             'datetime',
+            'ensemble_member',
             'iteration',
             'observation_type', # radiance observation type (e.g., hirs2_tirosn)
             'series_numbers', # series numbers of the channels in satinfo file
@@ -111,9 +112,11 @@ def gsi_satellite_radiance_translator(harvested_data):
         ]
     )
     """
+    instrument = harvested_data.observation_type.split('_')[0]
+    sat_short_name = harvested_data.observation_type.split('_')[1]
     result = ArrayMetricTableData(
-        harvested_data.observation_type + "_" + harvested_data.statistic +
-        "_GSIstage_" + harvested_data.iteration,
+        instrument + "_" + harvested_data.statistic +
+        "_GSIstage_" + str(harvested_data.iteration),
         'global',
         harvested_data.values_by_channel,
         None,
@@ -123,5 +126,7 @@ def gsi_satellite_radiance_translator(harvested_data):
         None,
         None,
         None,
-        None,
+        sat_short_name,
     )
+    
+    return result
