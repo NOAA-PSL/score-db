@@ -36,12 +36,15 @@ $ pip install . # default installation into active environment
 4. Depending on your use case, you can install score-db using one of three methods using 
 [pip](https://pip.pypa.io/en/stable/),
 
-`$ pip install . # default installation into active environment`
-
-`$ pip install -e . # editable installation into active enviroment, useful for development`
-
-`$ pip install -t [TARGET_DIR] --upgrade . # target installation into TARGET_DIR, useful for deploying for cylc workflows (see https://cylc.github.io/cylc-doc/stable/html/tutorial/runtime/introduction.html#id3)`
-
+```sh
+$ pip install . # default installation into active environment`
+```
+```sh
+$ pip install -e . # editable installation into active enviroment, useful for development`
+```
+```sh
+$ pip install -t [TARGET_DIR] --upgrade . # target installation into TARGET_DIR, useful for deploying for cylc workflows (see https://cylc.github.io/cylc-doc/stable/html/tutorial/runtime/introduction.html#id3)`
+```
 5. Configure the PostgreSQL credentials and settings for the score-db by
 creating a `.env` file and by inserting the text shown below (note: this
 text is taken straight from the file `.env_example`).  You will need to 
