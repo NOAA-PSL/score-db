@@ -61,12 +61,6 @@ SCORE_POSTGRESQL_DB_ENDPOINT = 'psl-score-db.cmpwyouptct1.us-east-2.rds.amazonaw
 SCORE_POSTGRESQL_DB_PORT = 5432
 ```
 
-Verify the installation by running the unit test suite. There are no expected test failures.
-
-```sh
-$ pytest tests
-```
-
 # Using the APIs to Interact with score-db
 Each of the APIs is structured in a similar way and are meant to be
 accessible via either a direct library call or via a command line call
