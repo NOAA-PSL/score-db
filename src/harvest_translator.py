@@ -114,15 +114,21 @@ def gsi_satellite_radiance_translator(harvested_data):
     """
     instrument = harvested_data.observation_type.split('_')[0]
     sat_short_name = harvested_data.observation_type.split('_')[1]
+
+    if harvested_data.ensemble_member == 'control':
+        ensemble_member = None
+    else:
+        ensemble_member = int(harvested_data.ensemble_member)
+
     result = ArrayMetricTableData(
         instrument + "_" + harvested_data.statistic +
-        "_GSIstage_" + str(harvested_data.iteration),
+        "_GSIstage_" + str(harvested_data.iteration) + '_test2',
         'global',
         harvested_data.values_by_channel,
         None,
         harvested_data.datetime,
         None,
-        harvested_data.ensemble_member,
+        ensemble_member,
         None,
         None,
         None,

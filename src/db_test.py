@@ -5,6 +5,7 @@ reanalysis experiment metrics database
 """
 
 import json
+from datetime import datetime
 
 import numpy as np
 
@@ -37,6 +38,100 @@ def get_request_dict2(db_request_name):
         }
     }
     return request_dict
+
+def get_experiments(experiment_names=list()):
+    experiment_data = list()
+    for experiment in experiment_names:
+        request_dict = {
+         'db_request_name': 'experiment',
+         'method': 'GET',
+         'params': {
+            'filters': {
+
+                #'cycle_start': {
+                #    'from': '2015-01-01 00:00:00',
+                #    'to': '2018-01-01 00:00:00'
+                #},
+                #'cycle_stop': {
+                #    'from': '2015-01-01 00:00:00',
+                #    'to': '2018-01-01 00:00:00'
+                #},
+                #'owner_id': {
+                #    'exact': 'first.last@noaa.gov'
+                #},
+                'name': {
+                    'exact': experiment
+                },
+                #'platform': {
+                #    'exact': 'pw_awv1'
+                #},
+                #'wallclock_start': {
+                #    'from': '2022-01-01 00:00:00',
+                #    'to': '2022-07-01 00:00:00'
+                #},
+
+            },
+            #'ordering': [
+            #    {'name': 'group_id', 'order_by': 'desc'},
+            #    {'name': 'created_at', 'order_by': 'desc'}
+            #],
+            #'record_limit': 4
+          }
+        }
+        experiment_data.append(score_db_base.handle_request(request_dict))
+    if len(experiment_names)==0:
+        experiment_data.append(score_db_base.handle_request(
+                                              {'db_request_name': 'experiment',
+                                               'method': 'GET'}))
+    return experiment_data
+
+def put_new_experiment(name, cycle_start='1979010100', cycle_stop='2025010100',
+                       owner_id='Adam.Schneider', group_id='gsienkf',
+                       experiment_type='atm_only_scout_v1',
+                       platform = "pw_awv2",
+                       wall_clock_start='2023-12-15 17:30:10',
+                       wall_clock_end='2025-01-01 00:00:00',
+                       description=None):
+ 
+    """ put experiment meta data into database
+
+    cycle_start = 'YYYYmmddHH'
+    cycle_stop = 'YYYYmmddHH'
+
+    wall_clock_start = 'YYYY-mm-dd HH:MM:SS'
+    wall_clock_end = 'YYYY-mm-dd HH:MM:SS'
+    """
+    datetime_start = datetime.strptime(cycle_start,'%Y%m%d%H')
+    datetime_stop = datetime.strptime(cycle_stop, '%Y%m%d%H')
+
+    datetime_wall_clock_start = datetime.strptime(wall_clock_start, '%Y-%m-%d %H:%M:%S')
+    datetime_wall_clock_end = datetime.strptime(wall_clock_end, '%Y-%m-%d %H:%M:%S')
+    
+    if description != None:
+        json_description = json.dumps({"experiment configuration": description})
+    else:
+        json_description = json.dumps({"experiment configuration": experiment_type})
+    
+    datestr_format = '%Y-%m-%d %H:%M:%S'
+    request_dict = {
+        'db_request_name': 'experiment',
+        'method': 'PUT',
+        'body': {
+            'name': name,
+            'datestr_format': datestr_format,
+            'cycle_start': datetime_start.strftime(datestr_format),
+            'cycle_stop': datetime_stop.strftime(datestr_format),
+            'owner_id': owner_id,
+            'group_id': group_id,
+            'experiment_type': experiment_type,
+            'platform': platform,
+            'wallclock_start': datetime_wall_clock_start.strftime(datestr_format),
+            'wallclock_end': datetime_wall_clock_end.strftime(datestr_format),
+            'description': json_description
+        }
+    }
+    
+    return score_db_base.handle_request(request_dict)
 
 def put_array_metric_type(name, measurement_type,
                           coordinate_labels,
@@ -73,6 +168,10 @@ def register_instrument_meta(instrument_name, num_channels, scan_angle=None):
     }
     return score_db_base.handle_request(request_dict)
 
+def get_instrument_meta():
+    request_dict = {'db_request_name': 'instrument_meta', 'method': 'GET'}
+    return score_db_base.handle_request(request_dict)
+
 def register_sat_meta(sat_name):
     request_dict = {'db_request_name': 'sat_meta', 'method': 'PUT',
         'body': {'sat_name': sat_name,
@@ -104,7 +203,7 @@ def put_these_data2():
     for instrument, channels in my_instruments.items():
         for stat in my_stats:
             for gsi_stage in its:
-                name = instrument + "_" + stat + "_GSIstage_" + str(gsi_stage)
+                name = instrument + "_" + stat + "_GSIstage_" + str(gsi_stage) + '_test2'
                 put_array_metric_type(name, 'brightness temperature',
                           ['channel'], channels,
                           ['number'],
