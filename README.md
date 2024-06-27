@@ -18,41 +18,34 @@ $ git clone https://github.com/noaa-psl/score-db.git
 $ git clone https://github.com/noaa-psl/score-hv.git
 ```
 
-2. Install or setup the UFS-RNR anaconda3 python environment and update it. 
-If the UFS-RNR anaconda python environment is not already available, install
-it now using the instructions found in the [UFS-RNR-stack](https://github.com/HenryWinterbottom-NOAA/UFS-RNR-stack.git) repo.  An example of the actual
-installation script can be found at [scripts/build.UFS-RNR-stack.RDHPCS-Hera.anaconda3.sh](https://github.com/HenryWinterbottom-NOAA/UFS-RNR-stack/blob/0b0fd767928ebc56be0c1992b141015d9e3ff7a4/scripts/build.UFS-RNR-stack.RDHPCS-Hera.anaconda3.sh).
-If you are installing this anaconda module at a different location than what
-is configured in the above script, you will need to make modifications such
-that the install location matches your desired location.  You will also need to
-specify aws credentials for PSL's private s3 bucket.
-3. Update the anaconda environment (follow anaconda update directions found [here](https://docs.anaconda.com/anaconda/install/update-version/) or use
-the example shown below).  Note: if you do not specify the anaconda environment to
-update, the `conda update --all` command will update the current environment. The
-`--all` indicates that you want to update all packages.  In order to specify a
-particular environment, use the command `conda update -n myenv --all`.
+2. For testing and development, we recommend creating a new python environment 
+(e.g., using [mamba](https://mamba.readthedocs.io/en/latest/index.html) as shown below or other options such as conda). To 
+install the required dependencies into a new environment using the micromamba 
+command-line interface, run the following after installing mamba/micromamba:
 
 ```sh
-$ conda update conda
-$ conda update --all
+$ micromamba create -f environment.yml; micromamba activate score-db-default-env
 ```
 
-4. Load the anaconda3 environment
-```sh
-$ module purge
-$ module use -a /contrib/home/builder/UFS-RNR-stack/modules
-$ module load anaconda3
-```
-5. Make the python interpreter aware of where the score-db and score-hv
-source code can be found.
+3. Install score-hv using [pip](https://pip.pypa.io/en/stable/). From the score-hv directory, run the following:
 
 ```sh
-$ export SCORE_DB_HOME_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-$ export PYTHONPATH=$SCORE_DB_HOME_DIR/src
-$ export PYTHONPATH=$PYTHONPATH:[absolute or relative path to score-hv]/src
+$ pip install . # default installation into active environment
 ```
 
-6. Configure the PostgreSQL credentials and settings for the score-db by
+4. Depending on your use case, you can install score-db using one of three methods using 
+[pip](https://pip.pypa.io/en/stable/),
+
+```sh
+$ pip install . # default installation into active environment`
+```
+```sh
+$ pip install -e . # editable installation into active enviroment, useful for development`
+```
+```sh
+$ pip install -t [TARGET_DIR] --upgrade . # target installation into TARGET_DIR, useful for deploying for cylc workflows (see https://cylc.github.io/cylc-doc/stable/html/tutorial/runtime/introduction.html#id3)`
+```
+5. Configure the PostgreSQL credentials and settings for the score-db by
 creating a `.env` file and by inserting the text shown below (note: this
 text is taken straight from the file `.env_example`).  You will need to 
 acquire the database password from the administrator (Sergey Frolov).
