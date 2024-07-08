@@ -122,7 +122,7 @@ def gsi_satellite_radiance_translator(harvested_data):
 
     result = ArrayMetricTableData(
         instrument + "_" + harvested_data.statistic +
-        "_GSIstage_" + str(harvested_data.iteration) + '_test2',
+        "_GSIstage_" + str(harvested_data.iteration),
         'global',
         harvested_data.values_by_channel,
         None,
