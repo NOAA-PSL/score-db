@@ -65,6 +65,7 @@ ExptArrayMetricsData = namedtuple(
         'expt_name',
         'wallclock_start',
         'metric_id',
+        'metric_name',
         'metric_long_name',
         'metric_type',
         'metric_unit',
@@ -72,6 +73,7 @@ ExptArrayMetricsData = namedtuple(
         'metric_obs_platform',
         'metric_instrument_meta_id',
         'metric_instrument_name',
+        'metric_instrument_num_channels',
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
@@ -715,6 +717,7 @@ class ExptArrayMetricRequest:
             sat_name=None
             sat_short_name=None
             metric_instrument_name=None
+            metric_instrument_num_channels=None
             if metric.sat_meta is not None:
                 sat_meta_id=metric.sat_meta.id
                 sat_meta_name=metric.sat_meta.name
@@ -723,6 +726,7 @@ class ExptArrayMetricRequest:
                 sat_short_name=metric.sat_meta.short_name
             if metric.array_metric_type.instrument_meta is not None:
                 metric_instrument_name=metric.array_metric_type.instrument_meta.name
+                metric_instrument_num_channels=metric.array_metric_type.instrument_meta.num_channels
 
             record = ExptArrayMetricsData(
                 id=metric.id,
@@ -735,12 +739,14 @@ class ExptArrayMetricRequest:
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
                 metric_id=metric.array_metric_type.id,
+                metric_name=metric.array_metric_type.name,
                 metric_long_name=metric.array_metric_type.long_name,
                 metric_type=metric.array_metric_type.measurement_type,
                 metric_unit=metric.array_metric_type.measurement_units,
                 metric_stat_type=metric.array_metric_type.stat_type,
                 metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
                 metric_instrument_name=metric_instrument_name,
+                metric_instrument_num_channels=metric_instrument_num_channels,
                 metric_obs_platform=metric.array_metric_type.obs_platform,
                 array_coord_labels=metric.array_metric_type.array_coord_labels,
                 array_coord_units=metric.array_metric_type.array_coord_units,
