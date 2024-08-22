@@ -8,9 +8,9 @@ Unit tests for io_utils
 import os
 import pathlib
 
-from harvest_metrics import HarvestMetricsRequest
+from score_db.harvest_metrics import HarvestMetricsRequest
 
-from score_db_base import handle_request
+from score_db.score_db_base import handle_request
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
 DATA_DIR = 'experiment-data'

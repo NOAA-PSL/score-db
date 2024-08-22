@@ -9,13 +9,13 @@ import os
 import pathlib
 import pytest
 
-import score_table_models as scr_models
-from score_table_models import Region as regions_table
-import regions as rgs
-from regions import RegionData, Region, RegionRequest
-import db_utils
+import score_db.score_table_models as scr_models
+from score_db.score_table_models import Region as regions_table
+import score_db.regions as rgs
+from score_db.regions import RegionData, Region, RegionRequest
+from score_db import db_utils
 
-from score_db_base import handle_request
+from score_db.score_db_base import handle_request
 
 #test regions
 EQUATORIAL = {'name': 'equatorial', 'min_lat': -5.0, 'max_lat': 5.0, 'east_lon': 0.0, 'west_lon': 360.0}
@@ -108,7 +108,7 @@ def test_validate_body():
 
 def test_initialize_region_request_prep():
     request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': 'PUT',
         'body': {
             'regions': [
@@ -130,7 +130,7 @@ def test_initialize_region_request_prep():
 
 def test_request_put_regions():
     request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': db_utils.HTTP_PUT,
         'body': {
             'regions': [
@@ -150,7 +150,7 @@ def test_request_put_regions():
 
 def test_request_get_specific_regions_by_name():
     request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'by_name'},
         'body': {
@@ -169,7 +169,7 @@ def test_request_get_specific_regions_by_name():
 
 def test_request_get_specific_regions_by_region_data():
     request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'by_data', 'filters': {'east_lon': 0.0},},
     }
@@ -180,7 +180,7 @@ def test_request_get_specific_regions_by_region_data():
 
 def test_request_all_regions():
     request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': db_utils.HTTP_GET,
         'params': {'filter_type': 'none'},
         'body': {

@@ -11,11 +11,11 @@ import pytest
 import json
 
 
-from expt_file_counts import ExptFileCountRequest
+from score_db.expt_file_counts import ExptFileCountRequest
 
 def test_put_expt_file_counts_request_dict():
     request_dict = {
-        'name': 'expt_file_counts',
+        'db_request_name': 'expt_file_counts',
         'method': 'PUT',
         'body': {
             'experiment_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -41,7 +41,7 @@ def test_put_expt_file_counts_request_dict():
 
 def test_get_expt_file_counts_dict():
     request_dict = {
-        'name' : 'expt_file_counts',
+        'db_request_name' : 'expt_file_counts',
         'method': 'GET',
         'params' : {
             'filters': {
@@ -73,7 +73,7 @@ def test_get_expt_file_counts_dict():
 
 def test_get_expt_file_counts_dict_only_count_filter():
     request_dict = {
-        'name' : 'expt_file_counts',
+        'db_request_name' : 'expt_file_counts',
         'method': 'GET',
         'params' : {
             'filters': {

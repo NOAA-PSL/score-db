@@ -11,7 +11,7 @@ import pytest
 import json
 from collections import namedtuple
 
-import db_utils
+from score_db import db_utils
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
 

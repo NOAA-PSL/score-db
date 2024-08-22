@@ -12,10 +12,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 import pprint
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import MetricType as mt
-import time_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import MetricType as mt
+from score_db import time_utils
 
 from pandas import DataFrame
 import sqlalchemy as db

@@ -7,9 +7,9 @@ Collection of methods to facilitate handling of score db requests
 """
 import argparse
 
-from yaml_utils import YamlLoader
-import db_request_registry as dbrr
-import file_utils
+from score_db.yaml_utils import YamlLoader
+import score_db.db_request_registry as dbrr
+from score_db import file_utils
 
 def handle_request(request_info):
     """

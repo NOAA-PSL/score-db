@@ -2,68 +2,71 @@
 Copyright NOAA 2024.
 All rights reserved.
 
-Collection of methods to faciliate interactions with the instrument meta table.
+Collection of methods to faciliate interactions with the sat meta table.
 """
 
 from collections import namedtuple
 from dataclasses import dataclass, field
 from datetime import datetime
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import InstrumentMeta as im
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import SatMeta as sm 
+from score_db import db_utils
 
 import numpy as np
 import psycopg2
 from pandas import DataFrame
-
 from sqlalchemy.dialects.postgresql import insert
 
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)
 
-InstrumentMetaData = namedtuple(
-    'InstrumentMetaData',
+SatMetaData = namedtuple(
+    'SatMetaData',
     [
         'name',
-        'num_channels',
-        'scan_angle',
+        'sat_id',
+        'sat_name',
+        'short_name',
     ],
 )
 
 @dataclass
-class InstrumentMeta:
-    '''instrument meta data object'''
+class SatMeta:
+    '''sat meta data object'''
     name: str
-    num_channels: int
-    scan_angle: str
-    instrument_meta_data: InstrumentMetaData = field(init=False)
+    sat_id: int
+    sat_name: str
+    short_name: str
+    sat_meta_data: SatMetaData = field(init=False)
 
     def __post_init__(self):
-        self.instrument_meta_data = InstrumentMetaData(
+        self.sat_meta_data = SatMetaData(
             self.name,
-            self.num_channels,
-            self.scan_angle
+            self.sat_id,
+            self.sat_name,
+            self.short_name
         )
-    
+
     def __repr__(self):
-        return f'instrument_meta_data: {self.instrument_meta_data}'
+        return f'sat_meta_data: {self.sat_meta_data}'
     
-    def get_instrument_meta_data(self):
-        return self.instrument_meta_data
-    
-def get_instrument_meta_from_body(body):
+    def get_sat_meta_data(self):
+        return self.sat_meta_data
+
+def get_sat_meta_from_body(body):
     if not isinstance(body, dict):
         msg = 'The \'body\' key must be a type dict, was ' \
             f'{type(body)}'
         raise TypeError(msg)
     
-    instrument_meta = InstrumentMeta(
+    sat_meta = SatMeta(
         name=body.get('name'),
-        num_channels=body.get('num_channels'),
-        scan_angle=body.get('scan_angle')
+        sat_id=body.get('sat_id'),
+        sat_name=body.get('sat_name'),
+        short_name=body.get('short_name')
     )
-    return instrument_meta
+    return sat_meta
 
 def get_string_filter(filters, cls, key, constructed_filter):
     if not isinstance(filters, dict):
@@ -110,17 +113,18 @@ def get_int_filter(filters, cls, key, constructed_filter):
 def construct_filters(filters):
     constructed_filter = {}
 
-    constructed_filter = get_string_filter(filters, im, 'name', constructed_filter)
-    
-    constructed_filter = get_int_filter(filters, im, 'num_channels', constructed_filter)
+    constructed_filter = get_string_filter(filters, sm, 'name', constructed_filter)
 
-    constructed_filter = get_string_filter(filters, im, 'scan_angle', constructed_filter)
+    constructed_filter = get_int_filter(filters, sm, 'sat_id', constructed_filter)
+
+    constructed_filter = get_string_filter(filters, sm, 'sat_name', constructed_filter)
+
+    constructed_filter = get_string_filter(filters, sm, 'short_name', constructed_filter)
 
     return constructed_filter
 
-
 @dataclass
-class InstrumentMetaRequest:
+class SatMetaRequest:
     request_dict: dict
     method: str = field(default_factory=str, init=False)
     params: dict = field(default_factory=dict, init=False)
@@ -128,7 +132,7 @@ class InstrumentMetaRequest:
     ordering: list = field(default_factory=list, init=False)
     record_limit: int = field(default_factory=int, init=False)
     body: dict = field(default_factory=dict, init=False)
-    instrument_meta: InstrumentMeta = field(init=False)
+    sat_meta: SatMeta = field(init=False)
     response: dict = field(default_factory=dict, init=False)
 
     def __post_init__(self):
@@ -140,7 +144,7 @@ class InstrumentMetaRequest:
         self.record_limit = None
 
         if self.method == db_utils.HTTP_PUT:
-            self.instrument_meta = get_instrument_meta_from_body(self.body)
+            self.sat_meta = get_sat_meta_from_body(self.body)
         else:
             if isinstance(self.params, dict):
                 self.filters = construct_filters(self.params.get('filters'))
@@ -159,47 +163,47 @@ class InstrumentMetaRequest:
         return DbActionResponse(
             request=self.request_dict,
             success=False,
-            message='Failed instrument meta request',
+            message='Failed sat meta request',
             details=None, 
             errors=error_msg
         )
 
     def submit(self):
         if self.method == db_utils.HTTP_GET:
-            return self.get_instrument_metas()
+            return self.get_sat_metas()
         elif self.method == db_utils.HTTP_PUT:
             try:
-                return self.put_instrument_meta()
+                return self.put_sat_meta()
             except Exception as err:
-                error_msg = 'Failed to insert instrument meta record -'\
+                error_msg = 'Failed to insert sat meta record -'\
                     f' err: {err}'
-                print(f'Submit PUT instrument meta error: {error_msg}')
+                print(f'Submit PUT sat meta error: {error_msg}')
                 return self.failed_request(error_msg)
-
-    def put_instrument_meta(self):
+            
+    def put_sat_meta(self):
         session = stm.get_session()
 
-        insert_stmt = insert(im).values(
-            name = self.instrument_meta.name,
-            num_channels = self.instrument_meta.num_channels,
-            scan_angle = self.instrument_meta.scan_angle,
+        insert_stmt = insert(sm).values(
+            name = self.sat_meta.name,
+            sat_id = self.sat_meta.sat_id,
+            sat_name = self.sat_meta.sat_name,
+            short_name = self.sat_meta.short_name,
             created_at = datetime.utcnow(),
             updated_at = None
-        ).returning(im)
+        ).returning(sm)
         print(f'insert stmt: {insert_stmt}')
 
         time_now = datetime.utcnow()
 
         do_update_stmt = insert_stmt.on_conflict_do_update(
-            constraint='unique_instrument_meta',
+            constraint='unique_sat_meta',
             set_=dict(
-                num_channels = self.instrument_meta.num_channels,
-                scan_angle = self.instrument_meta.scan_angle,
+                name = self.sat_meta.name,
                 updated_at = time_now
             )
         )
-
-        print(f'do update stmt: {do_update_stmt}')
+        
+        print(f'do_update_stmt: {do_update_stmt}')
 
         try:
             result = session.execute(do_update_stmt)
@@ -212,12 +216,12 @@ class InstrumentMetaRequest:
             session.commit()
             session.close()
         except Exception as err:
-            message = f'Attempt to INSERT/UPDATE instrument meta record FAILED'
+            message = f'Attempt to INSERT/UPDATE sat meta record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
             session.close()
         else:
-            message = f'Attempt to {action} instrument meta record SUCCEEDED'
+            message = f'Attempt to {action} sat meta record SUCCEEDED'
             error_msg = None
         
         results = {}
@@ -235,32 +239,32 @@ class InstrumentMetaRequest:
         )
 
         print(f'response: {response}')
-        return response 
+        return response
     
-
-    def get_instrument_metas(self):
+    def get_sat_metas(self):
         session = stm.get_session()
 
         q = session.query(
-            im.id,
-            im.name,
-            im.num_channels,
-            im.scan_angle,
-            im.created_at,
-            im.updated_at
+            sm.id,
+            sm.name,
+            sm.sat_id,
+            sm.sat_name, 
+            sm.short_name,
+            sm.created_at,
+            sm.updated_at
         ).select_from(
-            im
+            sm
         )
 
-        print('Before adding filters to instrument meta request########################')
+        print('Before adding filters to sat meta request########################')
         if self.filters is not None and len(self.filters) > 0:
             for key, value in self.filters.items():
                 q = q.filter(value)
         
-        print('After adding filters to instrument meta request########################')
+        print('After adding filters to sat meta request########################')
         
         # add column ordering
-        column_ordering = db_utils.build_column_ordering(im, self.ordering)
+        column_ordering = db_utils.build_column_ordering(sm, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)
@@ -269,20 +273,20 @@ class InstrumentMetaRequest:
         if self.record_limit is not None and self.record_limit > 0:
             q = q.limit(self.record_limit)
 
-        instrument_metas = q.all()
+        sat_metas = q.all()
 
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
-            if len(instrument_metas) > 0:
-                results = DataFrame(instrument_metas, columns = instrument_metas[0]._fields)
+            if len(sat_metas) > 0:
+                results = DataFrame(sat_metas, columns = sat_metas[0]._fields)
             
         except Exception as err:
-            message = 'Request for instrument meta records FAILED'
-            error_msg = f'Failed to get instrument meta records - err: {err}'
+            message = 'Request for sat meta records FAILED'
+            error_msg = f'Failed to get sat meta records - err: {err}'
         else:
-            message = 'Request for instrument meta records SUCCEEDED'
+            message = 'Request for sat meta records SUCCEEDED'
             for idx, row in results.iterrows():
                 print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)

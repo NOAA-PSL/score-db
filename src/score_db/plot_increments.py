@@ -15,9 +15,9 @@ import pandas as pd
 from pandas import DataFrame
 from matplotlib import pyplot as plt
 
-from expt_metrics import ExptMetricRequest
-from increments_plot_attrs import plot_attrs
-from plot_innov_stats import PlotInnovStatsRequest
+from score_db.expt_metrics import ExptMetricRequest
+from score_db.increments_plot_attrs import plot_attrs
+from score_db.plot_innov_stats import PlotInnovStatsRequest
 
 # figure output directory
 WORK_DIR = os.path.join('/', 'contrib', 'shared', 'replay', 'results')

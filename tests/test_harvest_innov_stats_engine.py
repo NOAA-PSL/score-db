@@ -12,16 +12,16 @@ import json
 import yaml
 
 
-from harvest_innov_stats import HarvestInnovStatsRequest
-import score_table_models as scr_models
-from score_table_models import Experiment as experiments_table
-from score_table_models import ExperimentMetric as exp_metrics_table
-import experiments as expts
-import expt_metrics
-from experiments import ExperimentData, Experiment, ExperimentRequest
-from expt_metrics import ExptMetricInputData, ExptMetricRequest
+from score_db.harvest_innov_stats import HarvestInnovStatsRequest
+import score_db.score_table_models as scr_models
+from score_db.score_table_models import Experiment as experiments_table
+from score_db.score_table_models import ExperimentMetric as exp_metrics_table
+import score_db.experiments as expts
+from score_db import expt_metrics
+from score_db.experiments import ExperimentData, Experiment, ExperimentRequest
+from score_db.expt_metrics import ExptMetricInputData, ExptMetricRequest
 
-from score_db_base import handle_request
+from score_db.score_db_base import handle_request
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
 

@@ -12,11 +12,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 import pprint
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import FileType as ft
-import time_utils
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import StorageLocation as sl
+from score_db import time_utils
+from score_db import db_utils
 
 from pandas import DataFrame
 import sqlalchemy as db
@@ -26,63 +26,58 @@ from sqlalchemy import and_, or_, not_
 from sqlalchemy import asc, desc
 from sqlalchemy.sql import func
 
-FileTypeData = namedtuple(
-    'FileTypeData',
+StorageLocationData = namedtuple(
+    'StorageLocationData',
     [
         'name',
-        'file_template',
-        'file_format',
-        'description'
-    ],
+        'bucket_name',
+        'platform',
+        'platform_region',
+        'key'
+    ]
 )
 
 @dataclass
-class FileType:
-    ''' file type object storing data related to the file info '''
+class StorageLocation:
+    ''' storage location object storing data related to file storage '''
     name: str
-    file_template: str
-    file_format: str
-    description: dict
-    file_type_data: FileTypeData = field(init=False)
+    bucket_name: str
+    platform: str
+    platform_region: str
+    key: str 
+    storage_location_data: StorageLocationData = field(init=False)
 
     def __post_init__(self):
         print(f'in post init name: {self.name}')
-        print(f'description: {self.description}')
-        self.file_type_data = FileTypeData(
+        self.storage_location_data = StorageLocationData(
             self.name,
-            self.file_template,
-            self.file_format,
-            self.description
+            self.bucket_name,
+            self.platform,
+            self.platform_region,
+            self.key
         )
-
-
-    def __repr__(self):
-        return f'file_type_data: {self.file_type_data}'
-
-
-    def get_file_type_data(self):
-        return self.file_type_data
     
-def get_file_type_from_body(body):
+    def __repr__(self):
+        return f'storage_location_data: {self.storage_location_data}'
+
+    def get_storage_location_data(self):
+        return self.storage_location_data
+    
+def get_storage_location_from_body(body):
     if not isinstance(body, dict):
         msg = 'The \'body\' key must be a type dict, was ' \
             f'{type(body)}'
         raise TypeError(msg)
     
-    try:
-        description = json.loads(body.get('description'))
-    except Exception as err:
-        msg = 'Error loading \'description\', must be valid JSON - err: {err}'
-        raise ValueError(msg) from err
-
-    file_type = FileType(
+    storage_location = StorageLocation(
         body.get('name'),
-        body.get('file_template'),
-        body.get('file_format'),
-        description
+        body.get('bucket_name'),
+        body.get('platform'),
+        body.get('platform_region'),
+        body.get('key')
     )
-    
-    return file_type
+
+    return storage_location
 
 def get_string_filter(filters, cls, key, constructed_filter):
     if not isinstance(filters, dict):
@@ -113,27 +108,33 @@ def construct_filters(filters):
     constructed_filter = {}
 
     constructed_filter = get_string_filter(
-        filters, ft, 'name', constructed_filter)
+        filters, sl, 'name', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, ft, 'file_template', constructed_filter)
+        filters, sl, 'bucket_name', constructed_filter)
 
     constructed_filter = get_string_filter(
-        filters, ft, 'file_format', constructed_filter)
+        filters, sl, 'platform', constructed_filter)
+
+    constructed_filter = get_string_filter(
+        filters, sl, 'platform_region', constructed_filter)
+    
+    constructed_filter = get_string_filter(
+        filters, sl, 'key', constructed_filter)
     
     return constructed_filter
 
-def get_all_file_types():
+def get_all_storage_locations():
     request_dict = {
-        'name': 'file_type',
+        'name': 'storage_location',
         'method': db_utils.HTTP_GET
     }
-
-    ftr = FileTypeRequest(request_dict)
-    return ftr.submit()
+    
+    slr = StorageLocationRequest(request_dict)
+    return slr.submit()
 
 @dataclass
-class FileTypeRequest:
+class StorageLocationRequest:
     request_dict: dict
     method: str = field(default_factory=str, init=False)
     params: dict = field(default_factory=dict, init=False)
@@ -141,8 +142,8 @@ class FileTypeRequest:
     ordering: list = field(default_factory=list, init=False)
     record_limit: int = field(default_factory=int, init=False)
     body: dict = field(default_factory=dict, init=False)
-    file_type: FileType = field(init=False)
-    file_type_data: namedtuple = field(init=False)
+    storage_location: StorageLocation = field(init=False)
+    storage_location_data: namedtuple = field(init=False)
     response: dict = field(default_factory=dict, init=False)
 
     def __post_init__(self):
@@ -151,15 +152,15 @@ class FileTypeRequest:
 
         self.body = self.request_dict.get('body')
         if self.method == db_utils.HTTP_PUT:
-            self.file_type = get_file_type_from_body(self.body)
-            self.file_type_data = self.file_type.get_file_type_data()
+            self.storage_location = get_storage_location_from_body(self.body)
+            self.storage_location_data = self.storage_location.get_storage_location_data()
             for k, v in zip(
-                self.file_type_data._fields, self.file_type_data
+                self.storage_location_data._fields, self.storage_location_data
             ):
                 val = pprint.pformat(v, indent=4)
                 print(f'exp_data: k: {k}, v: {val}')
         else:
-            print(f'In FileTypeRequest - params: {self.params}')
+            print(f'In StorageLocationRequest - params: {self.params}')
             if isinstance(self.params, dict):
                 self.filters = construct_filters(self.params.get('filters'))
                 self.ordering = self.params.get('ordering')
@@ -172,52 +173,51 @@ class FileTypeRequest:
                 self.ordering = None
                 self.record_limit = None
 
-
     def failed_request(self, error_msg):
         return DbActionResponse(
             request=self.request_dict,
             success=False,
-            message='Failed file type request.',
+            message='Failed storage location request.',
             details=None,
             errors=error_msg
         )
-
-
+    
     def submit(self):
         if self.method == db_utils.HTTP_GET:
-            return self.get_file_types()
+            return self.get_storage_locations()
         elif self.method == db_utils.HTTP_PUT:
             # becomes an update if record exists
             try:
-                return self.put_file_type()
+                return self.put_storage_location()
             except Exception as err:
-                error_msg = 'Failed to insert file type record -' \
+                error_msg = 'Failed to insert storage location record -' \
                     f' err: {err}'
                 print(f'Submit PUT error: {error_msg}')
                 return self.failed_request(error_msg)
-
-    
-    def put_file_type(self):
+            
+    def put_storage_location(self):
         session = stm.get_session()
 
-        insert_stmt = insert(ft).values(
-            name=self.file_type_data.name,
-            file_template=self.file_type_data.file_template,
-            file_format=self.file_type_data.file_format,
-            description=self.file_type_data.description,
+        insert_stmt = insert(sl).values(
+            name=self.storage_location_data.name,
+            bucket_name=self.storage_location_data.bucket_name,
+            platform=self.storage_location_data.platform,
+            platform_region=self.storage_location_data.platform_region,
+            key=self.storage_location_data.key,
             created_at=datetime.utcnow(),
             updated_at=None
-        ).returning(ft)
+        ).returning(sl)
         print(f'insert_stmt: {insert_stmt}')
 
         time_now = datetime.utcnow()
 
         do_update_stmt = insert_stmt.on_conflict_do_update(
-            constraint='unique_file_type',
+            constraint='unique_storage_location',
             set_=dict(
-                file_template=self.file_type_data.file_template,
-                file_format=self.file_type_data.file_format,
-                description=self.file_type_data.description,
+                bucket_name=self.storage_location_data.bucket_name,
+                platform=self.storage_location_data.platform,
+                platform_region=self.storage_location_data.platform_region,
+                key=self.storage_location_data.key,
                 updated_at=time_now
             )
         )
@@ -231,15 +231,14 @@ class FileTypeRequest:
             action = db_utils.INSERT
             if result_row.updated_at is not None:
                 action = db_utils.UPDATE
-
             session.commit()
             session.close()
         except Exception as err:
-            message = f'Attempt to {action} file type record FAILED'
+            message = f'Attempt to {action} storage location record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:
-            message = f'Attempt to {action} file type record SUCCEEDED'
+            message = f'Attempt to {action} storage location record SUCCEEDED'
             error_msg = None
         
         results = {}
@@ -258,32 +257,32 @@ class FileTypeRequest:
 
         print(f'response: {response}')
         return response
-
     
-    def get_file_types(self):
+    def get_storage_locations(self):
         session = stm.get_session()
 
         q = session.query(
-            ft.id,
-            ft.name,
-            ft.file_template,
-            ft.file_format,
-            ft.description,
-            ft.created_at,
-            ft.updated_at
+            sl.id,
+            sl.name,
+            sl.bucket_name,
+            sl.platform,
+            sl.platform_region,
+            sl.key,
+            sl.created_at,
+            sl.updated_at
         ).select_from(
-            ft
+            sl
         )
 
-        print('Before adding filters to file types request########################')
+        print('Before adding filters to storage locations request########################')
         if self.filters is not None and len(self.filters) > 0:
             for key, value in self.filters.items():
                 q = q.filter(value)
         
-        print('After adding filters to file types request########################')
+        print('After adding filters to storage location request########################')
         
         # add column ordering
-        column_ordering = db_utils.build_column_ordering(ft, self.ordering)
+        column_ordering = db_utils.build_column_ordering(sl, self.ordering)
         if column_ordering is not None and len(column_ordering) > 0:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)
@@ -292,20 +291,20 @@ class FileTypeRequest:
         if self.record_limit is not None and self.record_limit > 0:
             q = q.limit(self.record_limit)
 
-        file_types = q.all()
+        storage_locations = q.all()
 
         results = DataFrame()
         error_msg = None
         record_count = 0
         try:
-            if len(file_types) > 0:
-                results = DataFrame(file_types, columns = file_types[0]._fields)
+            if len(storage_locations) > 0:
+                results = DataFrame(storage_locations, columns = storage_locations[0]._fields)
             
         except Exception as err:
-            message = 'Request for file type records FAILED'
-            error_msg = f'Failed to get file type  records - err: {err}'
+            message = 'Request for storage location records FAILED'
+            error_msg = f'Failed to get storage location records - err: {err}'
         else:
-            message = 'Request for file type records SUCCEEDED'
+            message = 'Request for storage location records SUCCEEDED'
             for idx, row in results.iterrows():
                 print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)

@@ -31,18 +31,18 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import joinedload
 
 
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import Experiment as exp
-from score_table_models import ExperimentMetric as ex_mt
-from score_table_models import MetricType as mts
-from score_table_models import Region as rgs
-from experiments import Experiment, ExperimentData
-from experiments import ExperimentRequest
-import regions as rg
-import metric_types as mt
-import time_utils
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import Experiment as exp
+from score_db.score_table_models import ExperimentMetric as ex_mt
+from score_db.score_table_models import MetricType as mts
+from score_db.score_table_models import Region as rgs
+from score_db.experiments import Experiment, ExperimentData
+from score_db.experiments import ExperimentRequest
+import score_db.regions as rg
+import score_db.metric_types as mt
+from score_db import time_utils
+from score_db import db_utils
 
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)

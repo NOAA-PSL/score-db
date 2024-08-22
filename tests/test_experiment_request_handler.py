@@ -10,12 +10,12 @@ import pathlib
 import pytest
 import json
 
-import score_table_models as scr_models
-from score_table_models import Experiment as experiments_table
-import experiments as expts
-from experiments import ExperimentData, Experiment, ExperimentRequest
+import score_db.score_table_models as scr_models
+from score_db.score_table_models import Experiment as experiments_table
+import score_db.experiments as expts
+from score_db.experiments import ExperimentData, Experiment, ExperimentRequest
 
-from score_db_base import handle_request
+from score_db.score_db_base import handle_request
 
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
@@ -33,7 +33,7 @@ def test_parse_request_dict():
     description = json.loads(data)
 
     request_dict = {
-        'name': 'experiment',
+        'db_request_name': 'experiment',
         'method': 'PUT',
         'body': {
             'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -58,7 +58,7 @@ def test_parse_request_dict():
 def test_send_get_request():
 
     request_dict = {
-        'name': 'experiment',
+        'db_request_name': 'experiment',
         'method': 'GET',
         'params': {
             'filters': {

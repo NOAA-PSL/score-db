@@ -5,11 +5,11 @@ All rights reserved.
 Unit tests for expt_array_metrics.py
 """
 
-from expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
+from score_db.expt_array_metrics import ExptArrayMetricInputData, ExptArrayMetricRequest
 
 def test_put_exp_array_metrics_request():
     request_dict = {
-        'name': 'expt_array_metrics',
+        'db_request_name': 'expt_array_metrics',
         'method': 'PUT',
         'body': {
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -30,7 +30,7 @@ def test_put_exp_array_metrics_request():
 def test_get_expt_array_metrics_request():
 
     request_dict = {
-        'name': 'expt_array_metrics',
+        'db_request_name': 'expt_array_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
@@ -73,7 +73,7 @@ def test_get_expt_array_metrics_request():
 
 def test_put_exp_array_metrics_request_with_sat():
     request_dict = {
-        'name': 'expt_array_metrics',
+        'db_request_name': 'expt_array_metrics',
         'method': 'PUT',
         'body': {
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -94,7 +94,7 @@ def test_put_exp_array_metrics_request_with_sat():
 def test_get_expt_array_metrics_request_with_sat():
 
     request_dict = {
-        'name': 'expt_array_metrics',
+        'db_request_name': 'expt_array_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',

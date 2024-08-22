@@ -17,20 +17,20 @@ import psycopg2
 from pandas import DataFrame
 from sqlalchemy import and_, or_, not_
 
-from db_action_response import DbActionResponse
-import score_table_models as stm
-from score_table_models import Experiment as exp
-from score_table_models import ExptArrayMetric as ex_arr_mt
-from score_table_models import ArrayMetricType as amt
-from score_table_models import SatMeta as sm
-from score_table_models import Region as rgs
-from score_table_models import InstrumentMeta as im
-from experiments import ExperimentRequest
-from sat_meta import SatMetaRequest
-import regions as rg
-import array_metric_types as amts
-import time_utils
-import db_utils
+from score_db.db_action_response import DbActionResponse
+import score_db.score_table_models as stm
+from score_db.score_table_models import Experiment as exp
+from score_db.score_table_models import ExptArrayMetric as ex_arr_mt
+from score_db.score_table_models import ArrayMetricType as amt
+from score_db.score_table_models import SatMeta as sm
+from score_db.score_table_models import Region as rgs
+from score_db.score_table_models import InstrumentMeta as im
+from score_db.experiments import ExperimentRequest
+from score_db.sat_meta import SatMetaRequest
+import score_db.regions as rg
+import score_db.array_metric_types as amts
+from score_db import time_utils
+from score_db import db_utils
 
 psycopg2.extensions.register_adapter(np.int64, psycopg2._psycopg.AsIs)
 psycopg2.extensions.register_adapter(np.float32, psycopg2._psycopg.AsIs)

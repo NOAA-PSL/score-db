@@ -14,45 +14,38 @@ to help users insert and collect data from the score-db database.  score-hv,
 on the other hand, is responsible for harvesting data from the diagnostic
 
 ```sh
-$ git clone https://github.com/noaa-psd/score-db.git
-$ git clone https://github.com/noaa-psd/score-hv.git
+$ git clone https://github.com/noaa-psl/score-db.git
+$ git clone https://github.com/noaa-psl/score-hv.git
 ```
 
-2. Install or setup the UFS-RNR anaconda3 python environment and update it. 
-If the UFS-RNR anaconda python environment is not already available, install
-it now using the instructions found in the [UFS-RNR-stack](https://github.com/HenryWinterbottom-NOAA/UFS-RNR-stack.git) repo.  An example of the actual
-installation script can be found at [scripts/build.UFS-RNR-stack.RDHPCS-Hera.anaconda3.sh](https://github.com/HenryWinterbottom-NOAA/UFS-RNR-stack/blob/0b0fd767928ebc56be0c1992b141015d9e3ff7a4/scripts/build.UFS-RNR-stack.RDHPCS-Hera.anaconda3.sh).
-If you are installing this anaconda module at a different location than what
-is configured in the above script, you will need to make modifications such
-that the install location matches your desired location.  You will also need to
-specify aws credentials for PSL's private s3 bucket.
-3. Update the anaconda environment (follow anaconda update directions found [here](https://docs.anaconda.com/anaconda/install/update-version/) or use
-the example shown below).  Note: if you do not specify the anaconda environment to
-update, the `conda update --all` command will update the current environment. The
-`--all` indicates that you want to update all packages.  In order to specify a
-particular environment, use the command `conda update -n myenv --all`.
+2. For testing and development, we recommend creating a new python environment 
+(e.g., using [mamba](https://mamba.readthedocs.io/en/latest/index.html) as shown below or other options such as conda). To 
+install the required dependencies into a new environment using the micromamba 
+command-line interface, run the following after installing mamba/micromamba:
 
 ```sh
-$ conda update conda
-$ conda update --all
+$ micromamba create -f environment.yml; micromamba activate score-db-default-env
 ```
 
-4. Load the anaconda3 environment
-```sh
-$ module purge
-$ module use -a /contrib/home/builder/UFS-RNR-stack/modules
-$ module load anaconda3
-```
-5. Make the python interpreter aware of where the score-db and score-hv
-source code can be found.
+3. Install score-hv using [pip](https://pip.pypa.io/en/stable/). From the score-hv directory, run the following:
 
 ```sh
-$ export SCORE_DB_HOME_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-$ export PYTHONPATH=$SCORE_DB_HOME_DIR/src
-$ export PYTHONPATH=$PYTHONPATH:[absolute or relative path to score-hv]/src
+$ pip install . # default installation into active environment
 ```
 
-6. Configure the PostgreSQL credentials and settings for the score-db by
+4. Depending on your use case, you can install score-db using one of three methods using 
+[pip](https://pip.pypa.io/en/stable/),
+
+```sh
+$ pip install . # default installation into active environment`
+```
+```sh
+$ pip install -e . # editable installation into active enviroment, useful for development`
+```
+```sh
+$ pip install -t [TARGET_DIR] --upgrade . # target installation into TARGET_DIR, useful for deploying for cylc workflows (see https://cylc.github.io/cylc-doc/stable/html/tutorial/runtime/introduction.html#id3)`
+```
+5. Configure the PostgreSQL credentials and settings for the score-db by
 creating a `.env` file and by inserting the text shown below (note: this
 text is taken straight from the file `.env_example`).  You will need to 
 acquire the database password from the administrator (Sergey Frolov).
@@ -64,7 +57,7 @@ $ cat .env_example
 SCORE_POSTGRESQL_DB_NAME = 'rnr_scores_db'
 SCORE_POSTGRESQL_DB_PASSWORD = '[score_db_password]'
 SCORE_POSTGRESQL_DB_USERNAME = 'ufsrnr_user'
-SCORE_POSTGRESQL_DB_ENDPOINT = 'ufsrnr-pg-db.cmpwyouptct1.us-east-2.rds.amazonaws.com'
+SCORE_POSTGRESQL_DB_ENDPOINT = 'psl-score-db.cmpwyouptct1.us-east-2.rds.amazonaws.com'
 SCORE_POSTGRESQL_DB_PORT = 5432
 ```
 
@@ -105,7 +98,7 @@ This API helps the user register an experiment's meta data into the score-db
 example experiment registration yaml
 ```
 ---
-name: experiment
+db_request_name: experiment
 method: PUT
 body:
   name: EXAMPLE_EXPERIMENT_C96L64.UFSRNR.GSI_3DVAR.012016
@@ -123,7 +116,7 @@ body:
 2. Use the command line to execute the API and register the experiment.
 
 ```sh
-$ python3 src/score_db_base.py tests/experiment_registration__valid.yaml
+$ python3 src/score_db/score_db_base.py tests/experiment_registration__valid.yaml
 ```
 
 3. Call the experiment registration task from a python script.
@@ -139,7 +132,7 @@ def register_experiment():
     description = json.loads(data)
 
     request_dict = {
-        'name': 'experiment',
+        'db_request_name': 'experiment',
         'method': 'PUT',
         'body': {
             'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -215,14 +208,14 @@ output_format: tuples_list
 ```
 
 2. Call the harvester engine on the command line (see below).  Both command
-lines require mostly the same syntax `python3 src/score_db_base.py [command argument yaml]`
+lines require mostly the same syntax `python3 src/score_db/score_db_base.py [command argument yaml]`
 ```sh
-$ python3 src/score_db_base.py tests/netcdf_harvester_config__valid.yaml
+$ python3 src/score_db/score_db_base.py tests/netcdf_harvester_config__valid.yaml
 ```
 
 or one could issue the command from within a python script.
 ```sh
-from harvest_innov_stats import HarvestInnovStatsRequest
+from score_db.harvest_innov_stats import HarvestInnovStatsRequest
 
 harvester_control_dict = {
   "date_range": {
@@ -313,14 +306,14 @@ work_dir: /absolute/path/to/desired/figure/location
 ```
 
 2. Call the harvester engine on the command line (see below).  Both command
-lines require mostly the same syntax `python3 src/score_db_base.py [command argument yaml]`
+lines require mostly the same syntax `python3 src/score_db/score_db_base.py [command argument yaml]`
 ```sh
-$ python3 src/score_db_base.py tests/plot_innov_stats_config__valid.yaml
+$ python3 src/score_db/score_db_base.py tests/plot_innov_stats_config__valid.yaml
 ```
 
 or one could issue the command from within a python script.
 ```
-from plot_innov_stats import PlotInnovStatsRequest
+from score_db.plot_innov_stats import PlotInnovStatsRequest
 
 def plot_innov_stats_for_date_range():
 
@@ -581,7 +574,7 @@ GET:
 
 ```sh
 request_dict = {
-        'name': 'experiment',
+        'db_request_name': 'experiment',
         'method': 'GET',
         'params': {
             'filters': {
@@ -623,7 +616,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'experiment',
+        'db_request_name': 'experiment',
         'method': 'PUT',
         'body': {
             'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -649,7 +642,7 @@ GET:
 
 ```sh
 request_dict = {
-        'name': 'expt_metrics',
+        'db_request_name': 'expt_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
@@ -766,7 +759,7 @@ Example format of request dictionaries for 'metric_types' calls.
 GET: 
 ```sh
 request_dict = {
-        'name': 'metric_type',
+        'db_request_name': 'metric_type',
         'method': 'GET',
         'params': {
             'filters': {
@@ -820,7 +813,7 @@ Example format of request dictionary for 'regions' calls.
 GET:
 ```sh
 request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': 'GET',
         'params': {'filter_type': 'by_name'},
         'body': {
@@ -835,7 +828,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'region',
+        'db_request_name': 'region',
         'method': 'PUT',
         'body': {
             'regions': [
@@ -853,7 +846,7 @@ Example format of request dictionary for 'storage_locations' calls.
 GET:
 ```sh
 request_dict = {
-        'name': 'storage_locations',
+        'db_request_name': 'storage_locations',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
@@ -869,7 +862,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'storage_locations',
+        'db_request_name': 'storage_locations',
         'method': 'PUT',
         'body': {
             'name': 's3_example_bucket',
@@ -889,7 +882,7 @@ Example request dictionaries for the 'file_types' calls.
 GET:
 ```sh
 request_dict = {
-        'name': 'file_types',
+        'db_request_name': 'file_types',
         'method': 'GET',
         'params' : {
             'filters': {
@@ -904,7 +897,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'file_types',
+        'db_request_name': 'file_types',
         'method' : 'PUT',
         'body' :{
             'name': 'example_type',
@@ -922,7 +915,7 @@ Example request dictionaries for the 'expt_file_counts' calls.
 GET:
 ```sh
 request_dict = {
-        'name' : 'expt_file_counts',
+        'db_request_name' : 'expt_file_counts',
         'method': 'GET',
         'params' : {
             'filters': {
@@ -949,7 +942,7 @@ request_dict = {
 PUT:
 ```sh
   request_dict = {
-        'name': 'expt_file_counts',
+        'db_request_name': 'expt_file_counts',
         'method': 'PUT',
         'body': {
             'experiment_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
@@ -978,7 +971,7 @@ Example dictionaries for 'sat_meta' calls.
 GET:
 ```sh
 request_dict = {
-        'name': 'sat_meta',
+        'db_request_name': 'sat_meta',
         'method': 'GET',
         'params' : {
             'filters': {
@@ -993,7 +986,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'sat_meta',
+        'db_request_name': 'sat_meta',
         'method' : 'PUT',
         'body' :{
             'name': 'example_sat_meta',
@@ -1011,7 +1004,7 @@ Example dictionaries for 'instrument_meta' calls.
 GET:
 ```sh
 request_dict = {
-        'name': 'instrument_meta',
+        'db_request_name': 'instrument_meta',
         'method': 'GET',
         'params' : {
             'filters' : {
@@ -1026,7 +1019,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'instrument_meta',
+        'db_request_name': 'instrument_meta',
         'method' : 'PUT',
         'body' : {
             'name': 'example_instrument',
@@ -1043,7 +1036,7 @@ Example dictionaries for 'array_metric_types' calls.
 GET:
 ```sh
     request_dict = {
-        'name': 'array_metric_types',
+        'db_request_name': 'array_metric_types',
         'method':'GET',
         'params':{
             'filters':{
@@ -1066,7 +1059,7 @@ To search based on instrument_meta use instrument_meta_name or innstrument_name.
 PUT:
 ```sh
 request_dict = {
-        'name': 'array_metric_types',
+        'db_request_name': 'array_metric_types',
         'method': 'PUT',
         'body': {
             'name': 'vertical_example_metric',
@@ -1092,7 +1085,7 @@ Example dictionaries for 'expt_array_metrics' calls.
 GET:
 ```sh
 request_dict = {
-        'name': 'expt_array_metrics',
+        'db_request_name': 'expt_array_metrics',
         'method': 'GET',
         'params': {
             'datestr_format': '%Y-%m-%d %H:%M:%S',
@@ -1132,7 +1125,7 @@ request_dict = {
 PUT:
 ```sh
 request_dict = {
-        'name': 'expt_array_metrics',
+        'db_request_name': 'expt_array_metrics',
         'method': 'PUT',
         'body': {
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
