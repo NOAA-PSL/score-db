@@ -1099,7 +1099,7 @@ request_dict = {
                         'to': '2021-07-22 10:22:05'
                     }
                 },
-                'metric_types': {
+                'array_metric_types': {
                     'name': {
                         'exact': ['vertical_example_metric']
                     },
