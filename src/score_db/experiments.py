@@ -369,7 +369,6 @@ class ExperimentRequest:
 
     
     def put_experiment(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         record = exp(
@@ -463,7 +462,6 @@ class ExperimentRequest:
 
     
     def get_experiments(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         q = session.query(

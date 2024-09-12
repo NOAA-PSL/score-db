@@ -332,7 +332,4 @@ class InstrumentMeta(Base):
 Base.metadata.create_all(engine)
 
 def get_session():
-    engine = get_engine_from_settings()
-    Session = sessionmaker(bind=engine)
-
     return Session()

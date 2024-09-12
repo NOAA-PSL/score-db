@@ -219,7 +219,6 @@ class MetricTypeRequest:
 
     
     def put_metric_type(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         insert_stmt = insert(mt).values(
@@ -290,7 +289,6 @@ class MetricTypeRequest:
 
     
     def get_metric_types(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         q = session.query(
