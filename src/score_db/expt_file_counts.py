@@ -634,6 +634,7 @@ class ExptFileCountRequest:
             message = f'Attempt to insert experiment stored file counts record FAILED'
             error_msg = f'Failed to insert record - err: {err}'
             print(f'error_msg: {error_msg}')
+            session.close()
         else:
             message = f'Attempt to insert experiment stored file counts record SUCCEEDED'
             error_msg = None
@@ -736,5 +737,6 @@ class ExptFileCountRequest:
         )
 
         print(f'response: {response}')
-
+        
+        session.close()
         return response
