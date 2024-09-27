@@ -48,7 +48,7 @@ def get_engine(user, passwd, host, port, db):
 
     db_engine = create_engine(
         url,
-        pool_size=10,
+        pool_size=15,
         echo=False,
         connect_args={"options": "-c timezone=utc"}
     )
