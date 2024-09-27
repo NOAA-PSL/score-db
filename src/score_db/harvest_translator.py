@@ -7,6 +7,7 @@ into input data relevant for storage in the columns defined in
 the db table models.
 """
 
+import warnings
 from collections import namedtuple
 
 #data structure for what is stored in the database, corresponds to the db columns
@@ -93,5 +94,52 @@ def daily_bfg_translator(harvested_data):
         None,
         None
     )        
+    
+    return result
+   
+def gsi_satellite_radiance_channel_translator(harvested_data):
+    """Expected output from gsi_satellite_radiance_channel harvester
+    gsi_satellite_radiance_channel_harvested_data = namedtuple(
+        'SatinfoStat', [
+            'datetime',
+            'ensemble_member',
+            'iteration',
+            'observation_type', # radiance observation type (e.g., hirs2_tirosn)
+            'series_numbers', # series numbers of the channels in satinfo file
+            'channels', # channel numbers for certain radiance observation type
+            'statistic', # name of statistic
+            'values_by_channel',
+            'longnames'
+        ]
+    )
+    """
+    instrument = harvested_data.observation_type.split('_')[0]
+    sat_short_name = harvested_data.observation_type.split('_')[1]
+
+    if harvested_data.ensemble_member == 'control':
+        ensemble_member = None
+    else:
+        try:
+            ensemble_member = int(harvested_data.ensemble_member)
+        except ValueError:
+            warnings.warn('could not convert harvested_data.ensemble_member '
+                          f'{harvested_data.ensemble_member} to int, storing '
+                          f'as NoneType')
+            ensemble_member = None
+
+    result = ArrayMetricTableData(
+        instrument + "_" + harvested_data.statistic +
+        "_GSIstage_" + str(harvested_data.iteration),
+        'global',
+        harvested_data.values_by_channel,
+        None,
+        harvested_data.datetime,
+        None,
+        ensemble_member,
+        None,
+        None,
+        None,
+        sat_short_name,
+    )
     
     return result
