@@ -7,6 +7,7 @@ into input data relevant for storage in the columns defined in
 the db table models.
 """
 
+import warnings
 from collections import namedtuple
 
 #data structure for what is stored in the database, corresponds to the db columns
@@ -118,7 +119,13 @@ def gsi_satellite_radiance_channel_translator(harvested_data):
     if harvested_data.ensemble_member == 'control':
         ensemble_member = None
     else:
-        ensemble_member = int(harvested_data.ensemble_member)
+        try:
+            ensemble_member = int(harvested_data.ensemble_member)
+        except ValueError:
+            warnings.warn('could not convert harvested_data.ensemble_member '
+                          f'{harvested_data.ensemble_member} to int, storing '
+                          f'as NoneType')
+            ensemble_member = None
 
     result = ArrayMetricTableData(
         instrument + "_" + harvested_data.statistic +
