@@ -369,7 +369,6 @@ class ExperimentRequest:
 
     
     def put_experiment(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         record = exp(
@@ -440,6 +439,7 @@ class ExperimentRequest:
             message = f'Attempt to {action} experiment record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
+            session.close()
         else:
             message = f'Attempt to {action} experiment record SUCCEEDED'
             error_msg = None
@@ -463,7 +463,6 @@ class ExperimentRequest:
 
     
     def get_experiments(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         q = session.query(
@@ -509,11 +508,13 @@ class ExperimentRequest:
         except Exception as err:
             message = 'Request for experiment records FAILED'
             error_msg = f'Failed to get experiment records - err: {err}'
+            session.close()
         else:
             message = 'Request for experiment records SUCCEEDED'
             for idx, row in results.iterrows():
                 print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)
+            session.close()
         
         details = {}
         # details['filters'] = self.filters
