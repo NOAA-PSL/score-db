@@ -41,7 +41,7 @@ def run(make_plot=False, make_line_plot=True, select_array_metric_types=True,
                         ],
         sat_name = 'NOAA 15',
         start_date = '1979-01-01 00:00:00',
-        stop_date = '2008-01-01 00:00:00'):
+        stop_date = '2001-06-01 00:00:00'):
     """modify the above input variables to configure and generate time series
     data for various GSI related statistics
         
@@ -79,9 +79,11 @@ def run(make_plot=False, make_line_plot=True, select_array_metric_types=True,
 
             elif make_line_plot:
                 stat_label = 'bias_post_corr_GSIstage_1'
+                #stat_label = 'std_GSIstage_1'
                 sensor_label = 'n15_amsua'
-                timeseries_data.plot_line_plot(stat_label=stat_label, sensor_label=sensor_label)
-                plt.suptitle(experiment_name)                #plt.show()
+                y_min = -0.5
+                y_max = 0.6
+                timeseries_data.plot_line_plot(stat_label=stat_label, sensor_label=sensor_label, experiment_name=experiment_name, y_min=y_min, y_max=y_max)
                 metric_string = array_metric_type.split('%')[0] #again not expandable 
                 plt.savefig(os.path.join(
                                 #'results',
@@ -91,61 +93,60 @@ def run(make_plot=False, make_line_plot=True, select_array_metric_types=True,
             else:
                 timeseries_data.print_init_time()
 
-#separate to be able to plot experiments on the same graphic/ doesn't work yet it's a thought
-# def run_line_plot(make_line_plot=True, select_array_metric_types=True,
-#         select_sat_name=True,
-#         experiment_list=['scout_run_v1',
-#                          'NASA_GEOSIT_GSISTATS'
-#                          #'scout_runs_gsi3dvar_1979stream'
-#                      ],
-#         array_metrics_list=['amsua_bias_post_corr_GSIstage_%',
-#                             #'amsua_std_%',
-#                             #'%_variance_%',
-#                             #'amsua_use_%'
-#                         ],
-#         sat_name = 'NOAA 15',
-#         start_date = '1979-01-01 00:00:00',
-#         stop_date = '2008-01-01 00:00:00'):
-#     """modify the above input variables to configure and generate time series
-#     data for various GSI related statistics
+# separate to be able to plot experiments on the same graphic / flattens data for now
+def run_line_plot(make_line_plot=True, select_array_metric_types=True,
+        select_sat_name=True,
+        experiment_list=['scout_run_v1',
+                         'NASA_GEOSIT_GSISTATS'
+                         #'scout_runs_gsi3dvar_1979stream'
+                     ],
+        array_metrics_list=[#'amsua_bias_post_corr_GSIstage_%',
+                            #'amsua_std_%',
+                            #'%_variance_%',
+                            'amsua_nobs_used_%'
+                        ],
+        sat_name = 'NOAA 15',
+        start_date = '1998-01-01 00:00:00',
+        stop_date = '2001-06-01 00:00:00'):
+    """modify the above input variables to configure and generate time series
+    data for various GSI related statistics
         
-#         experiment_list: list of experiments to plot in sequence
-#         array_metrics_list: list of metrics to plot in sequence
-#     """
-#     if make_line_plot:
-#         plt.style.use('/Users/jknezha/.matplotlib/stylelib/agu_full.mplstyle')
+        experiment_list: list of experiments to plot in sequence
+        array_metrics_list: list of metrics to plot in sequence
+    """
+    if make_line_plot:
+        plt.style.use('/Users/jknezha/.matplotlib/stylelib/agu_full.mplstyle')
     
-#     if not select_array_metric_types:
-#         array_metrics_list=['%_all_stats_%']
+    if not select_array_metric_types:
+        array_metrics_list=['%_all_stats_%']
     
-#     experiment_timeseries = dict()
-#     for experiment_name in experiment_list:
-#         for array_metric_type in array_metrics_list:
-#             timeseries_data = GSIStatsTimeSeries(start_date, stop_date,
-#                             experiment_name=experiment_name, 
-#                             select_array_metric_types=select_array_metric_types,
-#                             array_metric_types=array_metric_type,
-#                             select_sat_name=select_sat_name,
-#                             sat_name=sat_name)
-#             timeseries_data.build(all_channel_max=False, # set max or mean
-#                                   all_channel_mean=False,
-#                                   by_channel=True) # other False
-#             experiment_timeseries[experiment_name] = timeseries_data
+    experiment_timeseries = dict()
+    for experiment_name in experiment_list:
+        for array_metric_type in array_metrics_list:
+            timeseries_data = GSIStatsTimeSeries(start_date, stop_date,
+                            experiment_name=experiment_name, 
+                            select_array_metric_types=select_array_metric_types,
+                            array_metric_types=array_metric_type,
+                            select_sat_name=select_sat_name,
+                            sat_name=sat_name)
+            timeseries_data.flatten()
+            experiment_timeseries[experiment_name] = timeseries_data
 
-#     if make_line_plot:
-#         stat_label = 'amsua_bias_post_corr_GSIstage_1'
-#         sensor_label = 'n15_amsua'
+    if make_line_plot:
+        # stat_label = 'amsua_bias_post_corr_GSIstage_1'
+        # sensor_label = 'n15_amsua'
 
-#         timeseries_data.plot_line_plot()
-#         plt.suptitle(experiment_name)                #plt.show()
-#         metric_string = array_metric_type.split('%')[0] #again not expandable 
-#         plt.savefig(os.path.join(
-#                         'results',
-#                         f'gsiline{metric_string}{experiment_name}.png'),
-#             dpi=600)
-#         plt.close()
-#     else:
-#         timeseries_data.print_init_time()
+        #make_line_plot_multi_expt(experiment_timeseries, experiment_list)
+        plot_experiment_comparison(experiment_timeseries, experiment_list, ".")
+        # plt.suptitle(experiment_name)                #plt.show()
+        # metric_string = array_metric_type.split('%')[0] #again not expandable 
+        # plt.savefig(os.path.join(
+        #                 'results',
+        #                 f'gsiline{metric_string}{experiment_name}.png'),
+        #     dpi=600)
+        # plt.close()
+    else:
+        timeseries_data.print_init_time()
 
 class GSIStatsTimeSeries(object):
     def __init__(self, start_date, stop_date,
@@ -289,6 +290,72 @@ class GSIStatsTimeSeries(object):
                     yval -= 1
         
                 #print(gsi_stage, stat_name, sensor_label, self.sensorlabel_dict[sensor_label])
+
+    def flatten(self):
+        self.unique_stat_list = extract_unique_stats(
+                                            set(self.data_frame['metric_name']))
+        
+        self.timestamp_dict = dict()
+        self.timelabel_dict = dict()
+        self.value_dict = dict()
+        
+        
+        self.sensorlabel_list = list()
+        self.statlabel_list = list()
+        yval = 0
+        for row in self.data_frame.itertuples():
+            metric_name_parts = row.metric_name.split('_')
+
+            if metric_name_parts[0] == row.metric_instrument_name and metric_name_parts[-1] != 'None':
+                stat_name = '_'.join(metric_name_parts[1:-2])
+                gsi_stage = metric_name_parts[-1]
+                
+                stat_label = f'{stat_name}_GSIstage_{gsi_stage}'
+                
+                sensor_label = f'{row.sat_short_name}_{row.metric_instrument_name}'
+                timestamp = row.time_valid#.timestamp()
+                time_label = '%02d-%02d-%04d' % (row.time_valid.month,
+                                             row.time_valid.day,
+                                             row.time_valid.year,)
+                
+                value = np.nansum([np.nan if v is None else v for v in row.value]) #flatten to one total
+
+                # Check if stat_label exists in timestamp_dict
+                if stat_label not in self.timestamp_dict:
+                    self.timestamp_dict[stat_label] = {}  # Create the first level dictionary for stat_label
+
+                # Check if sensor_label exists under stat_label in timestamp_dict
+                if sensor_label not in self.timestamp_dict[stat_label]:
+                    self.timestamp_dict[stat_label][sensor_label] = []  # Create an empty list for sensor_label
+
+                # Check if stat_label exists in timelabel_dict
+                if stat_label not in self.timelabel_dict:
+                    self.timelabel_dict[stat_label] = {}  # Create the first level dictionary for stat_label
+
+                # Check if sensor_label exists under stat_label in timelabel_dict
+                if sensor_label not in self.timelabel_dict[stat_label]:
+                    self.timelabel_dict[stat_label][sensor_label] = []  # Create an empty list for sensor_label
+                
+                # Check if stat_label exists in timelabel_dict
+                if stat_label not in self.value_dict:
+                    self.value_dict[stat_label] = {}  # Create the first level dictionary for stat_label
+
+                # Check if sensor_label exists under stat_label in timelabel_dict
+                if sensor_label not in self.value_dict[stat_label]:
+                    self.value_dict[stat_label][sensor_label] = []  # Create an empty list for sensor_label
+
+                #print(gsi_stage, stat_name, sensor_label, time_label, value)
+                self.timestamp_dict[stat_label][sensor_label].append(timestamp)
+                self.timelabel_dict[stat_label][sensor_label].append(time_label)
+                self.value_dict[stat_label][sensor_label].append(value)
+                
+                if not sensor_label in self.sensorlabel_list:
+                    self.sensorlabel_list.append(sensor_label)
+                
+                if not stat_label in self.statlabel_list:
+                    self.statlabel_list.append(stat_label)
+        
+                #print(gsi_stage, stat_name, sensor_label, self.sensorlabel_dict[sensor_label])
         
     def plot(self, all_channel_mean=False, all_channel_max=True):
         """demonstrate how to plot metrics stored in a backened SQL database
@@ -380,18 +447,21 @@ class GSIStatsTimeSeries(object):
         print("GSIStatsTimeSeries object init date and time: ",
               f"{self.init_datetime}") 
 
-    def plot_line_plot(self, stat_label, sensor_label, channels_to_plot=[4, 5, 6, 7]):
+    def plot_line_plot(self, stat_label, sensor_label, experiment_name, channels_to_plot=[4, 5, 6, 7], y_min=None, y_max=None):
         """
         Plot time series for specified stat_label, sensor_label, and channels.
         
         Parameters:
         - stat_label: The specific stat label (string) to plot.
         - sensor_label: The specific sensor label (string) to plot.
-        - channels_to_plot: List of channel indices to plot (default: channels 5-8). -1 for indexing, should read from the array labels in future 
+        - channels_to_plot: List of channel indices to plot (default: channels 5-8). 
+                            -1 for indexing, should read from the array labels in the future.
+        - y_min: Minimum limit for the y-axis (optional).
+        - y_max: Maximum limit for the y-axis (optional).
         """
         
         # Prepare the plot
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8), dpi=300)
 
         # Loop through the specified channels
         for channel in channels_to_plot:
@@ -404,7 +474,7 @@ class GSIStatsTimeSeries(object):
 
                 # Ensure the channel index is valid and plot the values
                 if len(channel_values) > channel:
-                    plt.plot(timestamps, [v[channel] for v in channel_values], label=f'Channel {channel + 1}')
+                    plt.plot(timestamps, [v[channel] for v in channel_values], label=f'Channel {channel + 1}', alpha=0.7)
                 else:
                     print(f"Channel {channel + 1} not found for {stat_label}, {sensor_label}")
                     
@@ -413,16 +483,23 @@ class GSIStatsTimeSeries(object):
 
         # Add labels and title
         plt.xlabel('Timestamp')
-        plt.ylabel('Value')
-        plt.title(f'Channel Values vs Time for {sensor_label} ({stat_label})')
+        plt.ylabel(f'{stat_label}')
+        plt.title(f'{experiment_name} Channel Values vs Time for {sensor_label} ({stat_label})')
         plt.legend()
 
         # Rotate x-axis labels for readability
         plt.xticks(rotation=45)
 
-        # Show the plot
+        # Set y-axis limits if specified
+        if y_min is not None and y_max is not None:
+            plt.ylim(y_min, y_max)
+        elif y_min is not None:
+            plt.ylim(bottom=y_min)
+        elif y_max is not None:
+            plt.ylim(top=y_max)
+
+        # Adjust layout to avoid label clipping
         plt.tight_layout()
-        #plt.show()
 
 
 
@@ -464,6 +541,114 @@ def extract_unique_stats(strings):
     unique_positions = [second_position_list, last_position_list]
     
     return unique_positions
+
+def make_line_plot_multi_expt(timeseries_dict, experiment_list):
+    """
+    Plot time series for multiple experiments stored in a dictionary.
+    
+    Parameters:
+    - timeseries_dict: Dictionary where keys are experiment names and values are GSIStatsTimeSeries objects.
+    - experiment_list: List of experiment names to plot.
+    """
+    
+    # Prepare the plot
+    plt.figure(figsize=(10, 6))
+
+    # Loop through each experiment name in experiment_list
+    for experiment_name in experiment_list:
+        # Access the corresponding GSIStatsTimeSeries object from the dictionary
+        timeseries_obj = timeseries_dict.get(experiment_name)
+
+        if timeseries_obj:
+            # Extract data from the timeseries object
+            time_valid = timeseries_obj.timestamp_dict  # Replace with actual column name
+            value = timeseries_obj.value_dict         # Replace with actual column name
+
+
+            # Plot the data
+            plt.plot(time_valid, value, label=experiment_name)
+        else:
+            print(f"No data found for experiment: {experiment_name}")
+    
+    # Add labels and title
+    plt.xlabel('Time')
+    plt.ylabel('Number AMSUA Obs Used')
+    plt.title(f'Time Series Comparison of Experiments')
+    plt.legend()
+
+    # Rotate x-axis labels for readability
+    plt.xticks(rotation=45)
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_experiment_comparison(timeseries_dict, experiment_list, output_dir):
+    """
+    Plot time series for multiple experiments for each stat and sensor combination, and save each plot.
+    
+    Parameters:
+    - timeseries_dict: Dictionary where keys are experiment names and values are GSIStatsTimeSeries objects.
+    - experiment_list: List of experiment names to plot.
+    - output_dir: Directory where plots will be saved.
+    """
+    
+    # Get statlabel_list and sensorlabel_list from one of the GSIStatsTimeSeries objects
+    if not timeseries_dict:
+        print("Error: timeseries_dict is empty.")
+        return
+    
+    # Extract the statlabel_list and sensorlabel_list from the first object in timeseries_dict
+    first_timeseries_obj = list(timeseries_dict.values())[0]
+    statlabel_list = first_timeseries_obj.statlabel_list
+    sensorlabel_list = first_timeseries_obj.sensorlabel_list
+
+    # Loop through each stat_label in the statlabel_list
+    for stat_label in statlabel_list:
+        # Loop through each sensor_label in the sensorlabel_list
+        for sensor_label in sensorlabel_list:
+            plt.figure(figsize=(12, 8), dpi=300)  # Create a new figure for each stat-sensor combination
+
+            # Loop through each experiment in the experiment list
+            for experiment_name in experiment_list:
+                # Access the corresponding GSIStatsTimeSeries object from the dictionary
+                timeseries_obj = timeseries_dict.get(experiment_name)
+
+                if timeseries_obj:
+                    # Safely access the nested dictionary for time_valid and value
+                    time_valid = timeseries_obj.timestamp_dict.get(stat_label, {}).get(sensor_label, [])
+                    value = timeseries_obj.value_dict.get(stat_label, {}).get(sensor_label, [])
+
+                    # Check if data exists for the stat_label and sensor_label
+                    if time_valid and value:
+                        # Plot the data for this experiment
+                        plt.plot(time_valid, value, label=experiment_name, alpha=0.7)
+                    else:
+                        print(f"No data for {stat_label}, {sensor_label} in experiment: {experiment_name}")
+                else:
+                    print(f"No data for experiment: {experiment_name}")
+
+            # Add labels and title for the plot
+            plt.xlabel('Time Valid')
+            plt.ylabel(f'{stat_label}')
+            plt.title(f'Comparison of {stat_label} and {sensor_label} across Experiments')
+            plt.legend()
+
+            # Rotate x-axis labels for readability
+            plt.xticks(rotation=45)
+
+            # Save the plot to the specified output directory
+            plot_filename = f'{stat_label}_{sensor_label}_comparison.svg'
+            plot_filepath = os.path.join(output_dir, plot_filename)
+            plt.savefig(plot_filepath)
+
+            # Close the plot after saving
+            plt.close()
+
+            print(f"Plot saved: {plot_filepath}")
+
+
 
 def main():
     run()
