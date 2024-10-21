@@ -106,6 +106,7 @@ def run_line_plot(make_line_plot=True, select_array_metric_types=True,
                             'amsua_nobs_used_%'
                         ],
         sat_name = 'NOAA 15',
+        channel_indices = [4, 5, 6, 7], #this is the specific location in the array, not based on the channel name that needs to be expanded
         start_date = '1998-01-01 00:00:00',
         stop_date = '2001-06-01 00:00:00'):
     """modify the above input variables to configure and generate time series
@@ -129,7 +130,7 @@ def run_line_plot(make_line_plot=True, select_array_metric_types=True,
                             array_metric_types=array_metric_type,
                             select_sat_name=select_sat_name,
                             sat_name=sat_name)
-            timeseries_data.flatten()
+            timeseries_data.flatten_by_channel(channel_indices=channel_indices)
             experiment_timeseries[experiment_name] = timeseries_data
 
     if make_line_plot:
@@ -137,7 +138,7 @@ def run_line_plot(make_line_plot=True, select_array_metric_types=True,
         # sensor_label = 'n15_amsua'
 
         #make_line_plot_multi_expt(experiment_timeseries, experiment_list)
-        plot_experiment_comparison(experiment_timeseries, experiment_list, ".")
+        plot_experiment_comparison(experiment_timeseries, experiment_list, ".", channel_list="5, 6, 7, 8")
         # plt.suptitle(experiment_name)                #plt.show()
         # metric_string = array_metric_type.split('%')[0] #again not expandable 
         # plt.savefig(os.path.join(
@@ -356,6 +357,76 @@ class GSIStatsTimeSeries(object):
                     self.statlabel_list.append(stat_label)
         
                 #print(gsi_stage, stat_name, sensor_label, self.sensorlabel_dict[sensor_label])
+
+    #right now this function just selects by the channel indices but it should be expanded to use channel names and then applied to the value indices
+    def flatten_by_channel(self, channel_indices):
+        if channel_indices is None:
+            self.flatten() #do a basic full flatten instead
+            return
+
+        self.unique_stat_list = extract_unique_stats(
+                                            set(self.data_frame['metric_name']))
+        
+        self.timestamp_dict = dict()
+        self.timelabel_dict = dict()
+        self.value_dict = dict()
+        
+        
+        self.sensorlabel_list = list()
+        self.statlabel_list = list()
+        yval = 0
+        for row in self.data_frame.itertuples():
+            metric_name_parts = row.metric_name.split('_')
+
+            if metric_name_parts[0] == row.metric_instrument_name and metric_name_parts[-1] != 'None':
+                stat_name = '_'.join(metric_name_parts[1:-2])
+                gsi_stage = metric_name_parts[-1]
+                
+                stat_label = f'{stat_name}_GSIstage_{gsi_stage}'
+                
+                sensor_label = f'{row.sat_short_name}_{row.metric_instrument_name}'
+                timestamp = row.time_valid#.timestamp()
+                time_label = '%02d-%02d-%04d' % (row.time_valid.month,
+                                             row.time_valid.day,
+                                             row.time_valid.year,)
+                
+                #flatten to only include given channels
+                value = np.nansum([np.nan if row.value[i] is None else row.value[i] for i in channel_indices if i < len(row.value)])
+
+                # Check if stat_label exists in timestamp_dict
+                if stat_label not in self.timestamp_dict:
+                    self.timestamp_dict[stat_label] = {}  # Create the first level dictionary for stat_label
+
+                # Check if sensor_label exists under stat_label in timestamp_dict
+                if sensor_label not in self.timestamp_dict[stat_label]:
+                    self.timestamp_dict[stat_label][sensor_label] = []  # Create an empty list for sensor_label
+
+                # Check if stat_label exists in timelabel_dict
+                if stat_label not in self.timelabel_dict:
+                    self.timelabel_dict[stat_label] = {}  # Create the first level dictionary for stat_label
+
+                # Check if sensor_label exists under stat_label in timelabel_dict
+                if sensor_label not in self.timelabel_dict[stat_label]:
+                    self.timelabel_dict[stat_label][sensor_label] = []  # Create an empty list for sensor_label
+                
+                # Check if stat_label exists in timelabel_dict
+                if stat_label not in self.value_dict:
+                    self.value_dict[stat_label] = {}  # Create the first level dictionary for stat_label
+
+                # Check if sensor_label exists under stat_label in timelabel_dict
+                if sensor_label not in self.value_dict[stat_label]:
+                    self.value_dict[stat_label][sensor_label] = []  # Create an empty list for sensor_label
+
+                #print(gsi_stage, stat_name, sensor_label, time_label, value)
+                self.timestamp_dict[stat_label][sensor_label].append(timestamp)
+                self.timelabel_dict[stat_label][sensor_label].append(time_label)
+                self.value_dict[stat_label][sensor_label].append(value)
+                
+                if not sensor_label in self.sensorlabel_list:
+                    self.sensorlabel_list.append(sensor_label)
+                
+                if not stat_label in self.statlabel_list:
+                    self.statlabel_list.append(stat_label)
         
     def plot(self, all_channel_mean=False, all_channel_max=True):
         """demonstrate how to plot metrics stored in a backened SQL database
@@ -584,7 +655,7 @@ def make_line_plot_multi_expt(timeseries_dict, experiment_list):
     plt.show()
 
 
-def plot_experiment_comparison(timeseries_dict, experiment_list, output_dir):
+def plot_experiment_comparison(timeseries_dict, experiment_list, output_dir, channel_list):
     """
     Plot time series for multiple experiments for each stat and sensor combination, and save each plot.
     
@@ -632,7 +703,10 @@ def plot_experiment_comparison(timeseries_dict, experiment_list, output_dir):
             # Add labels and title for the plot
             plt.xlabel('Time Valid')
             plt.ylabel(f'{stat_label}')
-            plt.title(f'Comparison of {stat_label} and {sensor_label} across Experiments')
+            if channel_list is None:
+                plt.title(f'Comparison of {stat_label} and {sensor_label} across Experiments')
+            else:
+                plt.title(f'Comparison of {stat_label} and {sensor_label} across Experiments for Channels {channel_list}')
             plt.legend()
 
             # Rotate x-axis labels for readability
