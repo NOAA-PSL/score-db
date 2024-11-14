@@ -597,7 +597,6 @@ class ExptMetricRequest:
 
     
     def get_experiment_metrics(self):
-        engine = stm.get_engine_from_settings()
         session = stm.get_session()
 
         # set basic query

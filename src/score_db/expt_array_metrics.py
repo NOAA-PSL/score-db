@@ -672,6 +672,7 @@ class ExptArrayMetricRequest:
             session.close()
 
         else:
+            session.close()
             return self.failed_request('No expt array metric records were discovered to be inserted')
 
         return DbActionResponse(
@@ -770,6 +771,7 @@ class ExptArrayMetricRequest:
                 columns=ExptArrayMetricsData._fields
             )
         except Exception as err:
+            session.close()
             trcbk = traceback.format_exc()
             msg = f'Problem casting array exeriment metrics query output into pandas ' \
                 f'DataFrame - err: {trcbk}'
