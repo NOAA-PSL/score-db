@@ -259,58 +259,60 @@ class RegionRequest:
             self.method, self.body, self.filter_type)
 
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            error_msg = None
-            message = None
-            matched_json = None
-            try:
-                if self.filter_type == FILTER__NONE:
-                    matched_records = self.get_all_regions()
-                elif self.filter_type == FILTER__BY_REGION_NAME:
-                    matched_records = self.get_regions_by_name()
-                else: #Filter by Region Data
-                    matched_records = self.get_regions_by_data()
-                message = f'Request returned {len(matched_records)} record/s'
-                matched_json = matched_records.to_json(orient = 'records')
-            except Exception as err:
-                error_msg = f'Problems encountered requesting regions - {err}'
-                return DbActionResponse(
-                    request=self.request_dict,
-                    success=False,
-                    message='Failed region GET request.',
-                    details=None,
-                    errors=error_msg
-                )
-
-            response = DbActionResponse(
-                self.request_dict,
-                (error_msg is None),
-                message,
-                {
-                    'matched_records': matched_json,
-                    'records': matched_records
-                },
-                error_msg
-            )
-            print(f'response: {response}')
-            return response
-        elif self.method == db_utils.HTTP_PUT:
-            try:
-                return self.put_regions()
-            except Exception as err:
-                error_msg = f'Failed to put region record - err: {err}'
-                print(f'Submit PUT error: {error_msg}')
-                return DbActionResponse(
-                    request=self.request_dict,
-                    success=False,
-                    message='Failed region PUT request.',
-                    details=None,
-                    errors=error_msg
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                error_msg = None
+                message = None
+                matched_json = None
+                try:
+                    if self.filter_type == FILTER__NONE:
+                        matched_records = self.get_all_regions(session)
+                    elif self.filter_type == FILTER__BY_REGION_NAME:
+                        matched_records = self.get_regions_by_name(session)
+                    else: #Filter by Region Data
+                        matched_records = self.get_regions_by_data(session)
+                    message = f'Request returned {len(matched_records)} record/s'
+                    matched_json = matched_records.to_json(orient = 'records')
+                except Exception as err:
+                    error_msg = f'Problems encountered requesting regions - {err}'
+                    return DbActionResponse(
+                        request=self.request_dict,
+                        success=False,
+                        message='Failed region GET request.',
+                        details=None,
+                        errors=error_msg
                     )
 
+                response = DbActionResponse(
+                    self.request_dict,
+                    (error_msg is None),
+                    message,
+                    {
+                        'matched_records': matched_json,
+                        'records': matched_records
+                    },
+                    error_msg
+                )
+                print(f'response: {response}')
+                return response
+            elif self.method == db_utils.HTTP_PUT:
+                try:
+                    return self.put_regions(session)
+                except Exception as err:
+                    error_msg = f'Failed to put region record - err: {err}'
+                    print(f'Submit PUT error: {error_msg}')
+                    return DbActionResponse(
+                        request=self.request_dict,
+                        success=False,
+                        message='Failed region PUT request.',
+                        details=None,
+                        errors=error_msg
+                        )
+            session.close()
+
     #get regions filtered by name 
-    def get_regions_by_name(self):
-        session = stm.get_session()
+    def get_regions_by_name(self,session):
         try:
             existing_regions = session.query(
                 rg.id,
@@ -331,15 +333,13 @@ class RegionRequest:
             print(msg)
             return DataFrame()
 
-        session.close()
         if len(existing_regions) == 0:
             return DataFrame()
 
         return DataFrame(existing_regions, columns = existing_regions[0]._fields)
 
     #get all regions in database
-    def get_all_regions(self):
-        session = stm.get_session()
+    def get_all_regions(self,session):
         try:
             existing_regions = session.query(
                 rg.id,
@@ -358,14 +358,13 @@ class RegionRequest:
             print(msg)
             return DataFrame()
 
-        session.close()
         if len(existing_regions) == 0:
             return DataFrame()
 
         return DataFrame(existing_regions, columns = existing_regions[0]._fields)
     
     #get regions based on filters on user provided restrictions on values 
-    def get_regions_by_data(self):
+    def get_regions_by_data(self,session):
         if len(self.params) < 0:
             msg = f'To filter regions by data, there must be a params which includes filters for the data'
             raise RegionError(msg)
@@ -376,8 +375,6 @@ class RegionRequest:
             raise RegionError(msg)
 
         constructed_filters = construct_filters(filters)
-        
-        session = stm.get_session()
 
         q = session.query(
             rg.id,
@@ -398,15 +395,13 @@ class RegionRequest:
         print('After adding regions filter')
 
         regions = q.all()
-        session.close()
  
         results = DataFrame()
         if len(regions) > 0:
             results = DataFrame(regions, columns = regions[0]._fields)
         return results
     
-    def put_regions(self):
-        session = stm.get_session()
+    def put_regions(self,session):
         all_results = []
         error_msgs = None
         for region in self.regions:
@@ -442,7 +437,6 @@ class RegionRequest:
                 if result_row.updated_at is not None:
                     action = db_utils.UPDATE
                 session.commit()
-                session.close()
             except Exception as err:
                 message = f'Attempt to insert/update region record FAILED'
                 error_msg = f'Failed to insert/update record -err: {err}'

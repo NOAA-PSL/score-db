@@ -204,23 +204,23 @@ class MetricTypeRequest:
 
 
     def submit(self):
-
-        if self.method == db_utils.HTTP_GET:
-            return self.get_metric_types()
-        elif self.method == db_utils.HTTP_PUT:
-            # becomes an update if record exists
-            try:
-                return self.put_metric_type()
-            except Exception as err:
-                error_msg = 'Failed to insert metric type record -' \
-                    f' err: {err}'
-                print(f'Submit PUT error: {error_msg}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                return self.get_metric_types(session)
+            elif self.method == db_utils.HTTP_PUT:
+                # becomes an update if record exists
+                try:
+                    return self.put_metric_type(session)
+                except Exception as err:
+                    error_msg = 'Failed to insert metric type record -' \
+                        f' err: {err}'
+                    print(f'Submit PUT error: {error_msg}')
+                    return self.failed_request(error_msg)
+            session.close()
 
     
-    def put_metric_type(self):
-        session = stm.get_session()
-
+    def put_metric_type(self,session):
         insert_stmt = insert(mt).values(
             name=self.metric_type_data.name,
             long_name = self.metric_type_data.long_name,
@@ -261,7 +261,6 @@ class MetricTypeRequest:
             # print(f'result.fetchone().keys(): {result_row._mapping}')
 
             session.commit()
-            session.close()
         except Exception as err:
             message = f'Attempt to {action} metric type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
@@ -288,9 +287,7 @@ class MetricTypeRequest:
         return response
 
     
-    def get_metric_types(self):
-        session = stm.get_session()
-
+    def get_metric_types(self,session):
         q = session.query(
             mt.id,
             mt.name,

@@ -596,20 +596,21 @@ class ExptFileCountRequest:
         return query
 
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            return self.get_expt_file_counts()
-        elif self.method == db_utils.HTTP_PUT:
-            try:
-                return self.put_expt_file_counts()
-            except Exception as err:
-                error_msg = 'Failed to insert expt file count record -' \
-                    f' err: {err}'
-                print(f'Submit PUT error: {error_msg}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                return self.get_expt_file_counts(session)
+            elif self.method == db_utils.HTTP_PUT:
+                try:
+                    return self.put_expt_file_counts(session)
+                except Exception as err:
+                    error_msg = 'Failed to insert expt file count record -' \
+                        f' err: {err}'
+                    print(f'Submit PUT error: {error_msg}')
+                    return self.failed_request(error_msg)
+            session.close()
 
-    def put_expt_file_counts(self):
-        session = stm.get_session()
-
+    def put_expt_file_counts(self,session):
         insert_stmt = insert(esfc).values(
             count=self.expt_file_count_data.count,
             folder_path=self.expt_file_count_data.folder_path,
@@ -629,12 +630,10 @@ class ExptFileCountRequest:
             session.flush()
             result_row = result.fetchone()
             session.commit()
-            session.close()
         except Exception as err:
             message = f'Attempt to insert experiment stored file counts record FAILED'
             error_msg = f'Failed to insert record - err: {err}'
             print(f'error_msg: {error_msg}')
-            session.close()
         else:
             message = f'Attempt to insert experiment stored file counts record SUCCEEDED'
             error_msg = None
@@ -656,9 +655,7 @@ class ExptFileCountRequest:
         print(f'response: {response}')
         return response
     
-    def get_expt_file_counts(self):
-        session = stm.get_session()
-
+    def get_expt_file_counts(self,session):
         q = session.query(
             esfc
         ).join(
@@ -737,6 +734,5 @@ class ExptFileCountRequest:
         )
 
         print(f'response: {response}')
-        
-        session.close()
+
         return response

@@ -183,21 +183,22 @@ class StorageLocationRequest:
         )
     
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            return self.get_storage_locations()
-        elif self.method == db_utils.HTTP_PUT:
-            # becomes an update if record exists
-            try:
-                return self.put_storage_location()
-            except Exception as err:
-                error_msg = 'Failed to insert storage location record -' \
-                    f' err: {err}'
-                print(f'Submit PUT error: {error_msg}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                return self.get_storage_locations(session)
+            elif self.method == db_utils.HTTP_PUT:
+                # becomes an update if record exists
+                try:
+                    return self.put_storage_location(session)
+                except Exception as err:
+                    error_msg = 'Failed to insert storage location record -' \
+                        f' err: {err}'
+                    print(f'Submit PUT error: {error_msg}')
+                    return self.failed_request(error_msg)
+            session.close()
             
-    def put_storage_location(self):
-        session = stm.get_session()
-
+    def put_storage_location(self,session):
         insert_stmt = insert(sl).values(
             name=self.storage_location_data.name,
             bucket_name=self.storage_location_data.bucket_name,
@@ -232,7 +233,6 @@ class StorageLocationRequest:
             if result_row.updated_at is not None:
                 action = db_utils.UPDATE
             session.commit()
-            session.close()
         except Exception as err:
             message = f'Attempt to {action} storage location record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
@@ -258,9 +258,7 @@ class StorageLocationRequest:
         print(f'response: {response}')
         return response
     
-    def get_storage_locations(self):
-        session = stm.get_session()
-
+    def get_storage_locations(self,session):
         q = session.query(
             sl.id,
             sl.name,

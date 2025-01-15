@@ -360,17 +360,17 @@ class ExperimentRequest:
         
 
     def submit(self):
-
-        if self.method == db_utils.HTTP_GET:
-            return self.get_experiments()
-        elif self.method == db_utils.HTTP_PUT:
-            # becomes an update if record exists
-            return self.put_experiment()
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                return self.get_experiments(session)
+            elif self.method == db_utils.HTTP_PUT:
+                # becomes an update if record exists
+                return self.put_experiment(session)
+            session.close()
 
     
-    def put_experiment(self):
-        session = stm.get_session()
-
+    def put_experiment(self,session):
         record = exp(
             name=self.experiment_data.name,
             cycle_start=self.experiment_data.cycle_start,
@@ -431,15 +431,11 @@ class ExperimentRequest:
             # print(f'result.fetchone(): {result_row}')
             # print(f'updated_at: {result_row.updated_at}')
             # print(f'result.fetchone().keys(): {result_row._mapping}')
-
-            session.commit()
-            session.close()
         except Exception as err:
             action = db_utils.INSERT
             message = f'Attempt to {action} experiment record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
-            session.close()
         else:
             message = f'Attempt to {action} experiment record SUCCEEDED'
             error_msg = None
@@ -462,9 +458,7 @@ class ExperimentRequest:
         return response
 
     
-    def get_experiments(self):
-        session = stm.get_session()
-
+    def get_experiments(self,session):
         q = session.query(
             exp.id,
             exp.name,
@@ -508,13 +502,11 @@ class ExperimentRequest:
         except Exception as err:
             message = 'Request for experiment records FAILED'
             error_msg = f'Failed to get experiment records - err: {err}'
-            session.close()
         else:
             message = 'Request for experiment records SUCCEEDED'
             for idx, row in results.iterrows():
                 print(f'idx: {idx}, row: {row}')
             record_count = len(results.index)
-            session.close()
         
         details = {}
         # details['filters'] = self.filters

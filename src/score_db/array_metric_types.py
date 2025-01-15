@@ -327,20 +327,21 @@ class ArrayMetricTypeRequest:
         )
     
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            return self.get_array_metric_types()
-        elif self.method == db_utils.HTTP_PUT:
-            try:
-                return self.put_array_metric_type()
-            except Exception as err:
-                error_msg = 'Failed to insert array metric type record -' \
-                    f' err: {err}'
-                print(f'Submit PUT error: {error_msg}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                return self.get_array_metric_types(session)
+            elif self.method == db_utils.HTTP_PUT:
+                try:
+                    return self.put_array_metric_type(session)
+                except Exception as err:
+                    error_msg = 'Failed to insert array metric type record -' \
+                        f' err: {err}'
+                    print(f'Submit PUT error: {error_msg}')
+                    return self.failed_request(error_msg)
+            session.close()
             
-    def put_array_metric_type(self):
-        session = stm.get_session()
-
+    def put_array_metric_type(self,session):
         instrument_meta_id = self.instrument_meta_id if self.instrument_meta_id > 0 else None
 
         insert_stmt = insert(amt).values(
@@ -387,12 +388,10 @@ class ArrayMetricTypeRequest:
                 action = db_utils.UPDATE
 
             session.commit()
-            session.close()
         except Exception as err:
             message = f'Attempt to INSERT/UPDATE array metric type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
-            session.close()
         else:
             message = f'Attempt to {action} array metric type record SUCCEEDED'
             error_msg = None
@@ -414,9 +413,7 @@ class ArrayMetricTypeRequest:
         print(f'response: {response}')
         return response
 
-    def get_array_metric_types(self):
-        session = stm.get_session()
-
+    def get_array_metric_types(self,session):
         q = session.query(
             amt
         ).outerjoin(
@@ -526,5 +523,4 @@ class ArrayMetricTypeRequest:
         )
         print(f'response: {response}')
 
-        session.close()
         return response
