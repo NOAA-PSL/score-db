@@ -518,6 +518,8 @@ class ExptArrayMetricRequest:
                     print(f'Submit GET error: {error_msg}')
                     print(f'Error: {err}')
                     return self.failed_request(error_msg)
+                finally:
+                    session.close()
             elif self.method == db_utils.HTTP_PUT:
                 try:
                     return self.put_expt_array_metrics(session)
@@ -528,7 +530,8 @@ class ExptArrayMetricRequest:
                     print(f'Submit PUT error: {error_msg}')
                     print(f'Error: {err}')
                     return self.failed_request(error_msg)
-            session.close()
+                finally:
+                    session.close()
     
     def failed_request(self, error_msg):
         return DbActionResponse(

@@ -599,7 +599,7 @@ class ExptFileCountRequest:
         with stm.engine.connect() as connection:
             session = stm.Session(bind=connection)
             if self.method == db_utils.HTTP_GET:
-                return self.get_expt_file_counts(session)
+                response = self.get_expt_file_counts(session)
             elif self.method == db_utils.HTTP_PUT:
                 try:
                     return self.put_expt_file_counts(session)
@@ -608,7 +608,10 @@ class ExptFileCountRequest:
                         f' err: {err}'
                     print(f'Submit PUT error: {error_msg}')
                     return self.failed_request(error_msg)
+                finally:
+                    session.close()
             session.close()
+            return response
 
     def put_expt_file_counts(self,session):
         insert_stmt = insert(esfc).values(

@@ -172,7 +172,7 @@ class SatMetaRequest:
         with stm.engine.connect() as connection:
             session = stm.Session(bind=connection)
             if self.method == db_utils.HTTP_GET:
-                return self.get_sat_metas(session)
+                response = self.get_sat_metas(session)
             elif self.method == db_utils.HTTP_PUT:
                 try:
                     return self.put_sat_meta(session)
@@ -181,7 +181,10 @@ class SatMetaRequest:
                         f' err: {err}'
                     print(f'Submit PUT sat meta error: {error_msg}')
                     return self.failed_request(error_msg)
-            session.close
+                finally:
+                    session.close()
+            session.close()
+            return response
             
     def put_sat_meta(self,session):
         insert_stmt = insert(sm).values(

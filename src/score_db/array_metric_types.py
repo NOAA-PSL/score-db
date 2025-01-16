@@ -330,7 +330,7 @@ class ArrayMetricTypeRequest:
         with stm.engine.connect() as connection:
             session = stm.Session(bind=connection)
             if self.method == db_utils.HTTP_GET:
-                return self.get_array_metric_types(session)
+                response = self.get_array_metric_types(session)
             elif self.method == db_utils.HTTP_PUT:
                 try:
                     return self.put_array_metric_type(session)
@@ -339,7 +339,10 @@ class ArrayMetricTypeRequest:
                         f' err: {err}'
                     print(f'Submit PUT error: {error_msg}')
                     return self.failed_request(error_msg)
+                finally:
+                    session.close()
             session.close()
+            return response
             
     def put_array_metric_type(self,session):
         instrument_meta_id = self.instrument_meta_id if self.instrument_meta_id > 0 else None

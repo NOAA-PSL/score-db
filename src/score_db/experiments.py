@@ -363,11 +363,12 @@ class ExperimentRequest:
         with stm.engine.connect() as connection:
             session = stm.Session(bind=connection)
             if self.method == db_utils.HTTP_GET:
-                return self.get_experiments(session)
+                response = self.get_experiments(session)
             elif self.method == db_utils.HTTP_PUT:
                 # becomes an update if record exists
-                return self.put_experiment(session)
+                response = self.put_experiment(session)
             session.close()
+            return response
 
     
     def put_experiment(self,session):

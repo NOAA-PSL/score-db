@@ -168,7 +168,7 @@ class InstrumentMetaRequest:
         with stm.engine.connect() as connection:
             session = stm.Session(bind=connection)
             if self.method == db_utils.HTTP_GET:
-                return self.get_instrument_metas(session)
+                response =  self.get_instrument_metas(session)
             elif self.method == db_utils.HTTP_PUT:
                 try:
                     return self.put_instrument_meta(session)
@@ -177,7 +177,10 @@ class InstrumentMetaRequest:
                         f' err: {err}'
                     print(f'Submit PUT instrument meta error: {error_msg}')
                     return self.failed_request(error_msg)
+                finally:
+                    session.close()
             session.close()
+            return response
 
     def put_instrument_meta(self,session):
         insert_stmt = insert(im).values(

@@ -187,7 +187,7 @@ class FileTypeRequest:
         with stm.engine.connect() as connection:
             session = stm.Session(bind=connection)
             if self.method == db_utils.HTTP_GET:
-                return self.get_file_types(session)
+                response = self.get_file_types(session)
             elif self.method == db_utils.HTTP_PUT:
                 # becomes an update if record exists
                 try:
@@ -197,7 +197,10 @@ class FileTypeRequest:
                         f' err: {err}'
                     print(f'Submit PUT error: {error_msg}')
                     return self.failed_request(error_msg)
+                finally:
+                    session.close()
             session.close()
+            return response
 
     
     def put_file_type(self,session):

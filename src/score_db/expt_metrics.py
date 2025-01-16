@@ -401,20 +401,21 @@ class ExptMetricRequest:
                         f' trcbk: {trcbk}'
                     print(f'Submit GET error: {error_msg}')
                     return self.failed_request(error_msg)
+                finally:
+                    session.close()
             elif self.method == db_utils.HTTP_PUT:
                 # becomes an update if record exists
                 print(f'in PUT method')
                 try:
-                    response = self.put_expt_metrics_data(session)
+                    return self.put_expt_metrics_data(session)
                 except Exception as err:
                     trcbk = traceback.format_exc()
                     error_msg = 'Failed to insert experiment metric records -' \
                         f' trcbk: {trcbk}'
                     print(f'Submit PUT error: {error_msg}')
                     return self.failed_request(error_msg)
-
-                return response
-            session.close()
+                finally:
+                    session.close()
 
 
     def failed_request(self, error_msg):

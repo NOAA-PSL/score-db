@@ -283,6 +283,8 @@ class RegionRequest:
                         details=None,
                         errors=error_msg
                     )
+                finally:
+                    session.close()
 
                 response = DbActionResponse(
                     self.request_dict,
@@ -309,7 +311,8 @@ class RegionRequest:
                         details=None,
                         errors=error_msg
                         )
-            session.close()
+                finally:
+                    session.close()
 
     #get regions filtered by name 
     def get_regions_by_name(self,session):
