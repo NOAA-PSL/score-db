@@ -529,6 +529,7 @@ class ExptArrayMetricRequest:
                         f' trcbk: {trcbk}'
                     print(f'Submit PUT error: {error_msg}')
                     print(f'Error: {err}')
+                    session.rollback()
                     return self.failed_request(error_msg)
                 finally:
                     session.close()

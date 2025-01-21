@@ -304,6 +304,7 @@ class RegionRequest:
                 except Exception as err:
                     error_msg = f'Failed to put region record - err: {err}'
                     print(f'Submit PUT error: {error_msg}')
+                    session.close()
                     return DbActionResponse(
                         request=self.request_dict,
                         success=False,

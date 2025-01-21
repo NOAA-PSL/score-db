@@ -216,6 +216,7 @@ class MetricTypeRequest:
                     error_msg = 'Failed to insert metric type record -' \
                         f' err: {err}'
                     print(f'Submit PUT error: {error_msg}')
+                    session.rollback()
                     return self.failed_request(error_msg)
                 finally:
                     session.close()

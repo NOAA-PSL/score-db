@@ -180,6 +180,7 @@ class SatMetaRequest:
                     error_msg = 'Failed to insert sat meta record -'\
                         f' err: {err}'
                     print(f'Submit PUT sat meta error: {error_msg}')
+                    session.rollback()
                     return self.failed_request(error_msg)
                 finally:
                     session.close()

@@ -195,6 +195,7 @@ class StorageLocationRequest:
                     error_msg = 'Failed to insert storage location record -' \
                         f' err: {err}'
                     print(f'Submit PUT error: {error_msg}')
+                    session.rollback()
                     return self.failed_request(error_msg)
                 finally:
                     session.close()

@@ -436,6 +436,7 @@ class ExperimentRequest:
             action = db_utils.INSERT
             message = f'Attempt to {action} experiment record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
+            session.rollback()
             print(f'error_msg: {error_msg}')
         else:
             message = f'Attempt to {action} experiment record SUCCEEDED'

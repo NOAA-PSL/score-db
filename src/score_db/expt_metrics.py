@@ -413,6 +413,7 @@ class ExptMetricRequest:
                     error_msg = 'Failed to insert experiment metric records -' \
                         f' trcbk: {trcbk}'
                     print(f'Submit PUT error: {error_msg}')
+                    session.rollback()
                     return self.failed_request(error_msg)
                 finally:
                     session.close()
