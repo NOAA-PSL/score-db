@@ -204,7 +204,7 @@ class FileTypeRequest:
             return response
 
     
-    def put_file_type(self,session):
+    def put_file_type(self, session):
         insert_stmt = insert(ft).values(
             name=self.file_type_data.name,
             file_template=self.file_type_data.file_template,
@@ -264,7 +264,7 @@ class FileTypeRequest:
         return response
 
     
-    def get_file_types(self,session):
+    def get_file_types(self, session):
         q = session.query(
             ft.id,
             ft.name,

@@ -345,7 +345,7 @@ class ArrayMetricTypeRequest:
             session.close()
             return response
             
-    def put_array_metric_type(self,session):
+    def put_array_metric_type(self, session):
         instrument_meta_id = self.instrument_meta_id if self.instrument_meta_id > 0 else None
 
         insert_stmt = insert(amt).values(
@@ -417,7 +417,7 @@ class ArrayMetricTypeRequest:
         print(f'response: {response}')
         return response
 
-    def get_array_metric_types(self,session):
+    def get_array_metric_types(self, session):
         q = session.query(
             amt
         ).outerjoin(

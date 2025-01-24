@@ -559,7 +559,7 @@ class ExptMetricRequest:
         return parsed_metrics
 
     
-    def put_expt_metrics_data(self,session):
+    def put_expt_metrics_data(self, session):
 
         # we need to determine the primary key id from the experiment
         # all calls to this function must return a DbActionResponse object
@@ -596,7 +596,7 @@ class ExptMetricRequest:
         )
 
     
-    def get_experiment_metrics(self,session):
+    def get_experiment_metrics(self, session):
         # set basic query
         q = session.query(
             ex_mt

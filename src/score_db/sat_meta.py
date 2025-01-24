@@ -187,7 +187,7 @@ class SatMetaRequest:
             session.close()
             return response
             
-    def put_sat_meta(self,session):
+    def put_sat_meta(self, session):
         insert_stmt = insert(sm).values(
             name = self.sat_meta.name,
             sat_id = self.sat_meta.sat_id,
@@ -244,7 +244,7 @@ class SatMetaRequest:
         print(f'response: {response}')
         return response
     
-    def get_sat_metas(self,session):
+    def get_sat_metas(self, session):
         q = session.query(
             sm.id,
             sm.name,

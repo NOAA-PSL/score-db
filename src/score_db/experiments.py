@@ -371,7 +371,7 @@ class ExperimentRequest:
             return response
 
     
-    def put_experiment(self,session):
+    def put_experiment(self, session):
         record = exp(
             name=self.experiment_data.name,
             cycle_start=self.experiment_data.cycle_start,
@@ -460,7 +460,7 @@ class ExperimentRequest:
         return response
 
     
-    def get_experiments(self,session):
+    def get_experiments(self, session):
         q = session.query(
             exp.id,
             exp.name,

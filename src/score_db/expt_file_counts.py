@@ -614,7 +614,7 @@ class ExptFileCountRequest:
             session.close()
             return response
 
-    def put_expt_file_counts(self,session):
+    def put_expt_file_counts(self, session):
         insert_stmt = insert(esfc).values(
             count=self.expt_file_count_data.count,
             folder_path=self.expt_file_count_data.folder_path,
@@ -659,7 +659,7 @@ class ExptFileCountRequest:
         print(f'response: {response}')
         return response
     
-    def get_expt_file_counts(self,session):
+    def get_expt_file_counts(self, session):
         q = session.query(
             esfc
         ).join(

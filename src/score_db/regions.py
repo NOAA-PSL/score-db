@@ -316,7 +316,7 @@ class RegionRequest:
                     session.close()
 
     #get regions filtered by name 
-    def get_regions_by_name(self,session):
+    def get_regions_by_name(self, session):
         try:
             existing_regions = session.query(
                 rg.id,
@@ -343,7 +343,7 @@ class RegionRequest:
         return DataFrame(existing_regions, columns = existing_regions[0]._fields)
 
     #get all regions in database
-    def get_all_regions(self,session):
+    def get_all_regions(self, session):
         try:
             existing_regions = session.query(
                 rg.id,
@@ -368,7 +368,7 @@ class RegionRequest:
         return DataFrame(existing_regions, columns = existing_regions[0]._fields)
     
     #get regions based on filters on user provided restrictions on values 
-    def get_regions_by_data(self,session):
+    def get_regions_by_data(self, session):
         if len(self.params) < 0:
             msg = f'To filter regions by data, there must be a params which includes filters for the data'
             raise RegionError(msg)
@@ -405,7 +405,7 @@ class RegionRequest:
             results = DataFrame(regions, columns = regions[0]._fields)
         return results
     
-    def put_regions(self,session):
+    def put_regions(self, session):
         all_results = []
         error_msgs = None
         for region in self.regions:

@@ -183,7 +183,7 @@ class InstrumentMetaRequest:
             session.close()
             return response
 
-    def put_instrument_meta(self,session):
+    def put_instrument_meta(self, session):
         insert_stmt = insert(im).values(
             name = self.instrument_meta.name,
             num_channels = self.instrument_meta.num_channels,
@@ -241,7 +241,7 @@ class InstrumentMetaRequest:
         return response 
     
 
-    def get_instrument_metas(self,session):
+    def get_instrument_metas(self, session):
         q = session.query(
             im.id,
             im.name,

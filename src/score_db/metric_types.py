@@ -224,7 +224,7 @@ class MetricTypeRequest:
             return response
 
     
-    def put_metric_type(self,session):
+    def put_metric_type(self, session):
         insert_stmt = insert(mt).values(
             name=self.metric_type_data.name,
             long_name = self.metric_type_data.long_name,
@@ -291,7 +291,7 @@ class MetricTypeRequest:
         return response
 
     
-    def get_metric_types(self,session):
+    def get_metric_types(self, session):
         q = session.query(
             mt.id,
             mt.name,

@@ -202,7 +202,7 @@ class StorageLocationRequest:
             session.close()
             return response
             
-    def put_storage_location(self,session):
+    def put_storage_location(self, session):
         insert_stmt = insert(sl).values(
             name=self.storage_location_data.name,
             bucket_name=self.storage_location_data.bucket_name,
@@ -262,7 +262,7 @@ class StorageLocationRequest:
         print(f'response: {response}')
         return response
     
-    def get_storage_locations(self,session):
+    def get_storage_locations(self, session):
         q = session.query(
             sl.id,
             sl.name,
