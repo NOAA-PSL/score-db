@@ -48,7 +48,7 @@ def get_engine(user, passwd, host, port, db):
 
     db_engine = create_engine(
         url,
-        pool_size=15,
+        pool_size=10,
         echo=False,
         connect_args={"options": "-c timezone=utc"}
     )
@@ -332,4 +332,4 @@ class InstrumentMeta(Base):
 Base.metadata.create_all(engine)
 
 def get_session():
-    return Session()
+    return Session(bind=engine.connect())

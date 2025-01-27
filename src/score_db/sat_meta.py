@@ -169,20 +169,25 @@ class SatMetaRequest:
         )
 
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            return self.get_sat_metas()
-        elif self.method == db_utils.HTTP_PUT:
-            try:
-                return self.put_sat_meta()
-            except Exception as err:
-                error_msg = 'Failed to insert sat meta record -'\
-                    f' err: {err}'
-                print(f'Submit PUT sat meta error: {error_msg}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                response = self.get_sat_metas(session)
+            elif self.method == db_utils.HTTP_PUT:
+                try:
+                    return self.put_sat_meta(session)
+                except Exception as err:
+                    error_msg = 'Failed to insert sat meta record -'\
+                        f' err: {err}'
+                    print(f'Submit PUT sat meta error: {error_msg}')
+                    session.rollback()
+                    return self.failed_request(error_msg)
+                finally:
+                    session.close()
+            session.close()
+            return response
             
-    def put_sat_meta(self):
-        session = stm.get_session()
-
+    def put_sat_meta(self, session):
         insert_stmt = insert(sm).values(
             name = self.sat_meta.name,
             sat_id = self.sat_meta.sat_id,
@@ -214,12 +219,10 @@ class SatMetaRequest:
                 action = db_utils.UPDATE
 
             session.commit()
-            session.close()
         except Exception as err:
             message = f'Attempt to INSERT/UPDATE sat meta record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
-            session.close()
         else:
             message = f'Attempt to {action} sat meta record SUCCEEDED'
             error_msg = None
@@ -241,9 +244,7 @@ class SatMetaRequest:
         print(f'response: {response}')
         return response
     
-    def get_sat_metas(self):
-        session = stm.get_session()
-
+    def get_sat_metas(self, session):
         q = session.query(
             sm.id,
             sm.name,

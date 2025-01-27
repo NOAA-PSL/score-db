@@ -165,20 +165,25 @@ class InstrumentMetaRequest:
         )
 
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            return self.get_instrument_metas()
-        elif self.method == db_utils.HTTP_PUT:
-            try:
-                return self.put_instrument_meta()
-            except Exception as err:
-                error_msg = 'Failed to insert instrument meta record -'\
-                    f' err: {err}'
-                print(f'Submit PUT instrument meta error: {error_msg}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                response =  self.get_instrument_metas(session)
+            elif self.method == db_utils.HTTP_PUT:
+                try:
+                    return self.put_instrument_meta(session)
+                except Exception as err:
+                    error_msg = 'Failed to insert instrument meta record -'\
+                        f' err: {err}'
+                    print(f'Submit PUT instrument meta error: {error_msg}')
+                    session.rollback()
+                    return self.failed_request(error_msg)
+                finally:
+                    session.close()
+            session.close()
+            return response
 
-    def put_instrument_meta(self):
-        session = stm.get_session()
-
+    def put_instrument_meta(self, session):
         insert_stmt = insert(im).values(
             name = self.instrument_meta.name,
             num_channels = self.instrument_meta.num_channels,
@@ -210,12 +215,10 @@ class InstrumentMetaRequest:
                 action = db_utils.UPDATE
 
             session.commit()
-            session.close()
         except Exception as err:
             message = f'Attempt to INSERT/UPDATE instrument meta record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
-            session.close()
         else:
             message = f'Attempt to {action} instrument meta record SUCCEEDED'
             error_msg = None
@@ -238,9 +241,7 @@ class InstrumentMetaRequest:
         return response 
     
 
-    def get_instrument_metas(self):
-        session = stm.get_session()
-
+    def get_instrument_metas(self, session):
         q = session.query(
             im.id,
             im.name,

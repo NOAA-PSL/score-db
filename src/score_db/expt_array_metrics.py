@@ -506,26 +506,33 @@ class ExptArrayMetricRequest:
                 return self.failed_request(error_msg)
 
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            try:
-                return self.get_expt_array_metrics()
-            except Exception as err:
-                trcbk = traceback.format_exc()
-                error_msg = 'Failed to get experiment array metric records -' \
-                    f' trcbk: {trcbk}'
-                print(f'Submit GET error: {error_msg}')
-                print(f'Error: {err}')
-                return self.failed_request(error_msg)
-        elif self.method == db_utils.HTTP_PUT:
-            try:
-                return self.put_expt_array_metrics()
-            except Exception as err:
-                trcbk = traceback.format_exc()
-                error_msg = 'Failed to insert experiment array metric records -' \
-                    f' trcbk: {trcbk}'
-                print(f'Submit PUT error: {error_msg}')
-                print(f'Error: {err}')
-                return self.failed_request(error_msg)
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                try:
+                    return self.get_expt_array_metrics(session)
+                except Exception as err:
+                    trcbk = traceback.format_exc()
+                    error_msg = 'Failed to get experiment array metric records -' \
+                        f' trcbk: {trcbk}'
+                    print(f'Submit GET error: {error_msg}')
+                    print(f'Error: {err}')
+                    return self.failed_request(error_msg)
+                finally:
+                    session.close()
+            elif self.method == db_utils.HTTP_PUT:
+                try:
+                    return self.put_expt_array_metrics(session)
+                except Exception as err:
+                    trcbk = traceback.format_exc()
+                    error_msg = 'Failed to insert experiment array metric records -' \
+                        f' trcbk: {trcbk}'
+                    print(f'Submit PUT error: {error_msg}')
+                    print(f'Error: {err}')
+                    session.rollback()
+                    return self.failed_request(error_msg)
+                finally:
+                    session.close()
     
     def failed_request(self, error_msg):
         return DbActionResponse(
@@ -647,10 +654,8 @@ class ExptArrayMetricRequest:
 
         return parsed_array_metrics
     
-    def put_expt_array_metrics(self):
+    def put_expt_array_metrics(self, session):
         records = self.get_expt_array_metrics_from_body(self.body)
-        session = stm.get_session()
-
 
         if len(records) > 0:
             #This section of print statements can be uncommented for debugging
@@ -669,10 +674,7 @@ class ExptArrayMetricRequest:
 
             session.bulk_save_objects(records)
             session.commit()
-            session.close()
-
         else:
-            session.close()
             return self.failed_request('No expt array metric records were discovered to be inserted')
 
         return DbActionResponse(
@@ -683,8 +685,7 @@ class ExptArrayMetricRequest:
             errors=None
         )
 
-    def get_expt_array_metrics(self):
-        session = stm.get_session()
+    def get_expt_array_metrics(self, session):
 
         q = session.query(
             ex_arr_mt
@@ -771,7 +772,6 @@ class ExptArrayMetricRequest:
                 columns=ExptArrayMetricsData._fields
             )
         except Exception as err:
-            session.close()
             trcbk = traceback.format_exc()
             msg = f'Problem casting array exeriment metrics query output into pandas ' \
                 f'DataFrame - err: {trcbk}'
@@ -809,8 +809,6 @@ class ExptArrayMetricRequest:
         )
 
         print(f'response: {response}')
-
-        session.close()
         return response
 
     def remove_metric_duplicates(self, m_df):

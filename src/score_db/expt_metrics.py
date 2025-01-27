@@ -309,8 +309,6 @@ def get_regions_filter(filter_dict, constructed_filter):
 def get_expt_record(body):
 
     # get experiment name
-    session = stm.get_session()
-
     expt_name = body.get('expt_name')
     datestr_format = body.get('datestr_format')
     wlclk_strt_str = body.get('expt_wallclock_start')
@@ -360,7 +358,7 @@ def get_expt_record(body):
     except Exception as err:
         msg = f'Problems encountered requesting experiment data. err - {err}'
         raise ExptMetricsError(msg)
-        
+    
     return records
 
 
@@ -392,28 +390,33 @@ class ExptMetricRequest:
 
 
     def submit(self):
-        if self.method == db_utils.HTTP_GET:
-            try:
-                return self.get_experiment_metrics()
-            except Exception as err:
-                trcbk = traceback.format_exc()
-                error_msg = 'Failed to get experiment metric records -' \
-                    f' trcbk: {trcbk}'
-                print(f'Submit GET error: {error_msg}')
-                return self.failed_request(error_msg)
-        elif self.method == db_utils.HTTP_PUT:
-            # becomes an update if record exists
-            print(f'in PUT method')
-            try:
-                response = self.put_expt_metrics_data()
-            except Exception as err:
-                trcbk = traceback.format_exc()
-                error_msg = 'Failed to insert experiment metric records -' \
-                    f' trcbk: {trcbk}'
-                print(f'Submit PUT error: {error_msg}')
-                return self.failed_request(error_msg)
-
-            return response
+        with stm.engine.connect() as connection:
+            session = stm.Session(bind=connection)
+            if self.method == db_utils.HTTP_GET:
+                try:
+                    return self.get_experiment_metrics(session)
+                except Exception as err:
+                    trcbk = traceback.format_exc()
+                    error_msg = 'Failed to get experiment metric records -' \
+                        f' trcbk: {trcbk}'
+                    print(f'Submit GET error: {error_msg}')
+                    return self.failed_request(error_msg)
+                finally:
+                    session.close()
+            elif self.method == db_utils.HTTP_PUT:
+                # becomes an update if record exists
+                print(f'in PUT method')
+                try:
+                    return self.put_expt_metrics_data(session)
+                except Exception as err:
+                    trcbk = traceback.format_exc()
+                    error_msg = 'Failed to insert experiment metric records -' \
+                        f' trcbk: {trcbk}'
+                    print(f'Submit PUT error: {error_msg}')
+                    session.rollback()
+                    return self.failed_request(error_msg)
+                finally:
+                    session.close()
 
 
     def failed_request(self, error_msg):
@@ -556,14 +559,13 @@ class ExptMetricRequest:
         return parsed_metrics
 
     
-    def put_expt_metrics_data(self):
+    def put_expt_metrics_data(self, session):
 
         # we need to determine the primary key id from the experiment
         # all calls to this function must return a DbActionResponse object
         expt_record = get_expt_record(self.body)
         expt_id = self.get_first_expt_id_from_df(expt_record)
         records = self.get_expt_metrics_from_body(self.body)
-        session = stm.get_session()
 
 
         if len(records) > 0:
@@ -582,9 +584,7 @@ class ExptMetricRequest:
 
             session.bulk_save_objects(records)
             session.commit()
-            session.close()
         else:
-            session.close()
             return self.failed_request('No expt metric records were discovered to be inserted')
 
         return DbActionResponse(
@@ -596,9 +596,7 @@ class ExptMetricRequest:
         )
 
     
-    def get_experiment_metrics(self):
-        session = stm.get_session()
-
+    def get_experiment_metrics(self, session):
         # set basic query
         q = session.query(
             ex_mt
