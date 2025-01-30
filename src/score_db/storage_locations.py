@@ -104,6 +104,22 @@ def get_string_filter(filters, cls, key, constructed_filter):
 
     return constructed_filter
 
+def get_int_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    int_flt = filters.get(key)
+
+    if int_flt is None:
+        print(f'No \'{key}\' filter detected')
+    else:
+        constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    
+    return constructed_filter
+
 def construct_filters(filters):
     constructed_filter = {}
 
@@ -121,6 +137,9 @@ def construct_filters(filters):
     
     constructed_filter = get_string_filter(
         filters, sl, 'key', constructed_filter)
+    
+    constructed_filter = get_int_filter(
+        filters, sl, 'id', constructed_filter)
     
     return constructed_filter
 

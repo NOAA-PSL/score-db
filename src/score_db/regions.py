@@ -223,6 +223,22 @@ def get_float_filter(filters, cls, key, constructed_filter):
     
     return constructed_filter
 
+def get_int_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    int_flt = filters.get(key)
+
+    if int_flt is None:
+        print(f'No \'{key}\' filter detected')
+    else:
+        constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    
+    return constructed_filter
+
 #constructs all sqlalchmey filter statements for region values
 def construct_filters(filters):
         constructed_filter = {}
@@ -236,6 +252,8 @@ def construct_filters(filters):
         constructed_filter = get_float_filter(filters, rg, 'east_lon', constructed_filter)
 
         constructed_filter = get_float_filter(filters, rg, 'west_lon', constructed_filter)
+
+        constructed_filter = get_int_filter(filters, rg, 'id', constructed_filter)
 
         return constructed_filter
 

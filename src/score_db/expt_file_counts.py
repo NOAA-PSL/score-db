@@ -249,6 +249,22 @@ def get_float_filter(filter_dict, cls, key, constructed_filter):
     
     return constructed_filter
 
+def get_int_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    int_flt = filters.get(key)
+
+    if int_flt is None:
+        print(f'No \'{key}\' filter detected')
+    else:
+        constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    
+    return constructed_filter
+
 def get_experiments_filter(filter_dict, constructed_filter):
     if filter_dict is None:
         print('No experiment filters provided')
@@ -277,6 +293,9 @@ def get_experiments_filter(filter_dict, constructed_filter):
     constructed_filter = get_time_filter(
         filter_dict, exp, 'wallclock_start', constructed_filter)
     
+    constructed_filter = get_int_filter(
+        filter_dict, exp, 'id', constructed_filter)
+    
     return constructed_filter
 
 def get_file_types_filter(filter_dict, constructed_filter):
@@ -303,6 +322,9 @@ def get_file_types_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_string_filter(
         filter_dict, ft, 'file_format', constructed_filter, 'file_format')
+    
+    constructed_filter = get_int_filter(
+        filter_dict, ft, 'id', constructed_filter)
     
     return constructed_filter
 
@@ -336,6 +358,9 @@ def get_storage_locations_filter(filter_dict, constructed_filter):
     
     constructed_filter = get_string_filter(
         filter_dict, sl, 'key', constructed_filter, 'key')
+    
+    constructed_filter = get_int_filter(
+        filter_dict, sl, 'id', constructed_filter)
     
     return constructed_filter
 
@@ -582,6 +607,8 @@ class ExptFileCountRequest:
         constructed_filter = get_time_filter(filters, esfc, 'cycle', constructed_filter)
 
         constructed_filter = get_float_filter(filters, esfc, 'file_size_bytes', constructed_filter)
+
+        constructed_filter = get_int_filter(filters, esfc, 'id', constructed_filter)
 
         if len(constructed_filter) > 0:
             try: 
