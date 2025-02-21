@@ -425,6 +425,7 @@ class ExperimentRequest:
         try:
             result = session.execute(do_update_stmt)
             session.flush()
+            session.commit()
             result_row = result.fetchone()
             action = db_utils.INSERT
             if result_row.updated_at is not None:
