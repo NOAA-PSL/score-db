@@ -255,6 +255,9 @@ def get_experiments_filter(filter_dict, constructed_filter):
     constructed_filter = get_time_filter(
         filter_dict, exp, 'wallclock_start', constructed_filter)
     
+    constructed_filter = get_int_filter(
+        filter_dict, exp, 'id', constructed_filter)
+    
     return constructed_filter
 
 def get_array_metric_types_filter(filter_dict, constructed_filter):
@@ -282,6 +285,8 @@ def get_array_metric_types_filter(filter_dict, constructed_filter):
     constructed_filter = get_string_filter(filter_dict, amt, 'measurement_units', constructed_filter, 'measurement_units')
 
     constructed_filter = get_string_filter(filter_dict, amt, 'stat_type', constructed_filter, 'stat_type')
+
+    constructed_filter = get_int_filter(filter_dict, amt, 'id', constructed_filter)
     
     constructed_filter = get_string_filter(filter_dict, im, 'name', constructed_filter, 'instrument_meta_name')
 
@@ -312,6 +317,8 @@ def get_regions_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
 
+    constructed_filter = get_int_filter(filter_dict, rgs, 'id', constructed_filter)
+
     return constructed_filter
 
 def get_sat_meta_filter(filter_dict, constructed_filter):
@@ -335,6 +342,8 @@ def get_sat_meta_filter(filter_dict, constructed_filter):
     constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter, 'sat_name')
 
     constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter, 'short_name')
+
+    constructed_filter = get_int_filter(filter_dict, sm, 'id', constructed_filter)
 
     return constructed_filter
 
@@ -571,6 +580,8 @@ class ExptArrayMetricRequest:
         constructed_filter = get_float_filter(self.filters, ex_arr_mt, 'ensemble_member', constructed_filter)
 
         constructed_filter = get_boolean_filter(self.filters, ex_arr_mt, 'assimilated', constructed_filter)
+
+        constructed_filter = get_int_filter(self.filters, ex_arr_mt, 'id', constructed_filter)
 
         if len(constructed_filter) > 0:
             try:

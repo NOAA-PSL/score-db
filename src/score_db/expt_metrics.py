@@ -38,6 +38,7 @@ from score_db.score_table_models import ExperimentMetric as ex_mt
 from score_db.score_table_models import MetricType as mts
 from score_db.score_table_models import Region as rgs
 from score_db.score_table_models import SatMeta as sm
+from score_db.score_table_models import InstrumentMeta as im
 from score_db.experiments import Experiment, ExperimentData
 from score_db.experiments import ExperimentRequest
 import score_db.regions as rg
@@ -213,6 +214,22 @@ def get_float_filter(filter_dict, cls, key, constructed_filter):
     
     return constructed_filter
 
+def get_int_filter(filters, cls, key, constructed_filter):
+    if not isinstance(filters, dict):
+        msg = f'Invalid type for filters, must be \'dict\', was ' \
+            f'type: {type(filters)}'
+        raise TypeError(msg)
+
+    print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
+    int_flt = filters.get(key)
+
+    if int_flt is None:
+        print(f'No \'{key}\' filter detected')
+    else:
+        constructed_filter[f'{cls.__name__}.{key}'] = ( getattr(cls, key) == int_flt )
+    
+    return constructed_filter
+
 def get_experiments_filter(filter_dict, constructed_filter):
     if not isinstance(filter_dict, dict):
         msg = f'Invalid type for filter, must be \'dict\', was ' \
@@ -235,6 +252,9 @@ def get_experiments_filter(filter_dict, constructed_filter):
 
     constructed_filter = get_time_filter(
         filter_dict, exp, 'wallclock_start', constructed_filter)
+    
+    constructed_filter = get_int_filter(
+        filter_dict, exp, 'id', constructed_filter)
     
     return constructed_filter
 
@@ -290,6 +310,11 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         'metric_type_stat_type'
     )
 
+    constructed_filter = get_int_filter(
+        filter_dict, mts,
+        'id',
+        constructed_filter)
+    
     constructed_filter = get_string_filter(filter_dict, im, 'name', constructed_filter, 'instrument_meta_name')
 
     return constructed_filter
@@ -319,6 +344,32 @@ def get_regions_filter(filter_dict, constructed_filter):
     constructed_filter = get_float_filter(filter_dict, rgs, 'east_lon', constructed_filter)
 
     constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
+
+    constructed_filter = get_int_filter(filter_dict, rgs, 'id', constructed_filter)
+
+    return constructed_filter
+
+def get_sat_meta_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        return constructed_filter
+
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'name')
+
+    constructed_filter = get_int_filter(filter_dict, sm, 'sat_id', constructed_filter)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter, 'sat_name')
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter, 'short_name')
 
     return constructed_filter
 
@@ -501,6 +552,8 @@ class ExptMetricRequest:
         constructed_filter = get_float_filter(self.filters, ex_mt, 'forecast_hour', constructed_filter)
 
         constructed_filter = get_float_filter(self.filters, ex_mt, 'ensemble_member', constructed_filter)
+
+        constructed_filter = get_int_filter(self.filters, ex_mt, 'id', constructed_filter)
 
         if len(constructed_filter) > 0:
             try:

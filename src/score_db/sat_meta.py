@@ -121,6 +121,8 @@ def construct_filters(filters):
 
     constructed_filter = get_string_filter(filters, sm, 'short_name', constructed_filter)
 
+    constructed_filter = get_int_filter(filters, sm, 'id', constructed_filter)
+
     return constructed_filter
 
 @dataclass
