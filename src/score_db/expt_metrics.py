@@ -37,6 +37,7 @@ from score_db.score_table_models import Experiment as exp
 from score_db.score_table_models import ExperimentMetric as ex_mt
 from score_db.score_table_models import MetricType as mts
 from score_db.score_table_models import Region as rgs
+from score_db.score_table_models import SatMeta as sm
 from score_db.experiments import Experiment, ExperimentData
 from score_db.experiments import ExperimentRequest
 import score_db.regions as rg
@@ -57,7 +58,11 @@ ExptMetricInputData = namedtuple(
         'value',
         'time_valid',
         'forecast_hour',
-        'ensemble_member'
+        'ensemble_member',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
     ],
 )
 
@@ -81,8 +86,17 @@ ExptMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
+        'metric_obs_platform',
+        'metric_instrument_meta_id',
+        'metric_instrument_name',
+        'metric_instrument_num_channels',
         'region_id',
         'region',
+        'sat_meta_id',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
         'created_at'
     ],
 )
@@ -276,6 +290,8 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         'metric_type_stat_type'
     )
 
+    constructed_filter = get_string_filter(filter_dict, im, 'name', constructed_filter, 'instrument_meta_name')
+
     return constructed_filter
 
 
@@ -303,6 +319,30 @@ def get_regions_filter(filter_dict, constructed_filter):
     constructed_filter = get_float_filter(filter_dict, rgs, 'east_lon', constructed_filter)
 
     constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
+
+    return constructed_filter
+
+def get_sat_meta_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        return constructed_filter
+
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'name')
+
+    constructed_filter = get_int_filter(filter_dict, sm, 'sat_id', constructed_filter)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter, 'sat_name')
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter, 'short_name')
 
     return constructed_filter
 
