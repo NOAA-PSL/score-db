@@ -719,6 +719,8 @@ class ExptArrayMetricRequest:
             for ordering_item in column_ordering:
                 q = q.order_by(ordering_item)
 
+        # compiled_sql = q.statement.compile(stm.engine, compile_kwargs={"literal_binds": True})
+        # compiled_string = str(compiled_sql)
         array_metrics = q.all()
 
         parsed_metrics = []
