@@ -747,13 +747,13 @@ class ExptMetricRequest:
         ).join(
             exp, ex_mt.experiment
         ).join(
-            mts, ex_mt.metric_type
-        ).join(
             rgs, ex_mt.region
         ).outerjoin(
             sm, ex_mt.sat_meta
+        ).join(
+            mts, ex_mt.metric_type
         ).outerjoin(
-            im, ex_mt.instrument_meta
+            im, mts.instrument_meta
         )
 
         # add filters
@@ -784,9 +784,9 @@ class ExptMetricRequest:
                 sat_id=metric.sat_meta.sat_id
                 sat_name=metric.sat_meta.sat_name
                 sat_short_name=metric.sat_meta.short_name
-            if metric.array_metric_type.instrument_meta is not None:
-                metric_instrument_name=metric.array_metric_type.instrument_meta.name
-                metric_instrument_num_channels=metric.array_metric_type.instrument_meta.num_channels
+            if metric.metric_type.instrument_meta is not None:
+                metric_instrument_name=metric.metric_type.instrument_meta.name
+                metric_instrument_num_channels=metric.metric_type.instrument_meta.num_channels
 
             record = ExptMetricsData(
                 id=metric.id,
