@@ -115,6 +115,7 @@ class ExperimentMetric(Base):
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     metric_type_id = Column(Integer, ForeignKey('metric_types.id'))
     region_id = Column(Integer, ForeignKey('regions.id'))
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
     elevation = Column(Float)
     elevation_unit = Column(String(32))
     value = Column(Float)
@@ -126,7 +127,7 @@ class ExperimentMetric(Base):
     experiment = relationship('Experiment', back_populates='metrics')
     metric_type = relationship('MetricType', back_populates='metrics')
     region = relationship('Region', back_populates='metrics')
-
+    sat_meta = relationship('SatMeta', back_populates='metrics')
 
 class Region(Base):
     __tablename__ = REGIONS_TABLE
@@ -156,11 +157,15 @@ class MetricType(Base):
             'measurement_type',
             'measurement_units',
             'stat_type',
+            'obs_platform',
+            'instrument_meta_id',
             name='unique_metric_type'
         ),
     )
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    obs_platform = Column(String(128), nullable=True)
+    instrument_meta_id = Column(Integer, ForeignKey('instrument_meta.id'), nullable=True)
     name = Column(String(128), nullable=False)
     long_name = Column(String(128))
     measurement_type = Column(String(64), nullable=False)
@@ -171,6 +176,7 @@ class MetricType(Base):
     updated_at = Column(DateTime)
     
     metrics = relationship('ExperimentMetric', back_populates='metric_type')
+    instrument_meta = relationship('InstrumentMeta', back_populates='metric_type')
 
 class StorageLocation(Base):
     __tablename__ = STORAGE_LOCATION_TABLE
@@ -307,6 +313,7 @@ class SatMeta(Base):
     updated_at = Column(DateTime) 
 
     array_metrics = relationship('ExptArrayMetric', back_populates='sat_meta')
+    metrics = relationship('ExperimentMetric', back_populates='sat_meta')
 
 class InstrumentMeta(Base):
     __tablename__ = INSTRUMENT_META_TABLE
@@ -325,6 +332,7 @@ class InstrumentMeta(Base):
     updated_at = Column(DateTime) 
 
     array_metric_type = relationship('ArrayMetricType', back_populates='instrument_meta')
+    metric_type = relationship('MetricType', back_populates='instrument_meta')
 
 
 

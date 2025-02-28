@@ -12,7 +12,7 @@ import json
 from collections import namedtuple
 
 import score_db.metric_types as mts
-from score_db.metric_types import MetricTypeData, MetricType, MetricTypeRequest
+from score_db.metric_types import MetricTypeInputData, MetricType, MetricTypeRequest
 
 from score_db.score_db_base import handle_request
 
