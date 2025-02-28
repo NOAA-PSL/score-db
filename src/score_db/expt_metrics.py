@@ -707,6 +707,8 @@ class ExptMetricRequest:
 
         # we need to determine the primary key id from the experiment
         # all calls to this function must return a DbActionResponse object
+        expt_record = get_expt_record(self.body)
+        expt_id = self.get_first_expt_id_from_df(expt_record)
         records = self.get_expt_metrics_from_body(self.body)
 
 
