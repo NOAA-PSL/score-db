@@ -44,7 +44,7 @@ def test_get_expt_array_metrics_request():
                         'to': '2021-07-22 10:22:05'
                     }
                 },
-                'metric_types': {
+                'array_metric_types': {
                     'name': {
                         'exact': ['vertical_example_metric']
                     },
@@ -108,7 +108,7 @@ def test_get_expt_array_metrics_request_with_sat():
                         'to': '2021-07-22 10:22:05'
                     }
                 },
-                'metric_types': {
+                'array_metric_types': {
                     'name': {
                         'exact': ['vertical_example_metric']
                     },

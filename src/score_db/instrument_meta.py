@@ -116,6 +116,8 @@ def construct_filters(filters):
 
     constructed_filter = get_string_filter(filters, im, 'scan_angle', constructed_filter)
 
+    constructed_filter = get_int_filter(filters, im, 'id', constructed_filter)
+
     return constructed_filter
 
 
