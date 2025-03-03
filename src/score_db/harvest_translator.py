@@ -22,7 +22,11 @@ MetricTableData = namedtuple(
         'value',
         'cycletime',
         'forecast_hour',
-        'ensemble_member'
+        'ensemble_member',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
     ],
 )
 
@@ -66,6 +70,10 @@ def inc_logs_translator(harvested_data):
         harvested_data.value,
         harvested_data.cycletime,
         None,
+        None,
+        None, 
+        None,
+        None,
         None)
     return result
 
@@ -91,6 +99,10 @@ def daily_bfg_translator(harvested_data):
         'N/A',
         harvested_data.value,
         harvested_data.mediantime,
+        None,
+        None,
+        None, 
+        None,
         None,
         None
     )        

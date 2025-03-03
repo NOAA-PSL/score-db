@@ -280,3 +280,22 @@ def test_send_get_request_with_instrument():
     result = mtr.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+def test_put_metric_type_for_harvest_test():
+    request_dict = {
+        'db_request_name': 'metric_types',
+        'method': 'PUT',
+        'body': {
+            'name': 'mean_o3mr_inc',
+            'longname': 'Mean Ozone Mixing Ratio',
+            'obs_platform': None,
+            'measurement_type': 'o3mr_inc',
+            'measurement_units': 'kg/kg',
+            'stat_type': 'mean',
+            'description': json.dumps("longname is Mean Ozone Mixing Ratio"),
+        }
+    }
+
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
+    assert(result.success)

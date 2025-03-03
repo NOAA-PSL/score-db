@@ -91,7 +91,11 @@ class HarvestMetricsRequest(object):
                 data.value,
                 data.cycletime,
                 data.forecast_hour,
-                data.ensemble_member
+                data.ensemble_member,
+                data.sat_meta_name, 
+                data.sat_id,
+                data.sat_name,
+                data.sat_short_name
             )
 
             expt_metrics.append(item)
