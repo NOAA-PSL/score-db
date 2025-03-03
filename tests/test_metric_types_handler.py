@@ -224,7 +224,59 @@ def test_send_get_request():
         }
     }
 
-    er = MetricTypeRequest(request_dict)
-    result = er.submit()
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
+    assert(result.success)
+    assert(result.details.get('record_count') > 0)
+
+
+
+def test_put_metric_type_with_instrument():
+    request_dict = {
+        'db_request_name': 'metric_types',
+        'method': 'PUT',
+        'body': {
+            'name': 'example_metric_inst',
+            'longname': 'long name with instrument',
+            'obs_platform': 'satellite',
+            'measurement_type': 'example_measurement_type',
+            'measurement_units': 'example_measurement_units',
+            'stat_type': 'example_stat',
+            'description': json.dumps("example metric type for testing purposes"),
+            'instrument_meta_name': 'example_instrument',
+        }
+    }
+
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
+    assert(result.success)
+
+def test_send_get_request_with_instrument():
+
+    request_dict = {
+        'db_request_name': 'metric_types',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': 'example_metric_inst',
+                },
+                'instrument_meta_name':{
+                    'exact': 'example_instrument'
+                },
+                'stat_type':{
+                    'exact':'example_stat'
+                }
+            },
+            'ordering': [
+                {'name': 'name', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 4
+        }
+    }
+
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)
