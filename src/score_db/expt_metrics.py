@@ -887,7 +887,8 @@ class ExptMetricRequest:
                     'ensemble_member',
                     'expt_id',
                     'metric_id',
-                    'region_id'
+                    'region_id',
+                    'sat_meta_id'
                 ],
                 keep='last'
             )
