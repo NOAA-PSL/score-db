@@ -336,7 +336,7 @@ def get_regions_filter(filter_dict, constructed_filter):
         raise TypeError(msg)
 
     constructed_filter = get_string_filter(
-        filter_dict, rgs, 'name', constructed_filter, 'rgs_name')
+        filter_dict, rgs, 'name', constructed_filter, 'name')
 
     constructed_filter = get_float_filter(filter_dict, rgs, 'min_lat', constructed_filter)
 
