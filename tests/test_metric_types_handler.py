@@ -12,7 +12,7 @@ import json
 from collections import namedtuple
 
 import score_db.metric_types as mts
-from score_db.metric_types import MetricTypeData, MetricType, MetricTypeRequest
+from score_db.metric_types import MetricTypeInputData, MetricType, MetricTypeRequest
 
 from score_db.score_db_base import handle_request
 
@@ -224,7 +224,78 @@ def test_send_get_request():
         }
     }
 
-    er = MetricTypeRequest(request_dict)
-    result = er.submit()
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+
+
+def test_put_metric_type_with_instrument():
+    request_dict = {
+        'db_request_name': 'metric_types',
+        'method': 'PUT',
+        'body': {
+            'name': 'example_metric_inst',
+            'longname': 'long name with instrument',
+            'obs_platform': 'satellite',
+            'measurement_type': 'example_measurement_type',
+            'measurement_units': 'example_measurement_units',
+            'stat_type': 'example_stat',
+            'description': json.dumps("example metric type for testing purposes"),
+            'instrument_meta_name': 'example_instrument',
+        }
+    }
+
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
+    assert(result.success)
+
+def test_send_get_request_with_instrument():
+
+    request_dict = {
+        'db_request_name': 'metric_types',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': 'example_metric_inst',
+                },
+                'instrument_meta_name':{
+                    'exact': 'example_instrument'
+                },
+                'stat_type':{
+                    'exact':'example_stat'
+                }
+            },
+            'ordering': [
+                {'name': 'name', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 4
+        }
+    }
+
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
+    assert(result.success)
+    assert(result.details.get('record_count') > 0)
+
+def test_put_metric_type_for_harvest_test():
+    request_dict = {
+        'db_request_name': 'metric_types',
+        'method': 'PUT',
+        'body': {
+            'name': 'mean_o3mr_inc',
+            'longname': 'Mean Ozone Mixing Ratio',
+            'obs_platform': None,
+            'measurement_type': 'o3mr_inc',
+            'measurement_units': 'kg/kg',
+            'stat_type': 'mean',
+            'description': json.dumps("longname is Mean Ozone Mixing Ratio"),
+        }
+    }
+
+    mtr = MetricTypeRequest(request_dict)
+    result = mtr.submit()
+    assert(result.success)

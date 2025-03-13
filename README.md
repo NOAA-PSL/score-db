@@ -412,6 +412,8 @@ regions
 metric_types
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    obs_platform = Column(String(128), nullable=True)
+    instrument_meta_id = Column(Integer, ForeignKey('instrument_meta.id'), nullable=True)
     name = Column(String(128), nullable=False)
     long_name = Column(String(128))
     measurement_type = Column(String(64), nullable=False)
@@ -422,6 +424,7 @@ metric_types
     updated_at = Column(DateTime)
     
     metrics = relationship('ExperimentMetric', back_populates='metric_type')
+    instrument_meta = relationship('InstrumentMeta', back_populates='metric_type')
 ```
 
 ```sh
@@ -431,6 +434,7 @@ expt_metrics
     experiment_id = Column(Integer, ForeignKey('experiments.id'))
     metric_type_id = Column(Integer, ForeignKey('metric_types.id'))
     region_id = Column(Integer, ForeignKey('regions.id'))
+    sat_meta_id = Column(Integer, ForeignKey('sat_meta.id'), nullable=True)
     elevation = Column(Float, nullable=False)
     elevation_unit = Column(String(32))
     value = Column(Float)
@@ -442,6 +446,7 @@ expt_metrics
     experiment = relationship('Experiment', back_populates='metrics')
     metric_type = relationship('MetricType', back_populates='metrics')
     region = relationship('Region', back_populates='metrics')
+    sat_meta = relationship('SatMeta', back_populates='metrics')
 ```
 ```sh
 storage_locations
@@ -548,6 +553,7 @@ sat_meta
     updated_at = Column(DateTime)
 
     array_metrics = relationship('ExptArrayMetric', back_populates='sat_meta')
+    metrics = relationship('ExperimentMetric', back_populates='sat_meta')
 ```
 
 ```sh
@@ -561,6 +567,7 @@ instrument_meta
     updated_at = Column(DateTime) 
 
     array_metric_type = relationship('ArrayMetricType', back_populates='instrument_meta')
+    metric_type = relationship('MetricType', back_populates='instrument_meta')
 ```
 
 ## Request Dictionaries / YAML Formats
@@ -698,15 +705,19 @@ request_dict = {
                 'value': value,
                 'time_valid': time_valid,
                 'forecast_hour' : forecast_hour,
-                'ensemble_member' : ensemble_member
+                'ensemble_member' : ensemble_member,
+                'sat_meta_name': sat_meta_name,
+                'sat_id': sat_id,
+                'sat_name': sat_name,
+                'sat_short_name': sat_short_name
             },
             'datestr_format': '%Y-%m-%d %H:%M:%S',
         }
     }
 ```
-Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member
+Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member, sat_meta_name, sat_id, sat_name, sat_short_name
 
-Note: for a successful PUT call, the experiment, region, and metric type referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
+Note: for a successful PUT call, the experiment, region, metric type, and sat meta referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
 ### Harvest Metrics Dictionary 
 Harvest metrics only accepts PUT calls, therefore a method is not required. Any GET call for metrics should be through 'expt_metrics'. 
@@ -800,12 +811,16 @@ request_types = {
             'measurement_type': measurement_type,
             'measurement_units': units,
             'stat_type': stat_type,
+            'obs_platform': obs_platform,
+            'instrument_meta_name': instrument_meta_name,
             'description': #JSON FORMAT OF DESCRIPTION
         }
     }
 ```
 
-Values which can be null or not provided: measurement_units, stat_type, description
+Values which can be null or not provided: measurement_units, stat_type, obs_platform, instrument_meta_name, description
+
+Note: for a successful PUT call, the instrument meta referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
 ### Regions Dictionaries
 Example format of request dictionary for 'regions' calls.

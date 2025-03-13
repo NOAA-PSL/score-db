@@ -37,8 +37,11 @@ from score_db.score_table_models import Experiment as exp
 from score_db.score_table_models import ExperimentMetric as ex_mt
 from score_db.score_table_models import MetricType as mts
 from score_db.score_table_models import Region as rgs
+from score_db.score_table_models import SatMeta as sm
+from score_db.score_table_models import InstrumentMeta as im
 from score_db.experiments import Experiment, ExperimentData
 from score_db.experiments import ExperimentRequest
+from score_db.sat_meta import SatMetaRequest
 import score_db.regions as rg
 import score_db.metric_types as mt
 from score_db import time_utils
@@ -57,7 +60,11 @@ ExptMetricInputData = namedtuple(
         'value',
         'time_valid',
         'forecast_hour',
-        'ensemble_member'
+        'ensemble_member',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
     ],
 )
 
@@ -81,8 +88,17 @@ ExptMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
+        'metric_obs_platform',
+        'metric_instrument_meta_id',
+        'metric_instrument_name',
+        'metric_instrument_num_channels',
         'region_id',
         'region',
+        'sat_meta_id',
+        'sat_meta_name',
+        'sat_id',
+        'sat_name',
+        'sat_short_name',
         'created_at'
     ],
 )
@@ -163,7 +179,7 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
         raise TypeError(msg)
 
     print(f'Column \'{key}\' is of type {type(getattr(cls, key).type)}.')
-    string_flt = filter_dict.get(key)
+    string_flt = filter_dict.get(key_name)
     print(f'string_flt: {string_flt}')
 
     if string_flt is None:
@@ -173,12 +189,12 @@ def get_string_filter(filter_dict, cls, key, constructed_filter, key_name):
     like_filter = string_flt.get('like')
     # prefer like search over exact match if both exist
     if like_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).like(like_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).like(like_filter))
         return constructed_filter
 
     exact_match_filter = validate_list_of_strings(string_flt.get('exact'))
     if exact_match_filter is not None:
-        constructed_filter[key_name] = (getattr(cls, key).in_(exact_match_filter))
+        constructed_filter[f'{cls.__name__}.{key}'] = (getattr(cls, key).in_(exact_match_filter))
 
     return constructed_filter
 
@@ -299,6 +315,8 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         filter_dict, mts,
         'id',
         constructed_filter)
+    
+    constructed_filter = get_string_filter(filter_dict, im, 'name', constructed_filter, 'instrument_meta_name')
 
     return constructed_filter
 
@@ -329,6 +347,30 @@ def get_regions_filter(filter_dict, constructed_filter):
     constructed_filter = get_float_filter(filter_dict, rgs, 'west_lon', constructed_filter)
 
     constructed_filter = get_int_filter(filter_dict, rgs, 'id', constructed_filter)
+
+    return constructed_filter
+
+def get_sat_meta_filter(filter_dict, constructed_filter):
+    if filter_dict is None:
+        return constructed_filter
+
+    if not isinstance(filter_dict, dict):
+        msg = f'Invalid type for filter, must be \'dict\', was ' \
+            f'type: {type(filter_dict)}'
+        raise TypeError(msg)
+    
+    if not isinstance(constructed_filter, dict):
+        msg = 'Invalid type for constructed_filter, must be \'dict\', ' \
+            f'was type: {type(filter_dict)}'
+        raise TypeError(msg)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'name', constructed_filter, 'name')
+
+    constructed_filter = get_int_filter(filter_dict, sm, 'sat_id', constructed_filter)
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'sat_name', constructed_filter, 'sat_name')
+
+    constructed_filter = get_string_filter(filter_dict, sm, 'short_name', constructed_filter, 'short_name')
 
     return constructed_filter
 
@@ -387,6 +429,75 @@ def get_expt_record(body):
     
     return records
 
+def get_sat_meta_id_from_metric(metric):
+    sat_meta_id = -1
+    try:    
+        sat_meta_name = metric.sat_meta_name
+        sat_id = metric.sat_id
+        sat_name = metric.sat_name
+        sat_short_name = metric.sat_short_name
+    except Exception as err:
+        print(f'Required sat meta input value not found: {err}')
+        return sat_meta_id
+    
+    if sat_meta_name is None and sat_id is None and sat_name is None and sat_short_name is None:
+        return sat_meta_id
+    
+    sat_meta_request = {
+        'name': 'sat_meta',
+        'method': db_utils.HTTP_GET,
+        'params': {
+            'filters': {
+                'name': {
+                    'exact': sat_meta_name
+                },
+                'sat_name': {
+                    'exact': sat_name
+                },
+                'short_name': {
+                    'exact': sat_short_name
+                },
+                'sat_id': sat_id
+            },
+            'record_limit': 1
+        }
+    }
+
+    print(f'sat_meta_request: {sat_meta_request}')
+
+    smr = SatMetaRequest(sat_meta_request)
+
+    results = smr.submit()
+    print(f'results: {results}')
+
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            if records is None:
+                msg = 'Request for sat meta record did not return a record'
+                raise ExptMetricsError(msg)
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting sat meta data.'
+            # create error return db_action_response
+            raise ExptMetricsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for sat meta record did not return a record'
+            raise ExptMetricsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting sat meta data. err - {err}'
+        raise ExptMetricsError(msg) from err
+        
+    try:
+        sat_meta_id = records[sm.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding sat meta id from record: {records} ' \
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ExptMetricsError(error_msg) from err
+    return sat_meta_id
 
 @dataclass
 class ExptMetricRequest:
@@ -472,6 +583,8 @@ class ExptMetricRequest:
         
         constructed_filter = get_regions_filter(
             self.filters.get('regions'), constructed_filter)
+        
+        constructed_filter = get_sat_meta_filter(self.filters.get('sat_meta'), constructed_filter)
 
         constructed_filter = get_time_filter(
             self.filters, ex_mt, 'time_valid', constructed_filter)
@@ -553,6 +666,8 @@ class ExptMetricRequest:
         for row in metrics:
             
             value = row.value
+            sat_meta_id = get_sat_meta_id_from_metric(row)
+            sat_meta_input_id = sat_meta_id if sat_meta_id > 0 else None
 
             if math.isnan(value):
                 value = None
@@ -561,6 +676,7 @@ class ExptMetricRequest:
                 experiment_id=self.expt_id,
                 metric_type_id=mt_df_dict[row.name],
                 region_id=rg_df_dict[row.region_name],
+                sat_meta_id=sat_meta_input_id,
                 elevation=row.elevation,
                 elevation_unit=row.elevation_unit,
                 value=value,
@@ -597,18 +713,18 @@ class ExptMetricRequest:
 
 
         if len(records) > 0:
-            for record in records:
-                msg = f'record.experiment_id: {record.experiment_id}, '
-                msg += f'record.metric_type_id: {record.metric_type_id}, '
-                msg += f'record.region_id: {record.region_id}, '
-                msg += f'record.elevation: {record.elevation}, '
-                msg += f'record.elevation_unit: {record.elevation_unit}, '
-                msg += f'record.value: {record.value}, '
-                msg += f'record.time_valid: {record.time_valid}, '
-                msg += f'record.forecast_hour: {record.forecast_hour},'
-                msg += f'record.ensemble_member: {record.ensemble_member},'
-                msg += f'record.created_at: {record.created_at}'
-                print(f'record: {msg}')
+            # for record in records:
+                # msg = f'record.experiment_id: {record.experiment_id}, '
+                # msg += f'record.metric_type_id: {record.metric_type_id}, '
+                # msg += f'record.region_id: {record.region_id}, '
+                # msg += f'record.elevation: {record.elevation}, '
+                # msg += f'record.elevation_unit: {record.elevation_unit}, '
+                # msg += f'record.value: {record.value}, '
+                # msg += f'record.time_valid: {record.time_valid}, '
+                # msg += f'record.forecast_hour: {record.forecast_hour},'
+                # msg += f'record.ensemble_member: {record.ensemble_member},'
+                # msg += f'record.created_at: {record.created_at}'
+                # print(f'record: {msg}')
 
             session.bulk_save_objects(records)
             session.commit()
@@ -631,9 +747,13 @@ class ExptMetricRequest:
         ).join(
             exp, ex_mt.experiment
         ).join(
-            mts, ex_mt.metric_type
-        ).join(
             rgs, ex_mt.region
+        ).outerjoin(
+            sm, ex_mt.sat_meta
+        ).join(
+            mts, ex_mt.metric_type
+        ).outerjoin(
+            im, mts.instrument_meta
         )
 
         # add filters
@@ -650,6 +770,24 @@ class ExptMetricRequest:
         print(f'len(metrics): {len(metrics)}')
         parsed_metrics = []
         for metric in metrics:
+            #handle potential nulls from outer joins
+            sat_meta_id=None
+            sat_meta_name=None
+            sat_id=None
+            sat_name=None
+            sat_short_name=None
+            metric_instrument_name=None
+            metric_instrument_num_channels=None
+            if metric.sat_meta is not None:
+                sat_meta_id=metric.sat_meta.id
+                sat_meta_name=metric.sat_meta.name
+                sat_id=metric.sat_meta.sat_id
+                sat_name=metric.sat_meta.sat_name
+                sat_short_name=metric.sat_meta.short_name
+            if metric.metric_type.instrument_meta is not None:
+                metric_instrument_name=metric.metric_type.instrument_meta.name
+                metric_instrument_num_channels=metric.metric_type.instrument_meta.num_channels
+
             record = ExptMetricsData(
                 id=metric.id,
                 name=metric.metric_type.name,
@@ -667,8 +805,17 @@ class ExptMetricRequest:
                 metric_type=metric.metric_type.measurement_type,
                 metric_unit=metric.metric_type.measurement_units,
                 metric_stat_type=metric.metric_type.stat_type,
+                metric_instrument_meta_id=metric.metric_type.instrument_meta_id,
+                metric_instrument_name=metric_instrument_name,
+                metric_instrument_num_channels=metric_instrument_num_channels,
+                metric_obs_platform=metric.metric_type.obs_platform,
                 region_id=metric.region.id,
                 region=metric.region.name,
+                sat_meta_id=sat_meta_id,
+                sat_meta_name=sat_meta_name,
+                sat_id=sat_id,
+                sat_name=sat_name,
+                sat_short_name=sat_short_name,
                 created_at=metric.created_at
             )
             parsed_metrics.append(record)
