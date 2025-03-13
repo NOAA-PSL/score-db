@@ -839,6 +839,7 @@ class ExptArrayMetricRequest:
                     'expt_id',
                     'metric_id',
                     'region_id',
+                    'sat_meta_id'
                 ],
                 keep='last'
             )
