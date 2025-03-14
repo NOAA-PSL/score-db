@@ -243,7 +243,7 @@ def get_experiments_filter(filter_dict, constructed_filter):
         raise TypeError(msg)   
     
     constructed_filter = get_string_filter(
-        filter_dict, exp, 'name', constructed_filter, 'experiment_name')
+        filter_dict, exp, 'name', constructed_filter, 'name')
     
     constructed_filter = get_time_filter(
         filter_dict, exp, 'cycle_start', constructed_filter)
@@ -279,7 +279,7 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         mts,
         'name',
         constructed_filter,
-        'metric_type_name'
+        'name'
     )
 
     constructed_filter = get_string_filter(
@@ -287,28 +287,28 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         mts,
         'long_name',
         constructed_filter,
-        'metric_type_long_name'
+        'long_name'
     )
     
     constructed_filter = get_string_filter(
         filter_dict, mts,
         'measurement_type',
         constructed_filter,
-        'metric_type_measurement_type'
+        'measurement_type'
     )
     
     constructed_filter = get_string_filter(
         filter_dict, mts,
         'measurement_units',
         constructed_filter,
-        'metric_type_measurement_units'
+        'measurement_units'
     )
     
     constructed_filter = get_string_filter(
         filter_dict, mts,
         'stat_type',
         constructed_filter,
-        'metric_type_stat_type'
+        'stat_type'
     )
 
     constructed_filter = get_int_filter(
@@ -336,7 +336,7 @@ def get_regions_filter(filter_dict, constructed_filter):
         raise TypeError(msg)
 
     constructed_filter = get_string_filter(
-        filter_dict, rgs, 'name', constructed_filter, 'rgs_name')
+        filter_dict, rgs, 'name', constructed_filter, 'name')
 
     constructed_filter = get_float_filter(filter_dict, rgs, 'min_lat', constructed_filter)
 
