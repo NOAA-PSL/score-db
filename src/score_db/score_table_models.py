@@ -157,6 +157,7 @@ class MetricType(Base):
             'measurement_type',
             'measurement_units',
             'stat_type',
+            'stage',
             'obs_platform',
             'instrument_meta_id',
             name='unique_metric_type'
@@ -269,6 +270,7 @@ class ArrayMetricType(Base):
             'measurement_type',
             'measurement_units',
             'stat_type',
+            'stage',
             'obs_platform',
             'instrument_meta_id',
             name='unique_array_metric_type'

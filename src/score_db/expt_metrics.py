@@ -88,7 +88,7 @@ ExptMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
-        'metric_stage'
+        'metric_stage',
         'metric_obs_platform',
         'metric_instrument_meta_id',
         'metric_instrument_name',
