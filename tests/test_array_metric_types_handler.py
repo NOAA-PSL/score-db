@@ -106,3 +106,47 @@ def test_get_array_metric_type_no_instrument():
     print(f'Array Metric Type GET result: {result}')
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+def test_put_array_metric_type_with_stage():
+    request_dict = {
+        'db_request_name': 'array_metric_types',
+        'method': 'PUT',
+        'body': {
+            'name': 'mean_test',
+            'longname': 'Mean Ozone Mixing Ratio',
+            'obs_platform': None,
+            'measurement_type': 'o3mr_inc',
+            'measurement_units': 'kg/kg',
+            'stat_type': 'mean',
+            'stage': 'background',
+            'array_coord_labels': ['temperature', 'depth'],
+            'array_coord_units': ['K', 'm'],
+            'array_index_values': [[10, 20, 30],[1000, 5000, 10000]],
+            'array_dimensions': [3, 3],
+            'description': json.dumps("longname is Mean Ozone Mixing Ratio"),
+        }
+    }
+
+    amtr = ArrayMetricTypeRequest(request_dict)
+    result = amtr.submit()
+    assert(result.success)
+
+def test_send_get_request_with_stage():
+
+    request_dict = {
+        'db_request_name': 'array_metric_types',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'stage': {
+                    'exact': 'background',
+                },
+            },
+            'record_limit': 1
+        }
+    }
+
+    amtr = ArrayMetricTypeRequest(request_dict)
+    result = amtr.submit()
+    assert(result.success)
+    assert(result.details.get('record_count') > 0)
