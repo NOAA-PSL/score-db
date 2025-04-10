@@ -107,3 +107,53 @@ def test_send_get_request():
     result = er.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+
+
+def test_experiment_request_commit():
+    with open(EXPERIMENT_CONFIG_FILE, 'r') as config_file:
+        data=config_file.read()
+    
+    description = json.loads(data)
+
+    put_request_dict = {
+        'db_request_name': 'experiment',
+        'method': 'PUT',
+        'body': {
+            'name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'cycle_start': '2016-01-01 00:00:00',
+            'cycle_stop': '2016-01-31 18:00:00',
+            'owner_id': 'Steve.Lawrence@noaa.gov',
+            'group_id': 'gsienkf',
+            'experiment_type': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'platform': 'pw_awv1',
+            'wallclock_start': '2021-07-22 09:22:05',
+            'wallclock_end': '2021-07-24 05:31:14',
+            'description': json.dumps(description)
+        }
+    }
+
+    er_put = ExperimentRequest(put_request_dict)
+    result_put = er_put.submit()
+    id = result_put.details.get('id')
+
+    get_request_dict = {
+        'db_request_name': 'experiment',
+        'method': 'GET',
+        'params': {
+            'filters': {
+                'id':id
+            },
+            'ordering': [
+                {'name': 'group_id', 'order_by': 'desc'},
+                {'name': 'created_at', 'order_by': 'desc'}
+            ],
+            'record_limit': 1
+        }
+    }
+
+    er_get = ExperimentRequest(get_request_dict)
+    result_get = er_get.submit()
+    assert(result_get.success)
+    assert(result_get.details.get('record_count') > 0)

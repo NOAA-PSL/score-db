@@ -138,3 +138,42 @@ def test_get_expt_array_metrics_request_with_sat():
     result = eamr.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+def test_expt_array_metrics_commit():
+    put_request_dict = {
+        'db_request_name': 'expt_array_metrics',
+        'method': 'PUT',
+        'body': {
+            'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'expt_wallclock_start': '2021-07-22 09:22:05',
+            'array_metrics': [
+                ExptArrayMetricInputData('vertical_example_metric','global',[[1, 2, 3],[4, 5, 6],[7, 8, 9]], True, '2015-12-02 06:00:00', None, None, None, None, None, None),
+                ExptArrayMetricInputData('vertical_example_metric2','global',[[111, 222, 333],[444, 555, 666],[777, 888, 999]], True, '2015-12-02 18:00:00', 24, 12, None, None, None, None)
+            ],
+            'datestr_format': '%Y-%m-%d %H:%M:%S'
+        }
+    }
+
+    eamr_put = ExptArrayMetricRequest(put_request_dict)
+    result_put = eamr_put.submit()
+    print(f'Experiment Array Metrics PUT result: {result_put}')
+    id = result_put.details.get('id')
+
+    get_request_dict = {
+        'db_request_name': 'expt_array_metrics',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'id':id
+            },
+            'ordering': [
+                {'name': 'time_valid', 'order_by': 'asc'}
+            ]
+        }
+    }
+
+    eamr_get = ExptArrayMetricRequest(get_request_dict)
+    result_get = eamr_get.submit()
+    assert(result_get.success)
+    assert(result_get.details.get('record_count') > 0)

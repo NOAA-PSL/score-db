@@ -46,3 +46,38 @@ def test_storage_location_get_request():
     print(f'Storage location GET result: {result}')
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+def test_storage_location_commit():
+    put_request_dict = {
+        'db_request_name': 'storage_locations',
+        'method': 'PUT',
+        'body': {
+            'name': 's3_example_bucket',
+            'platform': 'aws_s3', 
+            'bucket_name': 'noaa-example-score-db-bucket',
+            'key': 'reanalysis',
+            'platform_region': 'n/a'
+        }
+    }
+
+    slr_put = StorageLocationRequest(put_request_dict)
+    result_put = slr_put.submit()
+    print(f'Storage locations PUT result: {result_put}')
+    id = result_put.details.get('id')
+
+    get_request_dict = {
+        'db_request_name': 'storage_locations',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'id':id
+                },
+            }
+        }
+
+    slr_get = StorageLocationRequest(get_request_dict)
+    result_get = slr_get.submit()
+    print(f'Storage location GET result: {result_get}')
+    assert(result_get.success)
+    assert(result_get.details.get('record_count') > 0)

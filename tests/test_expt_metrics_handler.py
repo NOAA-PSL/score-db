@@ -150,3 +150,43 @@ def test_send_get_request_with_sats():
     result = emr.submit()
     assert(result.success)
     assert(result.details.get('record_count') > 0)
+
+def test_expt_metrics_commit():
+    put_request_dict = {
+        'db_request_name': 'expt_metrics',
+        'method': 'PUT',
+        'body': {
+            'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+            'expt_wallclock_start': '2021-07-22 09:22:05',
+            'metrics': [
+                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, None, None),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256,  None, None, None, None)
+            ],
+            'datestr_format': '%Y-%m-%d %H:%M:%S'
+        }
+    }
+
+    emr_put = ExptMetricRequest(put_request_dict)
+    result_put = emr_put.submit()
+    print(f'Experiment metrics PUT result: {result_put}')
+    id = result_put.details.get('id')
+
+    get_request_dict = {
+        'db_request_name': 'expt_metrics',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'id':id
+            },
+            'ordering': [
+                # {'name': 'id', 'order_by': 'asc'}
+                {'name': 'time_valid', 'order_by': 'asc'}
+            ]
+        }
+    }
+
+    emr_get = ExptMetricRequest(get_request_dict)
+    result_get = emr_get.submit()
+    assert(result_get.success)
+    assert(result_get.details.get('record_count') > 0)
