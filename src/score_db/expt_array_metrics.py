@@ -70,6 +70,7 @@ ExptArrayMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
+        'metric_stage',
         'metric_obs_platform',
         'metric_instrument_meta_id',
         'metric_instrument_name',
@@ -285,6 +286,8 @@ def get_array_metric_types_filter(filter_dict, constructed_filter):
     constructed_filter = get_string_filter(filter_dict, amt, 'measurement_units', constructed_filter, 'measurement_units')
 
     constructed_filter = get_string_filter(filter_dict, amt, 'stat_type', constructed_filter, 'stat_type')
+
+    constructed_filter = get_string_filter(filter_dict, amt, 'stage', constructed_filter, 'stage')
 
     constructed_filter = get_int_filter(filter_dict, amt, 'id', constructed_filter)
     
@@ -757,6 +760,7 @@ class ExptArrayMetricRequest:
                 metric_type=metric.array_metric_type.measurement_type,
                 metric_unit=metric.array_metric_type.measurement_units,
                 metric_stat_type=metric.array_metric_type.stat_type,
+                metric_stage=metric.array_metric_type.stage,
                 metric_instrument_meta_id=metric.array_metric_type.instrument_meta_id,
                 metric_instrument_name=metric_instrument_name,
                 metric_instrument_num_channels=metric_instrument_num_channels,

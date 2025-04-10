@@ -157,6 +157,7 @@ class MetricType(Base):
             'measurement_type',
             'measurement_units',
             'stat_type',
+            'stage',
             'obs_platform',
             'instrument_meta_id',
             name='unique_metric_type'
@@ -171,6 +172,7 @@ class MetricType(Base):
     measurement_type = Column(String(64), nullable=False)
     measurement_units = Column(String(64))
     stat_type = Column(String(64))
+    stage = Column(String(64), nullable=True)
     description = Column(JSONB(astext_type=sa.Text()), nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
@@ -268,6 +270,7 @@ class ArrayMetricType(Base):
             'measurement_type',
             'measurement_units',
             'stat_type',
+            'stage',
             'obs_platform',
             'instrument_meta_id',
             name='unique_array_metric_type'
@@ -282,6 +285,7 @@ class ArrayMetricType(Base):
     measurement_type = Column(String(64), nullable=False)
     measurement_units = Column(String(64))
     stat_type = Column(String(64))
+    stage = Column (String(64), nullable=True)
     array_coord_labels = Column(ARRAY(String))
     array_coord_units = Column(ARRAY(String))
     array_index_values = Column(ARRAY(String))

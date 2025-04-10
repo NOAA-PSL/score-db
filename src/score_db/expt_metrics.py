@@ -88,6 +88,7 @@ ExptMetricsData = namedtuple(
         'metric_type',
         'metric_unit',
         'metric_stat_type',
+        'metric_stage',
         'metric_obs_platform',
         'metric_instrument_meta_id',
         'metric_instrument_name',
@@ -309,6 +310,13 @@ def get_metric_types_filter(filter_dict, constructed_filter):
         'stat_type',
         constructed_filter,
         'stat_type'
+    )
+
+    constructed_filter = get_string_filter(
+        filter_dict, mts,
+        'stage',
+        constructed_filter,
+        'stage'
     )
 
     constructed_filter = get_int_filter(
@@ -805,6 +813,7 @@ class ExptMetricRequest:
                 metric_type=metric.metric_type.measurement_type,
                 metric_unit=metric.metric_type.measurement_units,
                 metric_stat_type=metric.metric_type.stat_type,
+                metric_stage=metric.metric_type.stage,
                 metric_instrument_meta_id=metric.metric_type.instrument_meta_id,
                 metric_instrument_name=metric_instrument_name,
                 metric_instrument_num_channels=metric_instrument_num_channels,

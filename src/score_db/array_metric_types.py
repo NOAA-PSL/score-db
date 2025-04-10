@@ -37,6 +37,7 @@ ArrayMetricTypeInputData = namedtuple(
         'measurement_type',
         'measurement_units',
         'stat_type',
+        'stage',
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
@@ -55,6 +56,7 @@ ArrayMetricTypeData = namedtuple(
         'measurement_type',
         'measurement_units',
         'stat_type',
+        'stage',
         'array_coord_labels',
         'array_coord_units',
         'array_index_values',
@@ -82,6 +84,7 @@ class ArrayMetricType:
     measurement_type: str
     measurement_units: str
     stat_type: str
+    stage: str
     array_coord_labels: list
     array_coord_units: list
     array_index_values: list
@@ -97,6 +100,7 @@ class ArrayMetricType:
             self.measurement_type,
             self.measurement_units,
             self.stat_type,
+            self.stage,
             self.array_coord_labels,
             self.array_coord_units,
             self.array_index_values,
@@ -129,6 +133,7 @@ def get_array_metric_type_from_body(body):
         measurement_type=body.get('measurement_type'),
         measurement_units=body.get('measurement_units'),
         stat_type=body.get('stat_type'),
+        stage=body.get('stage'),
         array_coord_labels=body.get('array_coord_labels'),
         array_coord_units=body.get('array_coord_units'),
         array_index_values=body.get('array_index_values'),
@@ -214,6 +219,8 @@ def construct_filters(filters):
     constructed_filter = get_string_filter(filters, amt, 'measurement_units', constructed_filter, 'measurement_units')
 
     constructed_filter = get_string_filter(filters, amt, 'stat_type', constructed_filter, 'stat_type')
+
+    constructed_filter = get_string_filter(filters, amt, 'stage', constructed_filter, 'stage')
 
     constructed_filter = get_int_filter(filters, amt, 'id', constructed_filter)
     
@@ -374,6 +381,7 @@ class ArrayMetricTypeRequest:
             measurement_type=self.array_metric_type_data.measurement_type,
             measurement_units=self.array_metric_type_data.measurement_units,
             stat_type=self.array_metric_type_data.stat_type,
+            stage=self.array_metric_type_data.stage,
             array_coord_labels=self.array_metric_type_data.array_coord_labels,
             array_coord_units=self.array_metric_type_data.array_coord_units,
             array_index_values=self.array_metric_type_data.array_index_values,
@@ -472,6 +480,7 @@ class ArrayMetricTypeRequest:
                 measurement_type=metric_type.measurement_type,
                 measurement_units=metric_type.measurement_units,
                 stat_type=metric_type.stat_type,
+                stage=metric_type.stage,
                 array_coord_labels=metric_type.array_coord_labels,
                 array_coord_units=metric_type.array_coord_units,
                 array_index_values=metric_type.array_index_values,
@@ -491,6 +500,7 @@ class ArrayMetricTypeRequest:
                     measurement_type=metric_type.measurement_type,
                     measurement_units=metric_type.measurement_units,
                     stat_type=metric_type.stat_type,
+                    stage=metric_type.stage,
                     array_coord_labels=metric_type.array_coord_labels,
                     array_coord_units=metric_type.array_coord_units,
                     array_index_values=metric_type.array_index_values,

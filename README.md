@@ -419,6 +419,7 @@ metric_types
     measurement_type = Column(String(64), nullable=False)
     measurement_units = Column(String(64))
     stat_type = Column(String(64))
+    stage = Column(String(64), nullable=True)
     description = Column(JSONB(astext_type=sa.Text()), nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
@@ -529,6 +530,7 @@ array_metric_types
     measurement_type = Column(String(64), nullable=False)
     measurement_units = Column(String(64))
     stat_type = Column(String(64))
+    stage = Column(String(64), nullable=True)
     array_coord_labels = Column(ARRAY(String))
     array_coord_units = Column(ARRAY(String))
     array_index_values = Column(ARRAY(String))
@@ -811,6 +813,7 @@ request_types = {
             'measurement_type': measurement_type,
             'measurement_units': units,
             'stat_type': stat_type,
+            'stage': stage,
             'obs_platform': obs_platform,
             'instrument_meta_name': instrument_meta_name,
             'description': #JSON FORMAT OF DESCRIPTION
@@ -818,7 +821,7 @@ request_types = {
     }
 ```
 
-Values which can be null or not provided: measurement_units, stat_type, obs_platform, instrument_meta_name, description
+Values which can be null or not provided: measurement_units, stat_type, stage, obs_platform, instrument_meta_name, description
 
 Note: for a successful PUT call, the instrument meta referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
@@ -1083,6 +1086,7 @@ request_dict = {
             'measurement_type': 'example_measurement_type',
             'measurement_units': 'example_measurement_units',
             'stat_type': 'example_stat',
+            'stage': 'example_stage',
             'array_coord_labels': ['temperature', 'elevation'],
             'array_coord_units': ['K', 'feet'],
             'array_index_values': [[10, 20, 30],[1000, 5000, 10000]],

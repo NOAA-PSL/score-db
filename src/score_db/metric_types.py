@@ -38,6 +38,7 @@ MetricTypeInputData = namedtuple(
         'measurement_type',
         'measurement_units',
         'stat_type',
+        'stage',
         'description'
     ],
 )
@@ -52,6 +53,7 @@ MetricTypeData = namedtuple(
         'measurement_type',
         'measurement_units',
         'stat_type',
+        'stage',
         'description',
         'instrument_meta_id',
         'instrument_name',
@@ -75,6 +77,7 @@ class MetricType:
     measurement_type: str
     measurement_units: str
     stat_type: str
+    stage: str
     description: dict
     metric_type_data: MetricTypeInputData = field(init=False)
 
@@ -88,6 +91,7 @@ class MetricType:
             self.measurement_type,
             self.measurement_units,
             self.stat_type,
+            self.stage,
             self.description
         )
 
@@ -119,6 +123,7 @@ def get_metric_type_from_body(body):
         body.get('measurement_type'),
         body.get('measurement_units'),
         body.get('stat_type'),
+        body.get('stage'),
         description
     )
     
@@ -205,6 +210,9 @@ def construct_filters(filters):
 
     constructed_filter = get_string_filter(
         filters, mt, 'stat_type', constructed_filter, 'stat_type')
+    
+    constructed_filter = get_string_filter(
+        filters, mt, 'stage', constructed_filter, 'stage')
     
     constructed_filter = get_int_filter(
         filters, mt, 'id', constructed_filter)
@@ -376,6 +384,7 @@ class MetricTypeRequest:
             measurement_type=self.metric_type_data.measurement_type,
             measurement_units=self.metric_type_data.measurement_units,
             stat_type=self.metric_type_data.stat_type,
+            stage=self.metric_type_data.stage,
             description=self.metric_type_data.description,
             created_at=datetime.utcnow(),
             updated_at=None
@@ -391,6 +400,7 @@ class MetricTypeRequest:
                 long_name=self.metric_type_data.long_name, 
                 measurement_units=self.metric_type_data.measurement_units,
                 stat_type=self.metric_type_data.stat_type,
+                stage=self.metric_type_data.stage,
                 description=self.metric_type_data.description,
                 updated_at=time_now
             )
@@ -470,6 +480,7 @@ class MetricTypeRequest:
                 measurement_type=metric_type.measurement_type,
                 measurement_units=metric_type.measurement_units,
                 stat_type=metric_type.stat_type,
+                stage=metric_type.stage,
                 description=metric_type.description,
                 instrument_meta_id=metric_type.instrument_meta.id,
                 instrument_name=metric_type.instrument_meta.name,
@@ -485,6 +496,7 @@ class MetricTypeRequest:
                     measurement_type=metric_type.measurement_type,
                     measurement_units=metric_type.measurement_units,
                     stat_type=metric_type.stat_type,
+                    stage=metric_type.stage,
                     description=metric_type.description,
                     instrument_meta_id=None,
                     instrument_name=None,
