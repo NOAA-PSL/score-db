@@ -17,8 +17,8 @@ def test_put_exp_metrics_request_dict():
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
             'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, None, None),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256,  None, None, None, None)
+                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', None, None, None, None, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, None, None),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', None, None, None, None, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256,  None, None, None, None)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
@@ -86,8 +86,8 @@ def test_put_exp_metrics_request_dict_with_sats():
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
             'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1'),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256,  None, 123456789, None, None)
+                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', None, None, None, None, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1'),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', None, None, None, None, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256,  None, 123456789, None, None)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
