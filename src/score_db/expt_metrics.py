@@ -43,7 +43,6 @@ from score_db.experiments import Experiment, ExperimentData
 from score_db.experiments import ExperimentRequest
 from score_db.sat_meta import SatMetaRequest
 from score_db.regions import RegionRequest
-import score_db.regions as rg
 import score_db.metric_types as mt
 from score_db import time_utils
 from score_db import db_utils
