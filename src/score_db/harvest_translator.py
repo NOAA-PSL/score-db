@@ -155,3 +155,45 @@ def gsi_satellite_radiance_channel_translator(harvested_data):
     )
     
     return result
+    
+def soca_diags_translator(harvested_data):
+    """Expected output from soca_diags harvester
+    HarvestedData = namedtuple('HarvestedData',
+        ['filenames',
+         'sensor',
+         'satellite',
+         'level',
+         'variables',
+         'group',
+         'longname',
+         'units',
+         'statistics',
+         'value',
+         'filetime',
+         'file_region']
+    )
+    """
+    if harvested_data.sensor is None:
+        instrument_type = 'insitu'
+    else:
+        instrument_type = harvested_data.sensor
+
+    #TODO: Decide if we should include level in metric name
+    
+    result = MetricTableData(
+        harvested_data.statistics + "_" + harvested_data.variables "_" +
+        instrument_type + "_" + harvested_data.group,
+        harvested_data.file_region,
+        None,
+        'N/A',
+        harvested_data.value,
+        harvested_data.filetime,
+        None,
+        None,
+        None,
+        None,
+        None,
+        harvested_data.satellite,
+    )
+    
+    return result
