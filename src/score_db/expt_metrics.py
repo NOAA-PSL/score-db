@@ -728,7 +728,6 @@ class ExptMetricRequest:
             msg = f'\'metrics\' must be a list - was a \'{type(metrics)}\''
             raise ExptMetricsError(msg)
         
-        # unique_regions = set()
         unique_metric_types = set()
         for metric in metrics:
 
