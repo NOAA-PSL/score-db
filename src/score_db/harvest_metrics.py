@@ -86,6 +86,10 @@ class HarvestMetricsRequest(object):
             item = ExptMetricInputData(
                 data.name,
                 data.region_name,
+                data.region_min_lat,
+                data.region_max_lat, 
+                data.region_east_lon,
+                data.region_west_lon,
                 data.elevation,
                 data.elevation_unit,
                 data.value,
@@ -140,6 +144,10 @@ class HarvestMetricsRequest(object):
             item = ExptArrayMetricInputData(
                 data.name,
                 data.region_name,
+                data.region_min_lat,
+                data.region_max_lat,
+                data.region_east_lon,
+                data.region_west_lon,
                 data.value,
                 data.assimilated,
                 data.time_valid,
