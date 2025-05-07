@@ -49,6 +49,7 @@ ExptArrayMetricInputData = namedtuple(
         'time_valid',
         'forecast_hour',
         'ensemble_member',
+        'level',
         'sat_meta_name',
         'sat_id',
         'sat_name',
@@ -65,6 +66,7 @@ ExptArrayMetricsData = namedtuple(
         'time_valid',
         'forecast_hour',
         'ensemble_member',
+        'level',
         'expt_id',
         'expt_name',
         'wallclock_start',
@@ -671,6 +673,8 @@ class ExptArrayMetricRequest:
 
         constructed_filter = get_float_filter(self.filters, ex_arr_mt, 'ensemble_member', constructed_filter)
 
+        constructed_filter = get_string_filter(self.filters, ex_arr_mt, 'level', constructed_filter, 'level')
+
         constructed_filter = get_boolean_filter(self.filters, ex_arr_mt, 'assimilated', constructed_filter)
 
         constructed_filter = get_int_filter(self.filters, ex_arr_mt, 'id', constructed_filter)
@@ -726,7 +730,8 @@ class ExptArrayMetricRequest:
                 assimilated=row.assimilated,
                 time_valid=row.time_valid,
                 forecast_hour=row.forecast_hour,
-                ensemble_member=row.ensemble_member
+                ensemble_member=row.ensemble_member,
+                level = row.level
             )
 
             records.append(item)
@@ -828,6 +833,7 @@ class ExptArrayMetricRequest:
                 time_valid=metric.time_valid,
                 forecast_hour=metric.forecast_hour,
                 ensemble_member=metric.ensemble_member,
+                level = metric.level,
                 expt_id=metric.experiment.id,
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
@@ -921,6 +927,7 @@ class ExptArrayMetricRequest:
                     'time_valid',
                     'forecast_hour',
                     'ensemble_member',
+                    'level',
                     'expt_id',
                     'metric_id',
                     'region_id',
