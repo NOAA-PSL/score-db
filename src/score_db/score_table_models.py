@@ -122,6 +122,7 @@ class ExperimentMetric(Base):
     time_valid = Column(DateTime, nullable=False)
     forecast_hour = Column(Float)
     ensemble_member = Column(Integer)
+    level = Column(String(64), nullable = True)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='metrics')
@@ -255,6 +256,7 @@ class ExptArrayMetric(Base):
     time_valid = Column(DateTime)
     forecast_hour = Column(Float)
     ensemble_member = Column(Integer)
+    level = Column(String(64), nullable = True)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='array_metrics')

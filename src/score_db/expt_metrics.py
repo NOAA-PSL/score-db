@@ -42,7 +42,7 @@ from score_db.score_table_models import InstrumentMeta as im
 from score_db.experiments import Experiment, ExperimentData
 from score_db.experiments import ExperimentRequest
 from score_db.sat_meta import SatMetaRequest
-import score_db.regions as rg
+from score_db.regions import RegionRequest
 import score_db.metric_types as mt
 from score_db import time_utils
 from score_db import db_utils
@@ -55,12 +55,17 @@ ExptMetricInputData = namedtuple(
     [
         'name',
         'region_name',
+        'region_min_lat',
+        'region_max_lat',
+        'region_east_lon',
+        'region_west_lon',
         'elevation',
         'elevation_unit',
         'value',
         'time_valid',
         'forecast_hour',
         'ensemble_member',
+        'level',
         'sat_meta_name',
         'sat_id',
         'sat_name',
@@ -80,6 +85,7 @@ ExptMetricsData = namedtuple(
         'time_valid',
         'forecast_hour',
         'ensemble_member',
+        'level',
         'expt_id',
         'expt_name',
         'wallclock_start',
@@ -94,7 +100,11 @@ ExptMetricsData = namedtuple(
         'metric_instrument_name',
         'metric_instrument_num_channels',
         'region_id',
-        'region',
+        'region_name',
+        'region_min_lat',
+        'region_max_lat',
+        'region_east_lon',
+        'region_west_lon',
         'sat_meta_id',
         'sat_meta_name',
         'sat_id',
@@ -507,6 +517,87 @@ def get_sat_meta_id_from_metric(metric):
         raise ExptMetricsError(error_msg) from err
     return sat_meta_id
 
+def get_region_id_from_metric(metric):
+    region_id = -1
+    try:    
+        region_name = metric.region_name
+        region_min_lat = metric.region_min_lat
+        region_max_lat = metric.region_max_lat
+        region_east_lon = metric.region_east_lon
+        region_west_lon = metric.region_west_lon
+    except Exception as err:
+        msg = f'Required region input value (name or lat and lon values) not found: {err}'
+        raise ExptMetricsError(msg)
+    
+    if region_name is None and region_min_lat is None and region_max_lat is None and region_east_lon is None and region_west_lon is None:
+        msg = 'No required region name or lat and lon values provided.'
+        raise ExptMetricsError(msg)
+    
+    if region_min_lat is not None and region_max_lat is not None and region_east_lon is not None and region_west_lon is not None:
+        region_request = {
+            'name': 'region',
+            'method': db_utils.HTTP_GET,
+            'params': {
+                'filter_type': 'by_data',
+                'filters': {
+                    'min_lat': region_min_lat,
+                    'max_lat': region_max_lat,
+                    'east_lon': region_east_lon,
+                    'west_lon': region_west_lon
+                },
+                'record_limit': 1
+            }
+        }
+    elif region_name is not None:
+        region_request = {
+            'name': 'region',
+            'method': db_utils.HTTP_GET,
+            'params': {
+                'filter_type': 'by_name',
+                'record_limit': 1
+            },
+            'body':{
+                'regions': [region_name]
+            }
+        }
+    else:
+        raise ExptMetricsError('Was not provided either all four region bounds or a region name to search for. Region is required.')
+
+    rr = RegionRequest(region_request)
+
+    results = rr.submit()
+
+    record_cnt = 0
+    try:
+        if results.success is True:
+            records = results.details.get('records')
+            if records is None:
+                msg = 'Request for region record did not return a record. Region must be pre-registered.'
+                raise ExptMetricsError(msg)
+            record_cnt = records.shape[0]
+        else:
+            msg = f'Problems encountered requesting region data. Region is required.'
+            raise ExptMetricsError(msg)
+        if record_cnt <= 0:
+            msg = 'Request for region record did not return a record. Region must be pre-registered.'
+            raise ExptMetricsError(msg)
+        
+    except Exception as err:
+        msg = f'Problems encountered requesting region data. err - {err}'
+        raise ExptMetricsError(msg) from err
+        
+    try:
+        region_id = records[rgs.id.name].iat[0]
+    except Exception as err:
+        error_msg = f'Problem finding region id from record: {records} ' \
+            f'- err: {err}'
+        print(f'error_msg: {error_msg}')
+        raise ExptMetricsError(error_msg) from err
+    
+    if region_id < 0:
+        raise ExptMetricsError("No region identified from input data.")
+    return region_id
+
 @dataclass
 class ExptMetricRequest:
     request_dict: dict
@@ -521,7 +612,6 @@ class ExptMetricRequest:
     response: dict = field(default_factory=dict, init=False)
 
     def __post_init__(self):
-        method = self.request_dict.get('method')
         self.method = db_utils.validate_method(self.request_dict.get('method'))
         self.params = self.request_dict.get('params')
         self.body = self.request_dict.get('body')
@@ -609,6 +699,8 @@ class ExptMetricRequest:
 
         constructed_filter = get_float_filter(self.filters, ex_mt, 'ensemble_member', constructed_filter)
 
+        constructed_filter = get_string_filter(self.filters, ex_mt, 'level', constructed_filter, 'level')
+
         constructed_filter = get_int_filter(self.filters, ex_mt, 'id', constructed_filter)
 
         if len(constructed_filter) > 0:
@@ -640,7 +732,6 @@ class ExptMetricRequest:
             msg = f'\'metrics\' must be a list - was a \'{type(metrics)}\''
             raise ExptMetricsError(msg)
         
-        unique_regions = set()
         unique_metric_types = set()
         for metric in metrics:
 
@@ -650,21 +741,9 @@ class ExptMetricRequest:
                 print(f'metric: {metric}, msg: {msg}')
                 raise ExptMetricsError(msg)
             
-            unique_regions.add(metric.region_name)
             unique_metric_types.add(metric.name)
 
-        regions = rg.get_regions_from_name_list(list(unique_regions))
         metric_types = mt.get_all_metric_types()
-
-        rg_df = regions.details.get('records')
-        if rg_df.shape[0] != len(unique_regions):
-            msg = 'Did not find all unique_regions in regions table ' \
-                f'unique_regions: {len(unique_regions)}, found regions: ' \
-                f'{rg_df.shape[0]}.'
-            print(f'region counts do not match: {msg}')
-            raise ExptMetricsError(msg)
-
-        rg_df_dict = dict(zip(rg_df.name, rg_df.id))
 
         mt_df = metric_types.details.get('records')
         mt_df_nm_id = mt_df[['id', 'name']].copy()
@@ -674,6 +753,7 @@ class ExptMetricRequest:
         for row in metrics:
             
             value = row.value
+            region_id = get_region_id_from_metric(row)
             sat_meta_id = get_sat_meta_id_from_metric(row)
             sat_meta_input_id = sat_meta_id if sat_meta_id > 0 else None
 
@@ -683,14 +763,15 @@ class ExptMetricRequest:
             item = ex_mt(
                 experiment_id=self.expt_id,
                 metric_type_id=mt_df_dict[row.name],
-                region_id=rg_df_dict[row.region_name],
+                region_id=region_id,
                 sat_meta_id=sat_meta_input_id,
                 elevation=row.elevation,
                 elevation_unit=row.elevation_unit,
                 value=value,
                 time_valid=row.time_valid,
                 forecast_hour=row.forecast_hour,
-                ensemble_member=row.ensemble_member
+                ensemble_member=row.ensemble_member,
+                level = row.level
             )
 
             records.append(item)
@@ -718,7 +799,6 @@ class ExptMetricRequest:
         expt_record = get_expt_record(self.body)
         expt_id = self.get_first_expt_id_from_df(expt_record)
         records = self.get_expt_metrics_from_body(self.body)
-
 
         if len(records) > 0:
             # for record in records:
@@ -805,6 +885,7 @@ class ExptMetricRequest:
                 time_valid=metric.time_valid,
                 forecast_hour=metric.forecast_hour,
                 ensemble_member=metric.ensemble_member,
+                level = metric.level,
                 expt_id=metric.experiment.id,
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
@@ -819,7 +900,11 @@ class ExptMetricRequest:
                 metric_instrument_num_channels=metric_instrument_num_channels,
                 metric_obs_platform=metric.metric_type.obs_platform,
                 region_id=metric.region.id,
-                region=metric.region.name,
+                region_name=metric.region.name,
+                region_min_lat=metric.region.min_lat,
+                region_max_lat=metric.region.max_lat,
+                region_east_lon=metric.region.east_lon,
+                region_west_lon=metric.region.west_lon,
                 sat_meta_id=sat_meta_id,
                 sat_meta_name=sat_meta_name,
                 sat_id=sat_id,
@@ -894,6 +979,7 @@ class ExptMetricRequest:
                     'time_valid',
                     'forecast_hour',
                     'ensemble_member',
+                    'level',
                     'expt_id',
                     'metric_id',
                     'region_id',
