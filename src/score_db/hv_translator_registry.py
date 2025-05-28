@@ -32,6 +32,10 @@ translator_registry = {
         'translate harvest values from gsi_satellite_radiance_channel harvester',
         harvest_translator.gsi_satellite_radiance_channel_translator
     ),
+    'soca_diags': TranslatorHandler(
+        'translate harvest values from soca_diags harvester',
+        harvest_translator.soca_diags_translator
+    ),
 }
 
 valid_translators = list(translator_registry.keys())
