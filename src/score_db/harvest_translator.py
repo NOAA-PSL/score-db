@@ -205,7 +205,7 @@ def soca_diags_translator(harvested_data):
         instrument_type = harvested_data.sensor
     
     result = MetricTableData(
-        harvested_data.statistics + "_" + harvested_data.variables "_" +
+        harvested_data.statistics + "_" + harvested_data.variables + "_" +
         instrument_type + "_" + harvested_data.group, # name
         harvested_data.file_region, # region_name
         None, # region_min_lat
