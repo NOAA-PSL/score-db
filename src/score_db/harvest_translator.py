@@ -180,7 +180,74 @@ def gsi_satellite_radiance_channel_translator(harvested_data):
     )
     
     return result
+
+def gsi_conventional_obs_translator(harvested_data):
+    """Expected output from gsi_conventional_obs_channel harvester
+    gsi_conventional_obs_harvested_data = namedtuple(
+        'HarvestedData', [
+            'datetime', # datetime.datetime object (date and a time)
+            'ensemble_member',
+            'plevs_top', # pressures at the layer tops (for multi-level data)
+            'plevs_bot', # pressures at the layer bottoms (for multi-level data)
+            'plevs_units',
+            'variable',
+            'statistic',
+            'values',
+            'units',
+            'longname',
+            'iteration', # GSI outer loop number
+            'usage', # used (asm), read in but not assimilated (mon) or rejected (rej)
+            'type', # prepbufr obs type
+            'subtype', # prepbufr obs subtype
+        ]
+    )
+    """
     
+    if harvested_data.usage == 'asm':
+        #TODO: determine how to store assmilated versus monitored versus rejected
+        assimilated = True
+    else:
+        assimilated = False
+    
+    if harvested_data.ensemble_member == 'control':
+        ensemble_member = None
+    else:
+        try:
+            ensemble_member = int(harvested_data.ensemble_member)
+        except ValueError:
+            warnings.warn('could not convert harvested_data.ensemble_member '
+                          f'{harvested_data.ensemble_member} to int, storing '
+                          f'as NoneType')
+            ensemble_member = None
+    
+    if harvested_data.subtype is None or harvested_data.subtype =='None':
+        #TODO: Determine how best to store obs type and subtype
+        subtype = ''
+    else:
+        subtype = f'{harvested_data.subtype}'
+
+    result = ArrayMetricTableData(
+        harvested_data.statistic + '_' + harvested_data.variable + '_' + 
+        harvested_data.type + subtype + "_GSIstage_" + str(harvested_data.iteration),
+        'global',
+        None,
+        None,
+        None,
+        None,
+        harvested_data.values,
+        assimilated,
+        harvested_data.datetime,
+        None,
+        ensemble_member,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    
+    return result
+
 def soca_diags_translator(harvested_data):
     """Expected output from soca_diags harvester
     HarvestedData = namedtuple('HarvestedData',
