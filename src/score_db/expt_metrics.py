@@ -66,6 +66,7 @@ ExptMetricInputData = namedtuple(
         'forecast_hour',
         'ensemble_member',
         'level',
+        'usage',
         'sat_meta_name',
         'sat_id',
         'sat_name',
@@ -86,6 +87,7 @@ ExptMetricsData = namedtuple(
         'forecast_hour',
         'ensemble_member',
         'level',
+        'usage',
         'expt_id',
         'expt_name',
         'wallclock_start',
@@ -701,6 +703,8 @@ class ExptMetricRequest:
 
         constructed_filter = get_string_filter(self.filters, ex_mt, 'level', constructed_filter, 'level')
 
+        constructed_filter = get_string_filter(self.filters, ex_mt, 'usage', constructed_filter, 'usage')
+
         constructed_filter = get_int_filter(self.filters, ex_mt, 'id', constructed_filter)
 
         if len(constructed_filter) > 0:
@@ -771,7 +775,8 @@ class ExptMetricRequest:
                 time_valid=row.time_valid,
                 forecast_hour=row.forecast_hour,
                 ensemble_member=row.ensemble_member,
-                level = row.level
+                level = row.level,
+                usage = row.usage
             )
 
             records.append(item)
@@ -886,6 +891,7 @@ class ExptMetricRequest:
                 forecast_hour=metric.forecast_hour,
                 ensemble_member=metric.ensemble_member,
                 level = metric.level,
+                usage = metric.usage,
                 expt_id=metric.experiment.id,
                 expt_name=metric.experiment.name,
                 wallclock_start=metric.experiment.wallclock_start,
@@ -980,6 +986,7 @@ class ExptMetricRequest:
                     'forecast_hour',
                     'ensemble_member',
                     'level',
+                    'usage',
                     'expt_id',
                     'metric_id',
                     'region_id',
