@@ -17,8 +17,8 @@ def test_put_exp_metrics_request_dict():
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
             'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', None, None, None, None, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, None, None, None),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', None, None, None, None, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256, 'l3', None, None, None, None)
+                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', None, None, None, None, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, None, None, None, None),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', None, None, None, None, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256, 'l3', 'asm', None, None, None, None)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
@@ -86,8 +86,8 @@ def test_put_exp_metrics_request_dict_with_sats():
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
             'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', None, None, None, None, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1'),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', None, None, None, None, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256, 'l3', None, 123456789, None, None)
+                ExptMetricInputData('innov_stats_temperature_rmsd', 'global', None, None, None, None, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1'),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', None, None, None, None, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256, 'l3', 'asm', None, 123456789, None, None)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
@@ -160,8 +160,8 @@ def test_put_exp_metrics_request_dict_with_region_bounds():
             'expt_name': 'C96L64.UFSRNR.GSI_3DVAR.012016',
             'expt_wallclock_start': '2021-07-22 09:22:05',
             'metrics': [
-                ExptMetricInputData('innov_stats_temperature_rmsd', None, -90.0, 90.0, 0.0, 360.0, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1'),
-                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', -20.0, 20.0, 0.0, 360.0, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256, 'l3', None, 123456789, None, None)
+                ExptMetricInputData('innov_stats_temperature_rmsd', None, -90.0, 90.0, 0.0, 360.0, '0', 'kpa', 2.6, '2015-12-02 06:00:00', None, None, None, None, 'example_sat_meta', 123456789, 'Example Sat Name', 'esm_1'),
+                ExptMetricInputData('innov_stats_uvwind_rmsd', 'tropics', -20.0, 20.0, 0.0, 360.0, '50', 'kpa', 2.8, '2015-12-02 06:00:00', 24, 256, 'l3', 'asm', None, 123456789, None, None)
             ],
             'datestr_format': '%Y-%m-%d %H:%M:%S'
         }
@@ -214,6 +214,57 @@ def test_send_get_request_by_level():
             },
             'ordering': [
                 # {'name': 'id', 'order_by': 'asc'}
+                {'name': 'time_valid', 'order_by': 'asc'}
+            ]
+        }
+    }
+
+    emr = ExptMetricRequest(request_dict)
+    result = emr.submit()
+    assert(result.success)
+    assert(result.details.get('record_count') > 0)
+
+def test_send_get_request_by_usage():
+
+    request_dict = {
+        'db_request_name': 'expt_metrics',
+        'method': 'GET',
+        'params': {
+            'datestr_format': '%Y-%m-%d %H:%M:%S',
+            'filters': {
+                'experiment': {
+                    'name': {
+                        'exact': 'C96L64.UFSRNR.GSI_3DVAR.012016',
+                    },
+                    'wallclock_start': {
+                        'from': '2021-07-22 02:22:05',
+                        'to': '2021-07-22 10:22:05'
+                    }
+                },
+                'metric_types': {
+                    'name': {
+                        'exact': ['innov_stats_uvwind_rmsd']
+                    },
+                    'stat_type': {
+                        'exact': ['rmsd']
+                    }
+                },
+                'regions': {
+                    'name': {
+                        'exact': ['tropics']
+                    },
+                },
+
+                'usage':{
+                    'exact': 'asm'
+                },
+
+                'time_valid': {
+                    'from': '2015-01-01 00:00:00',
+                    'to': '2016-01-03 00:00:00',
+                },
+            },
+            'ordering': [
                 {'name': 'time_valid', 'order_by': 'asc'}
             ]
         }
