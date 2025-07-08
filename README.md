@@ -443,6 +443,7 @@ expt_metrics
     forecast_hour = Column(Float)
     ensemble_member = Column(Integer)
     level = Column(String(64), nullable = True)
+    usage = Column(String(64), nullable = True)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='metrics')
@@ -513,6 +514,7 @@ expt_array_metrics
     forecast_hour = Column(Float)
     ensemble_member = Column(Integer)
     level = Column(String(64), nullable = True)
+    usage = Column(String(64), nullable = True)
     created_at = Column(DateTime, default=datetime.utcnow())
 
     experiment = relationship('Experiment', back_populates='array_metrics')
@@ -710,7 +712,8 @@ request_dict = {
                 'time_valid': time_valid,
                 'forecast_hour' : forecast_hour,
                 'ensemble_member' : ensemble_member,
-                'level' : level, 
+                'level' : level,
+                'usage' : usage, 
                 'sat_meta_name': sat_meta_name,
                 'sat_id': sat_id,
                 'sat_name': sat_name,
@@ -720,7 +723,7 @@ request_dict = {
         }
     }
 ```
-Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member, level, sat_meta_name, sat_id, sat_name, sat_short_name
+Values which can be null or not provided: elevation_unit, forecast_hour, ensemble_member, level, usage, sat_meta_name, sat_id, sat_name, sat_short_name
 
 Note: for a successful PUT call, the experiment, region, metric type, and sat meta referenced in the body must already be registered using the score_db_base.py. See the first example above on How To Register an Experiment. The process is the same for the other data types. 
 
