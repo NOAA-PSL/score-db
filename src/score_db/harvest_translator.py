@@ -224,6 +224,7 @@ def soca_diags_translator(harvested_data):
         None, # forecast_hour
         None, # ensemble_member
         harvested_data.level, # level
+        None, # usage
         None, # sat_meta_name
         None, # sat_id
         None, # sat_name
