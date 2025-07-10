@@ -209,7 +209,6 @@ def gsi_conventional_obs_translator(harvested_data):
     """
     
     if harvested_data.usage == 'asm':
-        #TODO: determine how to store assmilated versus monitored versus rejected
         assimilated = True
     else:
         assimilated = False
@@ -225,15 +224,17 @@ def gsi_conventional_obs_translator(harvested_data):
                           f'as NoneType')
             ensemble_member = None
     
+    '''
     if harvested_data.subtype is None or harvested_data.subtype =='None':
         #TODO: Determine how best to store obs type and subtype
         subtype = ''
     else:
-        subtype = f'{harvested_data.subtype}'
+        subtype = f'-{harvested_data.subtype}'
+    '''
 
     result = ArrayMetricTableData(
         harvested_data.statistic + '_' + harvested_data.variable + '_' + 
-        harvested_data.type + subtype + "_GSIstage_" + str(harvested_data.iteration),
+        harvested_data.type + '_' + harvested_data.subtype + "_GSIstage_" + str(harvested_data.iteration),
         'global',
         None,
         None,
@@ -245,6 +246,7 @@ def gsi_conventional_obs_translator(harvested_data):
         None,
         ensemble_member,
         None,
+        harvested_data.usage,
         None,
         None,
         None,
