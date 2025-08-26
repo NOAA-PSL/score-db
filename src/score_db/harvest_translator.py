@@ -225,30 +225,55 @@ def gsi_conventional_obs_translator(harvested_data):
             ensemble_member = None
     
     if harvested_data.subtype is None or harvested_data.subtype =='None':
-        #TODO: Determine how best to store obs type and subtype
         subtype = 'None'
     else:
         subtype = f'{harvested_data.subtype}'
 
-    result = ArrayMetricTableData(
-        harvested_data.statistic + '_' + harvested_data.variable + '_' + 
-        harvested_data.type + '_' + subtype + "_GSIstage_" + str(harvested_data.iteration),
-        'global',
-        None,
-        None,
-        None,
-        None,
-        harvested_data.values,
-        assimilated,
-        harvested_data.datetime,
-        None,
-        ensemble_member,
-        None,
-        harvested_data.usage,
-        None,
-        None,
-        None,
-        None,
+    metric_name = f"{harvested_data.statistic}_{harvested_data.variable}_{str(harvested_data.type)}_GSIstage_{str(harvested_data.iteration)}"
+    
+    
+    if harvested_data.variable == 'fit_psfc_data':
+        # scalar metric type
+        result = MetricTableData(
+            metric_name,
+            'global',
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            harvested_data.values,
+            Harvested_data.datetime,
+            None,
+            ensemble_member,
+            None,
+            harvested_data.usage,
+            None,
+            None,
+            None,
+            None,
+        )
+    else:
+        # array metric type
+        result = ArrayMetricTableData(
+            metric_name,
+            'global',
+            None,
+            None,
+            None,
+            None,
+            harvested_data.values,
+            assimilated,
+            harvested_data.datetime,
+            None,
+            ensemble_member,
+            None,
+            harvested_data.usage,
+            None,
+            None,
+            None,
+            None,
     )
     
     return result
