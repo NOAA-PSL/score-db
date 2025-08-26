@@ -186,7 +186,7 @@ def gsi_satellite_radiance_channel_translator(harvested_data):
     
     return result
 
-def gsi_conventional_obs_translator(harvested_data):
+def gsi_conventional_obs_translator(harvested_data, surface_level_only=False):
     """Expected output from gsi_conventional_obs_channel harvester
     gsi_conventional_obs_harvested_data = namedtuple(
         'HarvestedData', [
@@ -207,6 +207,13 @@ def gsi_conventional_obs_translator(harvested_data):
         ]
     )
     """
+    # There are a few metrics for which are surface level only. Conditions
+    # for surface only data are defined first
+    
+    if harvested_data.variable == 'fit_psfc_data':
+        surface_level_only = True
+    if harvested_data.plevs_top == [0.100E+04] and harvested_data.plevs_bot == [0.120E+04]:
+        surface_level_only = True
     
     if harvested_data.usage == 'asm':
         assimilated = True
@@ -231,8 +238,10 @@ def gsi_conventional_obs_translator(harvested_data):
 
     metric_name = f"{harvested_data.statistic}_{harvested_data.variable}_{str(harvested_data.type)}_GSIstage_{str(harvested_data.iteration)}"
     
-    
-    if harvested_data.variable == 'fit_psfc_data':
+    if surface_level_only:
+        assert len(harvested_data.values) == 1
+        value = harvested_data.values[0]
+        
         # scalar metric type
         result = MetricTableData(
             metric_name,
@@ -243,8 +252,8 @@ def gsi_conventional_obs_translator(harvested_data):
             None,
             None,
             None,
-            harvested_data.values,
-            Harvested_data.datetime,
+            value,
+            harvested_data.datetime,
             None,
             ensemble_member,
             None,
