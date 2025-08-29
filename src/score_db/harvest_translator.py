@@ -207,13 +207,13 @@ def gsi_conventional_obs_translator(harvested_data, surface_level_only=False):
         ]
     )
     """
-    # There are a few metrics for which are surface level only. Conditions
-    # for surface only data are defined first
+    # There are a few metrics for which are single level only. Conditions
+    # for single level data are defined first
     
     if harvested_data.variable == 'fit_psfc_data':
-        surface_level_only = True
-    if harvested_data.plevs_top == [0.100E+04] and harvested_data.plevs_bot == [0.120E+04]:
-        surface_level_only = True
+        single_level_only = True
+    if harvested_data.plevs_top == [0.000E+00] and harvested_data.plevs_bot == [0.200E+04]:
+        single_level_only = True
     
     if harvested_data.usage == 'asm':
         assimilated = True
@@ -238,7 +238,7 @@ def gsi_conventional_obs_translator(harvested_data, surface_level_only=False):
 
     metric_name = f"{harvested_data.statistic}_{harvested_data.variable}_{str(harvested_data.type)}_GSIstage_{str(harvested_data.iteration)}"
     
-    if surface_level_only:
+    if single_level_only:
         assert len(harvested_data.values) == 1
         value = harvested_data.values[0]
         
