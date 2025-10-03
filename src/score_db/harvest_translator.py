@@ -101,6 +101,7 @@ def daily_bfg_translator(harvested_data):
         'HarvestedData', 
         [
             'filenames',
+            'segment',
             'statistic',
             'variable',
             'value',
@@ -110,8 +111,16 @@ def daily_bfg_translator(harvested_data):
         ]
     )
     """
+
+    metric_name = harvested_data.statistic + "_" + harvested_data.variable,
+    
+    if harvested_data.segment == 'background':
+        metric_name += '_bg'
+    elif harvested_data.segment == 'analysis':
+        metric_name += '_an'
+    
     result = MetricTableData(
-        harvested_data.statistic + "_" + harvested_data.variable,
+        metric_name,
         'global',
         None,
         None,
