@@ -395,7 +395,7 @@ class ArrayMetricTypeRequest:
         time_now = datetime.utcnow()
 
         do_update_stmt = insert_stmt.on_conflict_do_update(
-            constraint='unique_array_metric_type',
+            constraint='unique_array_type_name',
             set_=dict(
                 long_name=self.array_metric_type_data.long_name, 
                 array_coord_labels=self.array_metric_type_data.array_coord_labels,
@@ -419,7 +419,7 @@ class ArrayMetricTypeRequest:
 
             session.commit()
         except Exception as err:
-            message = f'Attempt to INSERT/UPDATE array metric type record FAILED'
+            message = f'Attempt to insert/update array metric type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:

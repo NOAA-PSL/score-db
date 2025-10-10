@@ -257,7 +257,7 @@ class StorageLocationRequest:
                 action = db_utils.UPDATE
             session.commit()
         except Exception as err:
-            message = f'Attempt to {action} storage location record FAILED'
+            message = f'Attempt to insert/update storage location record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:

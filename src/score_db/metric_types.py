@@ -394,7 +394,7 @@ class MetricTypeRequest:
         time_now = datetime.utcnow()
 
         do_update_stmt = insert_stmt.on_conflict_do_update(
-            constraint='unique_metric_type',
+            constraint='unique_type_name',
             set_=dict(
                 obs_platform=self.metric_type_data.obs_platform,
                 long_name=self.metric_type_data.long_name, 
@@ -418,7 +418,7 @@ class MetricTypeRequest:
 
             session.commit()
         except Exception as err:
-            message = f'Attempt to {action} metric type record FAILED'
+            message = f'Attempt to insert/update metric type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:

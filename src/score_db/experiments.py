@@ -453,7 +453,7 @@ class ExperimentRequest:
             # print(f'result.fetchone().keys(): {result_row._mapping}')
         except Exception as err:
             action = db_utils.INSERT
-            message = f'Attempt to {action} experiment record FAILED'
+            message = f'Attempt to insert/update experiment record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             session.rollback()
             print(f'error_msg: {error_msg}')
