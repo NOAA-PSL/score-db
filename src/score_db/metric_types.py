@@ -397,7 +397,9 @@ class MetricTypeRequest:
             constraint='unique_type_name',
             set_=dict(
                 obs_platform=self.metric_type_data.obs_platform,
-                long_name=self.metric_type_data.long_name, 
+                long_name=self.metric_type_data.long_name,
+                instrument_meta_id=instrument_meta_id,
+                measurement_type=self.metric_type_data.measurement_type, 
                 measurement_units=self.metric_type_data.measurement_units,
                 stat_type=self.metric_type_data.stat_type,
                 stage=self.metric_type_data.stage,
