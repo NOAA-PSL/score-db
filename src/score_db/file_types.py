@@ -258,7 +258,7 @@ class FileTypeRequest:
 
             session.commit()
         except Exception as err:
-            message = f'Attempt to {action} file type record FAILED'
+            message = f'Attempt to insert/update file type record FAILED'
             error_msg = f'Failed to insert/update record - err: {err}'
             print(f'error_msg: {error_msg}')
         else:

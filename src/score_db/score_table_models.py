@@ -156,13 +156,7 @@ class MetricType(Base):
     __table_args__ = (
         UniqueConstraint(
             'name',
-            'measurement_type',
-            'measurement_units',
-            'stat_type',
-            'stage',
-            'obs_platform',
-            'instrument_meta_id',
-            name='unique_metric_type'
+            name='unique_type_name'
         ),
     )
     
@@ -271,13 +265,7 @@ class ArrayMetricType(Base):
     __table_args__ = (
         UniqueConstraint(
             'name',
-            'measurement_type',
-            'measurement_units',
-            'stat_type',
-            'stage',
-            'obs_platform',
-            'instrument_meta_id',
-            name='unique_array_metric_type'
+            name='unique_array_type_name'
         ),
     )
 
