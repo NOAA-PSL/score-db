@@ -212,8 +212,10 @@ def gsi_conventional_obs_translator(harvested_data):
     
     if harvested_data.variable == 'fit_psfc_data':
         single_level_only = True
-    if harvested_data.plevs_top == [0.000E+00] and harvested_data.plevs_bot == [0.200E+04]:
+    elif harvested_data.plevs_top == [0.000E+00] and harvested_data.plevs_bot == [0.200E+04]:
         single_level_only = True
+    else:
+        single_level_only = False
     
     if harvested_data.usage == 'asm':
         assimilated = True
