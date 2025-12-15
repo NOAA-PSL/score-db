@@ -186,7 +186,7 @@ def gsi_satellite_radiance_channel_translator(harvested_data):
     
     return result
 
-def gsi_conventional_obs_translator(harvested_data, surface_level_only=False):
+def gsi_conventional_obs_translator(harvested_data):
     """Expected output from gsi_conventional_obs_channel harvester
     gsi_conventional_obs_harvested_data = namedtuple(
         'HarvestedData', [
@@ -230,11 +230,6 @@ def gsi_conventional_obs_translator(harvested_data, surface_level_only=False):
                           f'{harvested_data.ensemble_member} to int, storing '
                           f'as NoneType')
             ensemble_member = None
-    
-    if harvested_data.subtype is None or harvested_data.subtype =='None':
-        subtype = 'None'
-    else:
-        subtype = f'{harvested_data.subtype}'
 
     metric_name = f"{harvested_data.statistic}_{harvested_data.variable}_{str(harvested_data.type)}_GSIstage_{str(harvested_data.iteration)}"
     
