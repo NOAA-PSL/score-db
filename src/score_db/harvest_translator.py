@@ -235,8 +235,7 @@ def gsi_conventional_obs_translator(harvested_data):
 
     metric_name = f"{harvested_data.statistic}_{harvested_data.variable}_{str(harvested_data.type)}_GSIstage_{str(harvested_data.iteration)}"
     
-    if single_level_only:
-        assert len(harvested_data.values) == 1
+    if single_level_only and len(harvested_data.values) == 1:
         value = harvested_data.values[0]
         
         # scalar metric type
@@ -260,7 +259,7 @@ def gsi_conventional_obs_translator(harvested_data):
             None,
             None,
         )
-    else:
+    elif not single_level_only:
         # array metric type
         result = ArrayMetricTableData(
             metric_name,
@@ -281,6 +280,8 @@ def gsi_conventional_obs_translator(harvested_data):
             None,
             None,
     )
+    else:
+        raise ValueError(f"trying to store scalar metric type but harvested array: {harvested_data.values}")
     
     return result
 
