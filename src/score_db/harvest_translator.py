@@ -308,7 +308,8 @@ def soca_diags_translator(harvested_data):
          'statistics',
          'value',
          'filetime',
-         'file_region']
+         'file_region',
+         'QC_threshold']
     )
     """
     
@@ -316,6 +317,13 @@ def soca_diags_translator(harvested_data):
         instrument_type = 'insitu'
     else:
         instrument_type = harvested_data.sensor
+        
+    if harvested_data.QC_threshold is None:
+        usage='noQC'
+    elif harvested_data.QC_threshold > 0:
+        usage=f'effectiveQC_lt_{harvested_data.QC_threshold}'
+    elif harvested_data.QC_threshold == 0:
+        usage='effectiveQC_eq_0' 
     
     result = MetricTableData(
         harvested_data.statistics + "_" + harvested_data.variables + "_" +
@@ -332,7 +340,7 @@ def soca_diags_translator(harvested_data):
         None, # forecast_hour
         None, # ensemble_member
         harvested_data.level, # level
-        None, # usage
+        usage, # usage
         None, # sat_meta_name
         None, # sat_id
         None, # sat_name
