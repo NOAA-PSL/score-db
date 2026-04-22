@@ -194,7 +194,106 @@ def gsi_satellite_radiance_channel_translator(harvested_data):
     )
     
     return result
+
+def gsi_conventional_obs_translator(harvested_data):
+    """Expected output from gsi_conventional_obs_channel harvester
+    gsi_conventional_obs_harvested_data = namedtuple(
+        'HarvestedData', [
+            'datetime', # datetime.datetime object (date and a time)
+            'ensemble_member',
+            'plevs_top', # pressures at the layer tops (for multi-level data)
+            'plevs_bot', # pressures at the layer bottoms (for multi-level data)
+            'plevs_units',
+            'variable',
+            'statistic',
+            'values',
+            'units',
+            'longname',
+            'iteration', # GSI outer loop number
+            'usage', # used (asm), read in but not assimilated (mon) or rejected (rej)
+            'type', # prepbufr obs type
+            'subtype', # prepbufr obs subtype
+        ]
+    )
+    """
+    # There are a few metrics for which are single level only. Conditions
+    # for single level data are defined first
     
+    if harvested_data.variable == 'fit_psfc_data':
+        single_level_only = True
+    elif harvested_data.plevs_top == [0.000E+00] and harvested_data.plevs_bot == [0.200E+04]:
+        single_level_only = True
+    else:
+        single_level_only = False
+    
+    if harvested_data.usage == 'asm':
+        assimilated = True
+    else:
+        assimilated = False
+    
+    if harvested_data.ensemble_member == 'control':
+        ensemble_member = None
+    else:
+        try:
+            ensemble_member = int(harvested_data.ensemble_member)
+        except ValueError:
+            warnings.warn('could not convert harvested_data.ensemble_member '
+                          f'{harvested_data.ensemble_member} to int, storing '
+                          f'as NoneType')
+            ensemble_member = None
+
+    metric_name = f"{harvested_data.statistic}_{harvested_data.variable}_{str(harvested_data.type)}_GSIstage_{str(harvested_data.iteration)}"
+    
+    if single_level_only and len(harvested_data.values) == 1:
+        value = harvested_data.values[0]
+        
+        # scalar metric type
+        result = MetricTableData(
+            metric_name,
+            'global',
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            value,
+            harvested_data.datetime,
+            None,
+            ensemble_member,
+            None,
+            harvested_data.usage,
+            None,
+            None,
+            None,
+            None,
+        )
+    elif not single_level_only:
+        # array metric type
+        result = ArrayMetricTableData(
+            metric_name,
+            'global',
+            None,
+            None,
+            None,
+            None,
+            harvested_data.values,
+            assimilated,
+            harvested_data.datetime,
+            None,
+            ensemble_member,
+            None,
+            harvested_data.usage,
+            None,
+            None,
+            None,
+            None,
+    )
+    else:
+        raise ValueError(f"trying to store scalar metric type but harvested array: {harvested_data.values}")
+    
+    return result
+
 def soca_diags_translator(harvested_data):
     """Expected output from soca_diags harvester
     HarvestedData = namedtuple('HarvestedData',
