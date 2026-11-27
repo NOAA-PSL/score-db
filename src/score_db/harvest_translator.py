@@ -107,21 +107,34 @@ def daily_bfg_translator(harvested_data):
             'value',
             'units',
             'mediantime',
-            'longname'
+            'longname',
+            'surface_mask', # optional
+            'region'        # optional, dict with a 'name' key
         ]
     )
     """
 
-    metric_name = harvested_data.statistic + "_" + harvested_data.variable,
+    metric_name = harvested_data.statistic + "_" + harvested_data.variable
     
-    if harvested_data.segment == 'background':
+    segment = getattr(harvested_data, 'segment', None)
+    if segment == 'background':
         metric_name += '_bg'
-    elif harvested_data.segment == 'analysis':
+    elif segment == 'analysis':
         metric_name += '_an'
+    
+    region = getattr(harvested_data, 'region', None)
+    if isinstance(region, dict) and region.get('name'):
+        region_name = region['name']
+    else:
+        region_name = 'global'
+    
+    surface_mask = getattr(harvested_data, 'surface_mask', None)
+    if surface_mask == 'none':
+        surface_mask = None
     
     result = MetricTableData(
         metric_name,
-        'global',
+        region_name,
         None,
         None,
         None,
@@ -133,7 +146,7 @@ def daily_bfg_translator(harvested_data):
         None,
         None,
         None,
-        None,
+        surface_mask, # usage
         None, 
         None,
         None,
